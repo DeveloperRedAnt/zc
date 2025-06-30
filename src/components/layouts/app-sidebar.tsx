@@ -30,7 +30,7 @@ import {
 } from '@/components/sidebar/sidebar';
 import { UserAvatarProfile } from '@/components/user-avatar-profile/user-avatar-profile';
 import { navItems } from '@/constants/data';
-import { HistoryQuery, LinkTwo, MoreOne, Power, Remind } from '@icon-park/react';
+import { BankCard, HistoryQuery, LinkTwo, MoreOne, Power, Remind } from '@icon-park/react';
 import { IconChevronRight, IconPhotoUp } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -187,6 +187,16 @@ export default function AppSidebar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
+                  <DropdownMenuItem>
+                    <Link href="/dashboard/packages" className="flex items-center">
+                      <BankCard
+                        size="16"
+                        style={{ width: '16.34px', height: '16px' }}
+                        className="mr-4"
+                      />
+                      Manajemen Langganan
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <HistoryQuery
                       size="16"
