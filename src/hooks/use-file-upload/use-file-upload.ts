@@ -224,7 +224,7 @@ export const useFileUpload = (
           if (multiple) {
             newFiles = [...prev.files, ...validFiles];
           } else {
-            newFiles = [validFiles[0]];
+            newFiles = validFiles.slice(0, 1);
           }
 
           onFilesChange?.(newFiles);
