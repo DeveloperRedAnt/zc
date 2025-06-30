@@ -1,0 +1,60 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "error"
+      },
+      "suspicious": {
+        "noConsoleLog": "error"
+      },
+      "a11y": {
+        "useValidAnchor": "off",
+        "useKeyWithClickEvents": "off",
+        "noAutofocus": "off",
+        "noBlankTarget": "off",
+        "noNoninteractiveTabindex": "off",
+        "noRedundantAlt": "off",
+        "noSvgWithoutTitle": "off",
+
+        "noPositiveTabindex": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off"
+      }
+    },
+    "ignore": [
+      "node_modules",
+      ".next",
+      "dist",
+      "public",
+      "**/*.css",
+      "**/*.md",
+      "**/*.json",
+      "**/*.yml",
+      "**/*.yaml",
+      "src/__generated__",
+      "__generated__",
+      "src/components/information-text/information-text.tsx"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "ignore": ["node_modules", ".next", "dist", "public", "src/__generated__", "__generated__"]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingComma": "es5",
+      "semicolons": "always"
+    }
+  }
+}

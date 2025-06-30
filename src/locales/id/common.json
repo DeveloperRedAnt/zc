@@ -1,0 +1,173 @@
+{
+  "app": {
+    "title": "Zycash Dashboard",
+    "description": "Dashboard manajemen untuk Zycash"
+  },
+  "dashboard": {
+    "welcome": "Ini adalah halaman beranda. Semua konten sekarang statis.",
+    "translation": {
+      "prefix": "Terjemahan didukung oleh",
+      "crowdin": "Crowdin"
+    }
+  },
+  "devices": {
+    "page": {
+      "title": "Perangkat - Zycash Dashboard",
+      "description": "Kelola dan pantau perangkat terhubung Anda"
+    },
+    "heading": "Perangkat",
+    "subheading": "Kelola perangkat terhubung Anda dan lihat statusnya",
+    "overview": {
+      "title": "Ikhtisar",
+      "description": "Ringkasan semua perangkat terhubung",
+      "content": "Bagian ini akan menampilkan statistik dan informasi ikhtisar tentang perangkat Anda."
+    },
+    "status": {
+      "title": "Status",
+      "description": "Status terkini perangkat Anda",
+      "content": "Bagian ini akan menampilkan status terkini dan kesehatan perangkat terhubung Anda."
+    },
+    "management": {
+      "title": "Manajemen",
+      "description": "Kelola dan konfigurasi perangkat Anda",
+      "content": "Bagian ini akan menyediakan alat untuk mengelola dan mengkonfigurasi perangkat terhubung Anda."
+    }
+  },
+  "nav": {
+    "home": "Beranda",
+    "dashboard": "Dashboard",
+    "settings": "Pengaturan",
+    "profile": "Profil",
+    "logout": "Keluar"
+  },
+  "auth": {
+    "signIn": "Masuk",
+    "signOut": "Keluar",
+    "signingOut": "Sedang keluar...",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "forgotPassword": "Lupa Kata Sandi?",
+    "noAccount": "Belum punya akun?",
+    "createAccount": "Buat Akun",
+    "rememberMe": "Ingat Saya",
+    "login": "Masuk",
+    "logo": "Logo",
+    "quote": "Template awal ini telah menghemat waktu saya yang tak terhitung dan membantu saya menyelesaikan proyek untuk klien saya lebih cepat dari sebelumnya.",
+    "quoteAuthor": "Orang Acak",
+    "starOnGithub": "Beri bintang di GitHub",
+    "agreementPrefix": "Dengan mengklik lanjutkan, Anda menyetujui",
+    "termsOfService": "Ketentuan Layanan",
+    "agreementConnector": "dan",
+    "privacyPolicy": "Kebijakan Privasi",
+    "agreementSuffix": "kami."
+  },
+  "actions": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "create": "Buat",
+    "search": "Cari",
+    "filter": "Filter",
+    "apply": "Terapkan",
+    "reset": "Atur Ulang",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "submit": "Kirim"
+  },
+  "messages": {
+    "loading": "Memuat...",
+    "saving": "Menyimpan...",
+    "saved": "Tersimpan",
+    "error": "Terjadi kesalahan",
+    "notFound": "Tidak ditemukan",
+    "successCreate": "Berhasil dibuat",
+    "successUpdate": "Berhasil diperbarui",
+    "successDelete": "Berhasil dihapus",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus ini?",
+    "required": "Wajib diisi"
+  },
+  "language": {
+    "id": "Bahasa Indonesia",
+    "en": "English"
+  },
+  "profile": {
+    "upload": {
+      "thumbnail": "Unggah Thumbnail",
+      "chooseFile": "Pilih File",
+      "noImage": "Tidak ada gambar",
+      "fileType": "Tipe file",
+      "fileTypeList": ".jpg, .jpeg, .png",
+      "maxSize": "Ukuran maks.",
+      "maxSizeValue": "2 MB",
+      "delete": "Hapus"
+    },
+    "changePassword": {
+      "title": "Ubah Password",
+      "description": "Isi formulir di bawah untuk mengubah password Anda",
+      "oldPassword": "Password Lama",
+      "newPassword": "Password Baru",
+      "confirmPassword": "Verifikasi Password Baru",
+      "submit": "Ubah Password",
+      "validation": {
+        "oldPasswordRequired": "Password lama wajib diisi",
+        "minLength": "Minimal 6 karakter",
+        "passwordComplexity": "Password harus mengandung huruf besar, huruf kecil, dan angka",
+        "confirmPasswordRequired": "Konfirmasi password wajib diisi",
+        "passwordsMustMatch": "Harus disi sama dengan Password"
+      }
+    },
+    "changePin": {
+      "title": "Ubah PIN",
+      "oldPin": "PIN Lama",
+      "newPin": "PIN Baru",
+      "confirmPin": "Verifikasi PIN Baru",
+      "submit": "Ubah PIN"
+    },
+    "logout": {
+      "title": "Anda akan logout",
+      "description": "Apakah Anda yakin akan logout dari Zycash Dashboard?",
+      "warning": "Anda harus login kembali",
+      "cancel": "Tidak",
+      "confirm": "Ya, Saya Yakin"
+    },
+    "userProfile": {
+      "cropper": {
+        "title": "Crop Foto Profil",
+        "save": "Simpan Foto Profil"
+      },
+      "changePassword": {
+        "title": "Anda akan merubah Password",
+        "description": "Apakah Anda yakin akan merubah password Anda?",
+        "cancel": "Tidak",
+        "confirm": "Ya, Saya Yakin"
+      },
+      "userDetail": {
+        "title": "Detail User",
+        "permission": "Permission",
+        "organization": "Organisasi:",
+        "orgExample": "#1155230ASA5 - PT Mencari Cinta Sejati",
+        "fields": {
+          "ktp": "KTP:",
+          "whatsapp": "No. Whatsapp:",
+          "email": "Email:"
+        }
+      },
+      "permissionDetail": {
+        "permissionBadge": "Permission",
+        "positionLabel": "Jabatan:"
+      },
+      "cardTeam": {
+        "changePassword": "Ubah Password",
+        "changePin": "Ubah PIN",
+        "logout": "Logout"
+      }
+    }
+  },
+  "wizard": {
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
+    "finish": "Selesai"
+  }
+}

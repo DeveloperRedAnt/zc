@@ -1,0 +1,16 @@
+import { Meta, Story, Preview } from '@storybook/addon-docs';
+import { ErrorState } from '../error-state';
+
+<Meta title="State/ErrorState" component={ErrorState} />
+
+# ErrorState
+
+Komponen ErrorState digunakan untuk menampilkan pesan error global pada aplikasi.
+
+## Contoh Penggunaan
+
+<Preview>
+  <Story name="Default">
+    <ErrorState error={new Error('Test error')} />
+  </Story>
+</Preview>

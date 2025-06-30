@@ -1,0 +1,30 @@
+import { Meta, Story, Preview } from '@storybook/addon-docs';
+import NotFound from '../not-found';
+
+<Meta title="State/NotFound" component={NotFound} />
+
+# NotFound
+
+The NotFound component is used to display a "not found" or "access denied" page.
+
+## Props
+
+| Prop        | Type     | Default | Description                              |
+|-------------|----------|---------|------------------------------------------|
+| statusCode  | number   | 404     | Status code to display                   |
+| title       | string   | ""      | Page title                               |
+| description | string   | ""      | Additional description                   |
+
+## Usage Example
+
+<Preview>
+  <Story name="Default">
+    <NotFound statusCode={404} title="Not Found" description="Page not found." />
+  </Story>
+</Preview>
+
+<Preview>
+  <Story name="Custom">
+    <NotFound statusCode={403} title="Access Denied" description="You do not have access to this page." />
+  </Story>
+</Preview>

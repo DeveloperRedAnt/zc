@@ -1,0 +1,173 @@
+{
+  "app": {
+    "title": "Zycash Dashboard",
+    "description": "Management dashboard for Zycash"
+  },
+  "dashboard": {
+    "welcome": "This is the home page. All content is now static.",
+    "translation": {
+      "prefix": "Translation powered by",
+      "crowdin": "Crowdin"
+    }
+  },
+  "devices": {
+    "page": {
+      "title": "Devices - Zycash Dashboard",
+      "description": "Manage and monitor your connected devices"
+    },
+    "heading": "Devices",
+    "subheading": "Manage your connected devices and view their status",
+    "overview": {
+      "title": "Overview",
+      "description": "Summary of all connected devices",
+      "content": "This section will display statistics and overview information about your devices."
+    },
+    "status": {
+      "title": "Status",
+      "description": "Current status of your devices",
+      "content": "This section will display the current status and health of your connected devices."
+    },
+    "management": {
+      "title": "Management",
+      "description": "Manage and configure your devices",
+      "content": "This section will provide tools to manage and configure your connected devices."
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signingOut": "Signing out...",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create Account",
+    "rememberMe": "Remember Me",
+    "login": "Login",
+    "logo": "Logo",
+    "quote": "This starter template has saved me countless hours of work and helped me deliver projects to my clients faster than ever before.",
+    "quoteAuthor": "Random Dude",
+    "starOnGithub": "Star on GitHub",
+    "agreementPrefix": "By clicking continue, you agree to our",
+    "termsOfService": "Terms of Service",
+    "agreementConnector": "and",
+    "privacyPolicy": "Privacy Policy",
+    "agreementSuffix": "."
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "reset": "Reset",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error": "An error occurred",
+    "notFound": "Not found",
+    "successCreate": "Successfully created",
+    "successUpdate": "Successfully updated",
+    "successDelete": "Successfully deleted",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "required": "Required field"
+  },
+  "language": {
+    "id": "Bahasa Indonesia",
+    "en": "English"
+  },
+  "profile": {
+    "upload": {
+      "thumbnail": "Upload Thumbnail",
+      "chooseFile": "Choose File",
+      "noImage": "No image",
+      "fileType": "File type",
+      "fileTypeList": ".jpg, .jpeg, .png",
+      "maxSize": "Max size",
+      "maxSizeValue": "2 MB",
+      "delete": "Delete"
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Fill in the form below to change your password",
+      "oldPassword": "Old Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Verify New Password",
+      "submit": "Change Password",
+      "validation": {
+        "oldPasswordRequired": "Old password is required",
+        "minLength": "Minimum 6 characters",
+        "passwordComplexity": "Password must contain uppercase, lowercase, and number",
+        "confirmPasswordRequired": "Confirm password is required",
+        "passwordsMustMatch": "Must match with Password"
+      }
+    },
+    "changePin": {
+      "title": "Change PIN",
+      "oldPin": "Old PIN",
+      "newPin": "New PIN",
+      "confirmPin": "Verify New PIN",
+      "submit": "Change PIN"
+    },
+    "logout": {
+      "title": "You will be logged out",
+      "description": "Are you sure you want to logout from Zycash Dashboard?",
+      "warning": "You'll have to login again",
+      "cancel": "No",
+      "confirm": "Yes, I'm sure"
+    },
+    "userProfile": {
+      "cropper": {
+        "title": "Crop Profile Photo",
+        "save": "Save Profile Photo"
+      },
+      "changePassword": {
+        "title": "You will change your Password",
+        "description": "Are you sure you want to change your password?",
+        "cancel": "No",
+        "confirm": "Yes, I'm sure"
+      },
+      "userDetail": {
+        "title": "User Detail",
+        "permission": "Permission",
+        "organization": "Organization:",
+        "orgExample": "#1155230ASA5 - PT Mencari Cinta Sejati",
+        "fields": {
+          "ktp": "ID Card:",
+          "whatsapp": "Whatsapp No.:",
+          "email": "Email:"
+        }
+      },
+      "permissionDetail": {
+        "permissionBadge": "Permission",
+        "positionLabel": "Position:"
+      },
+      "cardTeam": {
+        "changePassword": "Change Password",
+        "changePin": "Change PIN",
+        "logout": "Logout"
+      }
+    }
+  },
+  "wizard": {
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Finish"
+  }
+}

@@ -1,0 +1,46 @@
+import { Meta, Story, Preview } from '@storybook/addon-docs';
+import { EmptyState, EmptyStateIcon, EmptyStateTitle, EmptyStateDescription, EmptyStateAction } from '../empty-state';
+
+<Meta title="State/EmptyState" component={EmptyState} />
+
+# EmptyState
+
+The EmptyState component is used to display various empty or error states in your application.
+
+## Variants
+
+| Variant           | Description                                              |
+|-------------------|---------------------------------------------------------|
+| unauthorized      | Access/login verification required                      |
+| incomplete        | Data is incomplete                                      |
+| notFound          | Not found                                               |
+| systemProblem     | System problem                                          |
+| badGateway        | Connection lost                                         |
+| underMaintenance  | System under maintenance                                |
+| gatewayTimeout    | System took too long to respond                         |
+| incorrectAccess   | Incorrect way to access                                 |
+| custom            | Custom icon, title, description, and action             |
+
+## Usage Example
+
+<Preview>
+  <Story name="Unauthorized">
+    <EmptyState>
+      <EmptyStateIcon variant="unauthorized" />
+      <EmptyStateTitle variant="unauthorized" />
+      <EmptyStateDescription variant="unauthorized" />
+      <EmptyStateAction variant="unauthorized" />
+    </EmptyState>
+  </Story>
+</Preview>
+
+<Preview>
+  <Story name="Custom">
+    <EmptyState>
+      <EmptyStateIcon variant="custom" customIcon={<span>⭐</span>} />
+      <EmptyStateTitle variant="custom" customTitle="Custom Title" />
+      <EmptyStateDescription variant="custom" customDescription="Custom Description" />
+      <EmptyStateAction variant="custom" customActionText="Custom Action" />
+    </EmptyState>
+  </Story>
+</Preview>

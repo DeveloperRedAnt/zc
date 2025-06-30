@@ -1,0 +1,16 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  only:
+    - develop # Runs ONLY when pushing to 'develop' branch
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa # Use GitLab CI/CD variable
+    - chmod 600 ~/.ssh/id_rsa # Set correct permissions
+    - eval "$(ssh-agent -s)" # Start SSH agent
+    - ssh-add ~/.ssh/id_rsa # Add private key to agent
+    - ssh-keyscan -H 103.217.210.43 >> ~/.ssh/known_hosts # Prevent SSH warnings
+  script:
+    - ssh zycasapp@103.217.210.43 "bash ~/deployment/zycas_dashboard.sh"
