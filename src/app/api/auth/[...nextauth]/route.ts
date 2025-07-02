@@ -4,20 +4,28 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 
 // Mock users database
 const users = [
+  // {
+  //   id: '1',
+  //   name: 'Admin User',
+  //   whatsapp: '6281234567890',
+  //   password: 'admin123',
+  //   image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+  //   role: 'admin',
+  // },
+  // {
+  //   id: '2',
+  //   name: 'Test User',
+  //   whatsapp: '6289876543210',
+  //   password: 'user123',
+  //   image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+  //   role: 'user',
+  // },
   {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    password: 'admin123',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    name: 'Test User',
-    email: 'user@example.com',
-    password: 'user123',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+    id: '3',
+    name: 'Zycash User',
+    whatsapp: '08197567193',
+    password: 'password',
+    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zycash',
     role: 'user',
   },
 ];
@@ -27,16 +35,16 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        whatsapp: { label: 'Nomor WhatsApp', type: 'tel' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.whatsapp || !credentials?.password) {
           return null;
         }
 
-        // Find user by email
-        const user = users.find((user) => user.email === credentials.email);
+        // Find user by WhatsApp number
+        const user = users.find((user) => user.whatsapp === credentials.whatsapp);
 
         // Check if user exists and password matches
         if (user && user.password === credentials.password) {

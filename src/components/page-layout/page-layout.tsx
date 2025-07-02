@@ -1,14 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/card/card';
 import { cn } from '@/libs/utils';
 import React from 'react';
+import SkeletonButton from '../button/skeleton-button';
 
 interface PageLayoutProps {
-  title: string;
+  title?: string;
   button?: React.ReactNode;
   description?: string;
   requiredText?: string;
   children: React.ReactNode;
   className?: string;
+  isLoading?: boolean;
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -18,17 +20,28 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   requiredText = '',
   children,
   className = '',
+  isLoading = false,
 }) => {
   return (
     <Card className={cn(className, 'my-2')}>
-      <CardHeader className="p-6 border-b border-[zycas-border-grey]">
+      <CardHeader className="p-6 border-b border-[#F1F5F9]">
         <div className="flex justify-between items-center">
-          <CardTitle className="size-[16px] leading-[24px] text-nowrap text-foreground">
-            {title}
-          </CardTitle>
-          {button}
+          {isLoading ? (
+            <>
+              <SkeletonButton className="w-[110px]" />
+              <SkeletonButton className="w-[140px] mr-3.5" />
+            </>
+          ) : (
+            <>
+              <CardTitle className="size-[16px] leading-[24px] text-nowrap text-foreground">
+                {title}
+              </CardTitle>
+              {button}
+            </>
+          )}
         </div>
       </CardHeader>
+
       {(description || requiredText) && (
         <div className="p-6">
           {description && (

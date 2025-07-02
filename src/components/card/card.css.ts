@@ -7,7 +7,7 @@ export const cardStyles = tv({
     header: 'flex flex-col space-y-1.5 p-4',
     title: 'font-semibold leading-none tracking-tight',
     description: 'text-muted-foreground text-sm',
-    content: 'p-6 pt-0',
+    content: 'p-4 pt-0',
     footer: 'flex items-center p-6 pt-0',
   },
 });

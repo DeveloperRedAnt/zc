@@ -23,7 +23,6 @@ export function DataTable<T>({
   isLoading,
   renderDetailRow,
 }: DataTableProps<T>) {
-  // Generate stable IDs for skeleton keys (run once)
   const skeletonRowIds = React.useMemo(() => {
     return Array.from({ length: 5 }).map(() => crypto.randomUUID());
   }, []);
@@ -36,17 +35,27 @@ export function DataTable<T>({
     <div className="rounded-md bg-white dark:bg-inherit" style={width ? { width } : undefined}>
       <Table>
         <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+          {isLoading ? (
+            <TableRow>
+              {skeletonCellIds.map((cellId) => (
+                <TableHead key={cellId}>
+                  <Skeleton className="h-4 w-20 rounded" />
                 </TableHead>
               ))}
             </TableRow>
-          ))}
+          ) : (
+            table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))
+          )}
         </TableHeader>
         <TableBody>
           {isLoading ? (

@@ -6,9 +6,9 @@ const WizardProgressBar: React.FC<{ currentStep: number; totalSteps: number }> =
 }) => {
   const progress = ((currentStep + 1) / totalSteps) * 100;
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2">
+    <div className="w-[35rem] bg-[#D8D8D8] rounded-full h-[1rem] mx-auto">
       <div
-        className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
+        className="bg-[#0FA6C1] h-[1rem] rounded-full transition-all duration-300 ease-in-out"
         style={{ width: `${progress}%` }}
       />
     </div>

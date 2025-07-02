@@ -13,7 +13,7 @@ export default function page() {
     <PageLayout
       title="List User"
       button={
-        <Button variant="outline" onClick={() => router.push('/dashboard/users/form')}>
+        <Button variant="outline" onClick={() => router.push('/dashboard/users/add')}>
           <Plus />
           Tambah User
         </Button>

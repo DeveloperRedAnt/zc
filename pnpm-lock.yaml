@@ -113,6 +113,9 @@ importers:
       '@tabler/icons-react':
         specifier: ^3.33.0
         version: 3.33.0(react@19.1.0)
+      '@tanstack/react-query':
+        specifier: ^5.81.5
+        version: 5.81.5(react@19.1.0)
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -122,6 +125,9 @@ importers:
       '@types/next':
         specifier: ^9.0.0
         version: 9.0.0(@babel/core@7.27.1)(@playwright/test@1.52.0)(babel-plugin-macros@3.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      axios:
+        specifier: ^1.10.0
+        version: 1.10.0(debug@4.4.1)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -3710,6 +3716,14 @@ packages:
   '@tailwindcss/postcss@4.1.7':
     resolution: {integrity: sha512-88g3qmNZn7jDgrrcp3ZXEQfp9CVox7xjP1HN2TFKI03CltPVd/c61ydn5qJJL8FYunn0OqBaW5HNUga0kmPVvw==}
 
+  '@tanstack/query-core@5.81.5':
+    resolution: {integrity: sha512-ZJOgCy/z2qpZXWaj/oxvodDx07XcQa9BF92c0oINjHkoqUPsmm3uG08HpTaviviZ/N9eP1f9CM7mKSEkIo7O1Q==}
+
+  '@tanstack/react-query@5.81.5':
+    resolution: {integrity: sha512-lOf2KqRRiYWpQT86eeeftAGnjuTR35myTP8MXyvHa81VlomoAWNEd8x5vkcAfQefu0qtYCvyqLropFZqgI2EQw==}
+    peerDependencies:
+      react: ^18 || ^19
+
   '@tanstack/react-table@8.21.3':
     resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
     engines: {node: '>=12'}
@@ -4243,8 +4257,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  axios@1.9.0:
-    resolution: {integrity: sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==}
+  axios@1.10.0:
+    resolution: {integrity: sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==}
 
   b4a@1.6.7:
     resolution: {integrity: sha512-OnAYlL5b7LEkALw87fUVafQw5rVR9RjwGd4KUwNQ6DrrNmaVaUCgLipfVlzrPQ4tWOR9P0IXGNOx50jYCCdSJg==}
@@ -13239,6 +13253,13 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.1.7
 
+  '@tanstack/query-core@5.81.5': {}
+
+  '@tanstack/react-query@5.81.5(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-core': 5.81.5
+      react: 19.1.0
+
   '@tanstack/react-table@8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/table-core': 8.21.3
@@ -13867,7 +13888,7 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.9.0(debug@4.4.1):
+  axios@1.10.0(debug@4.4.1):
     dependencies:
       follow-redirects: 1.15.9(debug@4.4.1)
       form-data: 4.0.2
@@ -14205,7 +14226,7 @@ snapshots:
       acorn: 8.14.1
       acorn-walk: 8.3.4
       archiver: 7.0.1
-      axios: 1.9.0(debug@4.4.1)
+      axios: 1.10.0(debug@4.4.1)
       chalk: 4.1.2
       ci-info: 4.2.0
       conf: 10.2.0
@@ -19469,7 +19490,7 @@ snapshots:
 
   wait-on@7.2.0:
     dependencies:
-      axios: 1.9.0(debug@4.4.1)
+      axios: 1.10.0(debug@4.4.1)
       joi: 17.13.3
       lodash: 4.17.21
       minimist: 1.2.8
@@ -19479,7 +19500,7 @@ snapshots:
 
   wait-on@8.0.3(debug@4.4.1):
     dependencies:
-      axios: 1.9.0(debug@4.4.1)
+      axios: 1.10.0(debug@4.4.1)
       joi: 17.13.3
       lodash: 4.17.21
       minimist: 1.2.8

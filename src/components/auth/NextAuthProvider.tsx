@@ -1,5 +1,6 @@
 'use client';
 
+import LoadingPage from '@/modules/auth/components/loading-page';
 import type { Session } from 'next-auth';
 import { SessionProvider } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -73,7 +74,7 @@ export default function NextAuthProvider({
 
   // Show a loading state while determining if auth should be disabled
   if (authState === 'loading') {
-    return <div>Loading authentication state...</div>;
+    return <LoadingPage />;
   }
 
   // Use mock provider if auth is disabled

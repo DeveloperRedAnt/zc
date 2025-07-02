@@ -89,6 +89,9 @@
 
     --dark-bg: #555555;
 
+    /* skeleton */
+    --bg-skeleton-dark:#D8D8D8;
+
 }
 
 .dark {
@@ -160,13 +163,9 @@
 
     /* Breadcrumb */
     --text-disabled: #C2C7D0;
-
     --tw-border-style: #F1F5F9;
-
     --table-border-color: #F1F5F9;
-
     --switch-background-color: #C2C7D0;
-
     --text-dark: var(--dark-bg);
 }
 
@@ -452,4 +451,8 @@
 
 .bg-primary {
     background-color: var(--primary);
+}
+
+.bg-skeleton-dark {
+    background-color: var(--bg-skeleton-dark);
 }

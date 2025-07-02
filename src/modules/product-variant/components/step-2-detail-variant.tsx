@@ -16,10 +16,8 @@ import { BulkEditPopover } from '@/components/popover-menu/popover-menu';
 import { Text } from '@/components/text/text';
 import { toast } from '@/components/toast/toast';
 import { ArrowLeft, ArrowRight, Check, FullSelection } from '@icon-park/react';
-import cryptoRandomString from 'crypto-random-string';
 import React, { useState, useRef } from 'react';
 import { useProductVariantStore } from '../store';
-import { FormattedDatas } from '../types';
 import type { FormattedData as FormattedDataType, ProductVariants } from '../types';
 import DetailVariantList from './detail-variant-list';
 import type { ProductCardValue } from './detail-variant-list';
@@ -31,84 +29,21 @@ interface AddDetailVariantProps {
   onSaveDetail: (data: DetailData[]) => void;
 }
 
-import type { PricesVariantOption } from '../types';
-// Define the expected option type for variant options
-interface ProductVariantOption {
-  name: string;
-  barcode?: string;
-  sku?: string;
-  minStock?: number;
-  thumbnail?: string;
-  prices?: PricesVariantOption[];
-}
-
-const cartesianProduct = (arrays: ProductVariantOption[][]): ProductVariantOption[][] => {
-  if (arrays.length === 0) return [[]];
-  if (arrays.length === 1) return (arrays[0] ?? []).map((item) => [item]);
-
-  const result: ProductVariantOption[][] = [];
-  const restProduct = cartesianProduct(arrays.slice(1));
-
-  for (const item of arrays[0] ?? []) {
-    for (const restItem of restProduct) {
-      result.push([item, ...restItem]);
-    }
-  }
-
-  return result;
-};
-
-const createVariantCombinations = (
-  variantsData: { options: ProductVariantOption[] }[]
-): FormattedDatas => {
-  const allVariantOptions = variantsData.map((variant) => variant.options);
-  const combinations = cartesianProduct(allVariantOptions);
-
-  return combinations.map((combination) => {
-    const name = combination.map((option: ProductVariantOption) => option.name).join(' - ');
-    const baseOption = combination[0] as ProductVariantOption;
-
-    return {
-      id: cryptoRandomString({ length: 10 }),
-      name,
-      barcode: baseOption.barcode || '',
-      sku: baseOption.sku || '',
-      minStock: baseOption.minStock || 0,
-      thumbnail: baseOption.thumbnail || '',
-      prices: (baseOption.prices as PricesVariantOption[]) || [],
-      typeprice: '',
-    };
-  });
-};
-
 const AddDetailVariant: React.FC<AddDetailVariantProps> = ({ onBack, onSaveDetail }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [_selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [FormattedData, setFormattedVariants] = useState<FormattedDataType[]>([]);
 
   // Ref untuk menyimpan data dari setiap DetailVariantList
   const detailVariantRefs = useRef<{ [key: string]: ProductCardValue }>({});
 
-  const { productVariants, formattedData, setFormattedData, updateFormattedData } =
-    useProductVariantStore() as {
-      productVariants: ProductVariants;
-      formattedData: FormattedDataType[];
-      setFormattedData: (data: FormattedDataType[]) => void;
-      updateFormattedData: (id: string, data: Partial<FormattedDataType>) => void;
-    };
+  const { formattedData, updateFormattedData } = useProductVariantStore() as {
+    productVariants: ProductVariants;
+    formattedData: FormattedDataType[];
+    updateFormattedData: (id: string, data: Partial<FormattedDataType>) => void;
+  };
 
-  const variantsData = productVariants.map((variant) => ({
-    type: variant.type ?? '',
-    options: variant.options || [],
-  }));
-
-  React.useEffect(() => {
-    if (variantsData.length > 0 && variantsData.some((v) => v.options.length > 0)) {
-      const formatted = createVariantCombinations(variantsData);
-      setFormattedVariants(formatted);
-      setFormattedData(formatted);
-    }
-  }, [variantsData, setFormattedData]);
+  // Use formattedData directly from store instead of creating it
+  const FormattedData = formattedData;
 
   // Callback untuk menerima data dari DetailVariantList
   const handleDetailVariantChange = (id: string, values: ProductCardValue) => {

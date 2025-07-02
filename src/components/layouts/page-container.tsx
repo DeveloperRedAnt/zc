@@ -5,15 +5,17 @@ import Header from './header';
 export default function PageContainer({
   children,
   scrollable = true,
+  isLoading = false,
 }: {
   children: React.ReactNode;
   scrollable?: boolean;
+  isLoading?: boolean;
 }) {
   return (
     <>
       {scrollable ? (
         <ScrollArea className="h-[calc(100dvh-52px)]">
-          <Header />
+          <Header isLoading={isLoading} />
           <div className="flex flex-col p-4">{children}</div>
         </ScrollArea>
       ) : (
