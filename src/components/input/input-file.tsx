@@ -9,8 +9,12 @@ type InputFileProps = {
   label?: string;
   onChange?: (file: File | null) => void;
   accept?: string;
-  fileInfoExtension?: string; // Contoh: ".jpg, .jpeg, .png"
-  maxSize?: number; // dalam byte
+  fileInfoExtension?: string;
+  maxSize?: number;
+  previewUrl?: string | null;
+  onReset?: () => void;
+  previewPosition?: 'left' | 'top';
+  defaultImageUrl?: string;
 };
 
 export default function InputFile({
@@ -18,57 +22,63 @@ export default function InputFile({
   onChange,
   accept = 'image/*',
   fileInfoExtension = '.jpg, .jpeg, .png',
-  maxSize = 2 * 1024 * 1024, // 2MB
+  maxSize = 2 * 1024 * 1024,
+  previewUrl: externalPreviewUrl, // ubah nama agar tidak bentrok
+  onReset,
+  previewPosition = 'left', // default
+  defaultImageUrl,
 }: InputFileProps) {
-  const [preview, setPreview] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [internalPreview, setInternalPreview] = React.useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > maxSize) {
         alert(`Ukuran file maksimal ${(maxSize / (1024 * 1024)).toFixed(2)} MB`);
-        reset();
+        inputRef.current && (inputRef.current.value = '');
+        setInternalPreview(null);
+        onChange?.(null);
         return;
       }
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        setInternalPreview(reader.result as string); // fallback preview
       };
       reader.readAsDataURL(file);
+
       onChange?.(file);
     } else {
-      reset();
+      setInternalPreview(null);
+      onChange?.(null);
     }
   };
 
-  const reset = () => {
-    setPreview(null);
+  const handleReset = () => {
     if (inputRef.current) inputRef.current.value = '';
-    onChange?.(null);
+    setInternalPreview(null);
+    onReset?.();
   };
 
+  const effectivePreview = externalPreviewUrl ?? internalPreview;
+
   return (
-    <div className="flex items-start gap-4 text-[#555555] text-[0.9rem]">
+    <div
+      className={`gap-4 text-[#555555] text-[0.9rem] ${
+        previewPosition === 'top' ? 'flex flex-col items-center' : 'flex flex-row items-start'
+      }`}
+    >
       {/* Preview */}
       <div className="w-[138px] h-[138px] rounded-md border overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
-        {preview ? (
-          <img
-            src={preview}
-            alt="Preview"
-            className="object-cover w-full h-full block"
-            style={{ width: '138px', height: '138px' }} // force override
-          />
-        ) : (
-          <img
-            src={'/assets/zycas/default-image-product.png'}
-            alt="Preview"
-            className="object-cover w-full h-full block"
-            style={{ width: '138px', height: '138px' }} // force override
-          />
-        )}
+        <img
+          src={effectivePreview || defaultImageUrl || '/assets/zycas/default-image-product.png'}
+          alt="Preview"
+          className="object-cover w-full h-full block"
+          style={{ width: '138px', height: '138px' }}
+        />
       </div>
+
 
       {/* Input */}
       <div className="flex-1">
@@ -96,10 +106,10 @@ export default function InputFile({
           </span>
         </p>
 
-        {preview && (
+        {effectivePreview && (
           <Button
             variant="ghost"
-            onClick={reset}
+            onClick={handleReset}
             className="mt-2 ml-2 flex items-center text-sm text-[#F08181] hover:underline font-[500] cursor-pointer"
           >
             <Trash2 className="w-4 h-4 mr-1" />

@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 export default function SignInPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,13 +22,13 @@ export default function SignInPage() {
 
     try {
       const result = await signIn('credentials', {
-        email,
+        whatsapp,
         password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError('Invalid email or password');
+        setError('Nomor WhatsApp atau password salah');
         setIsLoading(false);
         return;
       }
@@ -88,15 +88,16 @@ export default function SignInPage() {
                   {/* Login Form */}
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email"> Email address </Label>
+                      <Label htmlFor="whatsapp">Nomor WhatsApp</Label>
                       <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
+                        id="whatsapp"
+                        name="whatsapp"
+                        type="tel"
+                        autoComplete="tel"
                         required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="08xxxxxxxxxx"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
                         className="w-full mt-2 h-[2.5rem]"
                       />
                     </div>

@@ -218,7 +218,13 @@ const accordionColumns = [
   ...baseColumns,
 ];
 
-export default function Index() {
+type TableProductListProps = {
+  isLoading?: boolean;
+};
+
+export default function Index({
+  isLoading = false, // default to false if not provided
+}: TableProductListProps) {
   const table = useReactTable({
     data: productData,
     columns: accordionColumns,
@@ -233,6 +239,7 @@ export default function Index() {
       <div className="container mx-auto py-2">
         <DataTable
           table={table}
+          isLoading={isLoading}
           renderDetailRow={(row) => {
             const details = row.original.details;
             if (!details || details.length === 0) return null;
@@ -261,7 +268,7 @@ export default function Index() {
             );
           }}
         />
-        <DataTablePagination table={table} isLoading={false} />
+        <DataTablePagination table={table} isLoading={isLoading} />
       </div>
     </>
   );

@@ -72,12 +72,12 @@ export function getLocalePreference(): Locale {
 export function useTranslation(namespace = 'common') {
   // Use a more specific type for translations
   const [translations, setTranslations] = useState<Record<string, unknown>>({});
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, _setLocale] = useState<Locale>(DEFAULT_LOCALE);
 
   // Initialize locale on client side
   useEffect(() => {
     const savedLocale = getLocalePreference();
-    setLocale(savedLocale);
+    // setLocale(savedLocale);
 
     // Load translations
     (async () => {
@@ -124,7 +124,7 @@ export function useTranslation(namespace = 'common') {
   // Change locale function
   const changeLocale = async (newLocale: Locale) => {
     saveLocalePreference(newLocale);
-    setLocale(newLocale);
+    // setLocale(newLocale);
 
     // Load new translations
     const trans = await getTranslations(newLocale, namespace);

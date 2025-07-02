@@ -1,31 +1,29 @@
 export const dynamic = 'force-dynamic';
 
+import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import KBar from '@/components/kbar/kbar';
 import AppSidebar from '@/components/layouts/app-sidebar';
 import PageContainer from '@/components/layouts/page-container';
+import { PageLayout } from '@/components/page-layout/page-layout';
 import { SidebarInset, SidebarProvider } from '@/components/sidebar/sidebar';
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'Zycash Dashboard',
   description: 'Dashboard Zycash',
 };
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Persisting the sidebar state in the cookie.
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
+export default function LoadingPage() {
   return (
     <KBar>
-      <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar isLoading={false} />
+      <SidebarProvider defaultOpen={false}>
+        <AppSidebar isLoading={true} />
         <SidebarInset>
-          <PageContainer>{children}</PageContainer>
+          <PageContainer isLoading={true}>
+            <PageLayout isLoading={true}>
+              <SkeletonCardContent />
+            </PageLayout>
+          </PageContainer>
         </SidebarInset>
       </SidebarProvider>
     </KBar>

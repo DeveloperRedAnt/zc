@@ -6,14 +6,64 @@ import { ArrowRight, Plus } from '@icon-park/react';
 import cryptoRandomString from 'crypto-random-string';
 import React, { useEffect, useRef } from 'react';
 import { useProductVariantStore } from '../store';
-import { ProductVariant, ProductVariants } from '../types';
+import { FormattedDatas, PricesVariantOption, ProductVariant, ProductVariants } from '../types';
 import ProductVariantOptions from './add-variant-options';
 
+// Define the expected option type for variant options
+interface ProductVariantOption {
+  name: string;
+  barcode?: string;
+  sku?: string;
+  minStock?: number;
+  thumbnail?: string;
+  prices?: PricesVariantOption[];
+}
+
+const cartesianProduct = (arrays: ProductVariantOption[][]): ProductVariantOption[][] => {
+  if (arrays.length === 0) return [[]];
+  if (arrays.length === 1) return (arrays[0] ?? []).map((item) => [item]);
+
+  const result: ProductVariantOption[][] = [];
+  const restProduct = cartesianProduct(arrays.slice(1));
+
+  for (const item of arrays[0] ?? []) {
+    for (const restItem of restProduct) {
+      result.push([item, ...restItem]);
+    }
+  }
+
+  return result;
+};
+
+const createVariantCombinations = (
+  variantsData: { options: ProductVariantOption[] }[]
+): FormattedDatas => {
+  const allVariantOptions = variantsData.map((variant) => variant.options);
+  const combinations = cartesianProduct(allVariantOptions);
+
+  return combinations.map((combination) => {
+    const name = combination.map((option: ProductVariantOption) => option.name).join(' - ');
+    const baseOption = combination[0] as ProductVariantOption;
+
+    return {
+      id: cryptoRandomString({ length: 10 }),
+      name,
+      barcode: baseOption.barcode || '',
+      sku: baseOption.sku || '',
+      minStock: baseOption.minStock || 0,
+      thumbnail: baseOption.thumbnail || '',
+      prices: (baseOption.prices as PricesVariantOption[]) || [],
+      typeprice: '',
+    };
+  });
+};
+
 const VariantManager = ({ onSave }: { onSave: (productVariants: ProductVariants) => void }) => {
-  const { productVariants, addProductVariant } = useProductVariantStore() as {
+  const { productVariants, addProductVariant, setFormattedData } = useProductVariantStore() as {
     productVariants: ProductVariants;
     addProductVariant: (variant: ProductVariant) => void;
     removeProductVariant: (id: string | number) => void;
+    setFormattedData: (data: FormattedDatas) => void;
   };
 
   const initializedRef = useRef(false);
@@ -48,6 +98,17 @@ const VariantManager = ({ onSave }: { onSave: (productVariants: ProductVariants)
         className: 'bg-red-500 text-white',
       });
       return;
+    }
+
+    // Create formatted data here before moving to step 2
+    const variantsData = productVariants.map((variant) => ({
+      type: variant.type ?? '',
+      options: variant.options || [],
+    }));
+
+    if (variantsData.length > 0 && variantsData.some((v) => v.options.length > 0)) {
+      const formatted = createVariantCombinations(variantsData);
+      setFormattedData(formatted);
     }
 
     onSave(productVariants);

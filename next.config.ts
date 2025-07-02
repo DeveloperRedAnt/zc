@@ -5,6 +5,15 @@ import './src/libs/Env';
 
 // Define the base Next.js configuration
 const baseConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/dashboard',
+        permanent: false, // Use true if this should be a permanent redirect (308)
+      },
+    ];
+  },
   eslint: {
     dirs: ['.'],
   },

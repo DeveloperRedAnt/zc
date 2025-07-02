@@ -2,7 +2,7 @@ import React from 'react';
 import { SidebarTrigger } from '../sidebar/sidebar';
 import { Breadcrumbs } from './breadcrumbs';
 
-export default function Header({ isLoading = false }: { isLoading?: boolean }) {
+export default function Header() {
   return (
     <header
       className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 
@@ -11,7 +11,7 @@ export default function Header({ isLoading = false }: { isLoading?: boolean }) {
       <div className="flex items-center gap-2 px-6">
         <SidebarTrigger className="-ml-1" />
         <div className="text-[#C2C7D0]">{'|'}</div>
-        <Breadcrumbs isLoading={isLoading} />
+        <Breadcrumbs />
       </div>
     </header>
   );
