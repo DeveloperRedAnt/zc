@@ -6,19 +6,24 @@ import { Input } from '@/components/input/input';
 import { Label } from '@/components/label/label';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import FormFieldError from '@/components/form-field-error/form-field-error';
 
 export default function SignInPage() {
   const router = useRouter();
+  const whatsappRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ whatsapp?: string; password?: string }>({});
+  const [globalError, setGlobalError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setIsLoading(true);
-    setError('');
 
     try {
       const result = await signIn('credentials', {
@@ -27,8 +32,23 @@ export default function SignInPage() {
         redirect: false,
       });
 
-      if (result?.error) {
-        setError('Nomor WhatsApp atau password salah');
+     if (result?.error) {
+        const errorMessage = 'Nomor WhatsApp atau password salah';
+
+        const fieldError = {
+          whatsapp: errorMessage,
+          password: errorMessage,
+        };
+
+        setErrors(fieldError);
+
+        // Fokus ke field yang error pertama
+        if (!whatsapp) {
+          whatsappRef.current?.focus();
+        } else {
+          passwordRef.current?.focus();
+        }
+
         setIsLoading(false);
         return;
       }
@@ -37,17 +57,13 @@ export default function SignInPage() {
       router.push('/dashboard');
       router.refresh();
     } catch (error) {
-      setError(`Something went wrong. Please try again. ${String(error)}`);
+      setGlobalError(`Terjadi kesalahan. Silakan coba lagi. ${String(error)}`);
       setIsLoading(false);
     }
   };
 
   return (
     <>
-      {/* 
-      Email: admin@example.com
-      Password: admin123 
-    */}
       <div>
         <Card>
           <CardContent className="space-y-2 p-0 text-[#555555]">
@@ -80,26 +96,34 @@ export default function SignInPage() {
                     </p>
                   </div>
 
-                  {error && (
+                  {globalError && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                      {error}
+                      {globalError}
                     </div>
                   )}
+
                   {/* Login Form */}
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="whatsapp">Nomor WhatsApp</Label>
+                      <Label htmlFor="whatsapp">No. Whatsapp</Label>
                       <Input
                         id="whatsapp"
                         name="whatsapp"
                         type="tel"
                         autoComplete="tel"
+                        ref={whatsappRef}
                         required
                         placeholder="08xxxxxxxxxx"
                         value={whatsapp}
-                        onChange={(e) => setWhatsapp(e.target.value)}
-                        className="w-full mt-2 h-[2.5rem]"
+                        onChange={(e) => {
+                          setWhatsapp(e.target.value);
+                          setErrors((prev) => ({ ...prev, whatsapp: undefined }));
+                        }}
+                        className={`w-full mt-2 h-[2.5rem] border ${
+                          errors.whatsapp ? '!border-[#F08181]' : 'border-gray-300'
+                        }`}
                       />
+                      <FormFieldError message={errors.whatsapp} />
                     </div>
 
                     {/* Password */}
@@ -113,10 +137,18 @@ export default function SignInPage() {
                           name="password"
                           type="password"
                           autoComplete="current-password"
+                          ref={passwordRef}
                           required
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setErrors((prev) => ({ ...prev, password: undefined }));
+                          }}
+                          className={`w-full h-[2.5rem] border ${
+                            errors.password ? '!border-[#F08181]' : 'border-gray-300'
+                          }`}
                         />
+                        <FormFieldError message={errors.password} />
                       </div>
                     </div>
 

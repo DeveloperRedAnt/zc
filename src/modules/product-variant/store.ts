@@ -67,6 +67,26 @@ export const useProductVariantStore = create()(
             ),
           };
         }),
+      deleteOptionByProductIDandOptionID: (productVariantID: string, optionID: string) =>
+        set((state) => {
+          const index = state.productVariants.findIndex(
+            (variant) => variant.id === productVariantID
+          );
+
+          if (index === -1) return state;
+
+          const updatedVariant = {
+            ...state.productVariants[index],
+            options: state.productVariants[index].options?.filter(
+              (option) => option.id !== optionID
+            ),
+          };
+
+          const updatedVariants = [...state.productVariants];
+          updatedVariants[index] = updatedVariant;
+
+          return { productVariants: updatedVariants };
+        }),
       changeProductVariantTypeByID: (id: string, type: ProductVariantType) =>
         set((state) => ({
           productVariants: state.productVariants.map((variant) =>
@@ -110,8 +130,6 @@ export const useProductVariantStore = create()(
           ),
         }));
       },
-
-      // Tambahkan function-function ini ke dalam useProductVariantStore
 
       // Function untuk batch update prices dan typeprice (dipanggil dari handleSave)
       updateFormattedDataPrices: (id: string, prices: PricesVariantOption[], typeprice: string) =>
@@ -168,6 +186,19 @@ export const useProductVariantStore = create()(
 
         return { existingPriceOptions, hasExistingData };
       },
+
+      clearAllData: () =>
+        set(() => ({
+          productVariants: [],
+          productVariantType: '',
+          formattedData: [],
+        })),
+
+      // Function untuk clear hanya formattedData
+      clearFormattedData: () =>
+        set(() => ({
+          formattedData: [],
+        })),
     }),
     {
       name: 'product-variant-store',
