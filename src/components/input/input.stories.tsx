@@ -79,9 +79,7 @@ export const NoTitle: Story = {
 };
 
 export const Currency: Story = {
-  render: () => (
-    <CustomInput label="Amount" inputNumber prependText="Rp" placeholder="Enter amount" />
-  ),
+  render: () => <CustomInput label="Amount" currency prependText="Rp" placeholder="Enter amount" />,
   parameters: {
     docs: {
       description: {

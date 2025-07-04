@@ -43,7 +43,7 @@ interface BulkPriceOption {
 const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [_selectedIds, setSelectedIds] = useState<string[]>([]);
-  const { formattedData, updateFormattedDataPrices } =
+  const { formattedData, updateFormattedDataPrices, clearFormattedData } =
     useProductVariantStore() as ProductVariantStore & {
       updateFormattedDataPrices: (
         id: string,
@@ -55,6 +55,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
         prices: PricesVariantOption[],
         typeprice: string
       ) => void;
+      clearFormattedData();
     };
 
   const [typePrice, setTypePrice] = useState<'Grosir' | 'Multi Kemasan'>('Multi Kemasan');
@@ -234,6 +235,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
   };
 
   const handleRedirect = () => {
+    clearFormattedData();
     window.location.href = '/dashboard/product/add';
   };
 
@@ -374,11 +376,11 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
                           onChange={(val: number) => updateOptionBulk(option.id, 'quantity', val)}
                         />
                         <CustomInput
-                          required
                           label="Nominal Harga"
-                          placeholder="0"
-                          inputNumber
+                          currency
                           prependText="Rp"
+                          placeholder="0"
+                          required
                           value={option.price}
                           onChange={(e) =>
                             updateOptionBulk(option.id, 'price', parseInt(e.target.value) || 0)
@@ -449,9 +451,9 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
                         required
                         label="Nominal Harga"
                         placeholder="0"
-                        inputNumber
+                        currency
                         prependText="Rp"
-                        value={priceOption.prices || ''}
+                        value={priceOption.prices || 0}
                         onChange={(e) =>
                           handleInputChange(
                             data.id,

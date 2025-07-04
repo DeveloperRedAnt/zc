@@ -1,8 +1,17 @@
+'use client';
+
 import { Minus, Plus } from '@icon-park/react';
-import React, { useState, useEffect } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Button } from '../button/button';
-import { Input } from '../input/input';
+import CustomInput from '../input/custom-input';
 import { Label } from '../label/label';
+import FormFieldError from '../form-field-error/form-field-error';
 
 interface StepperProps {
   label?: string;
@@ -11,86 +20,103 @@ interface StepperProps {
   max?: number;
   readOnly?: boolean;
   required?: boolean;
+  error?: string;
   onChange?: (value: number) => void;
 }
 
-export const Stepper: React.FC<StepperProps> = ({
-  label,
-  value,
-  required = false,
-  min = 0,
-  max = Infinity,
-  readOnly,
-  onChange,
-}) => {
-  const isControlled = value !== undefined && typeof onChange === 'function';
-  const [internalValue, setInternalValue] = useState<number>(value ?? min);
+export const Stepper = forwardRef<HTMLInputElement, StepperProps>(
+  (
+    {
+      label,
+      value,
+      min = 0,
+      max = Infinity,
+      readOnly = false,
+      required = false,
+      error,
+      onChange,
+    },
+    ref
+  ) => {
+    const isControlled = typeof value === 'number' && typeof onChange === 'function';
+    const [internalValue, setInternalValue] = useState<number>(value ?? min);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isControlled && value !== undefined) {
-      setInternalValue(value);
-    }
-  }, [value, isControlled]);
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-  const setValue = (newValue: number) => {
-    if (newValue < min || newValue > max || Number.isNaN(newValue)) return;
-    if (!isControlled) {
-      setInternalValue(newValue);
-    }
-    onChange?.(newValue);
-  };
+    useEffect(() => {
+      if (isControlled && typeof value === 'number') {
+        setInternalValue(value);
+      }
+    }, [value]);
 
-  const currentValue = isControlled ? value! : internalValue;
+    const currentValue = isControlled ? value! : internalValue;
 
-  const decrement = () => setValue(currentValue - 1);
-  const increment = () => setValue(currentValue + 1);
+    const setValue = (newVal: number) => {
+      if (newVal < min || newVal > max || isNaN(newVal)) return;
+      if (!isControlled) setInternalValue(newVal);
+      onChange?.(newVal);
+    };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (readOnly) return;
-    const newValue = Number(e.target.value);
-    if (!Number.isNaN(newValue)) {
-      setValue(newValue);
-    }
-  };
+    const decrement = () => {
+      setValue(currentValue - 1);
+    };
 
-  return (
-    <div className="flex flex-col gap-2">
-      {label && (
-        <Label className="text-sm font-medium">
-          {label} {required && <span className="text-red-500">*</span>}
-        </Label>
-      )}
-      <div className="flex items-center space-x-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={decrement}
-          disabled={currentValue <= min}
-          aria-label="Decrement"
-        >
-          <Minus theme="outline" size="16" strokeWidth={3} />
-        </Button>
+    const increment = () => {
+      setValue(currentValue + 1);
+    };
 
-        <Input
-          readOnly={readOnly}
-          type="text"
-          value={currentValue}
-          className="text-center h-10 w-14"
-          onChange={handleInputChange}
-        />
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = Number(e.target.value);
+      if (!Number.isNaN(newValue)) {
+        setValue(newValue);
+      }
+    };
 
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={increment}
-          disabled={currentValue >= max}
-          aria-label="Increment"
-        >
-          <Plus theme="outline" size="16" strokeWidth={3} />
-        </Button>
+    return (
+      <div className="flex flex-col gap-2">
+        {label && (
+          <Label className="text-sm font-medium text-[#555555]">
+            {label} {required && <span className="text-red-500">*</span>}
+          </Label>
+        )}
+        <div className="flex items-center space-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={decrement}
+            disabled={currentValue <= min || readOnly}
+            aria-label="Decrement"
+          >
+            <Minus theme="outline" size="16" strokeWidth={3} />
+          </Button>
+
+          <CustomInput
+            ref={inputRef}
+            inputNumber
+            readonly={readOnly}
+            currency
+            value={String(currentValue)}
+            className={`text-center h-10 w-14 ${error ? '!border-[#F08181]' : 'border-[#C2C7D0]'}`}
+            onChange={handleInputChange}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={increment}
+            disabled={currentValue >= max || readOnly}
+            aria-label="Increment"
+          >
+            <Plus theme="outline" size="16" strokeWidth={3} />
+          </Button>
+        </div>
+        {error && <FormFieldError message={error} />}
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+
+Stepper.displayName = 'Stepper';

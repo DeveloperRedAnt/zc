@@ -1,6 +1,7 @@
 // src/components/icons/icons-park.ts
 import {
   AdProduct,
+  BuildingOne,
   DashboardOne,
   DataFile,
   Delete,
@@ -27,6 +28,7 @@ export const IconsPark = {
   system: System,
   viewgriddetail: ViewGridDetail,
   shop: Shop,
+  buildingone: BuildingOne,
   winkingfacewithopeneyes: WinkingFaceWithOpenEyes,
   datafile: DataFile,
   adproduct: AdProduct,
