@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React from 'react';
 import Select, {
   ActionMeta,
@@ -15,6 +16,7 @@ type DropdownProps<Multi extends boolean> = {
   id?: string;
   name?: string;
   className?: string;
+  classDiv?: string;
   label?: string;
   placeholder?: string;
   options: OptionType[];
@@ -32,6 +34,7 @@ function Dropdown<Multi extends boolean = false>({
   id,
   name,
   className,
+  classDiv,
   label,
   placeholder = 'Choose...',
   options,
@@ -54,7 +57,7 @@ function Dropdown<Multi extends boolean = false>({
   };
 
   return (
-    <div className="mb-2">
+    <div className={clsx('mb-2', classDiv)}>
       {label && (
         <label className="block mb-1 text-sm font-medium text-[#555555]">
           {label} {required && <span className="text-red-500">*</span>}

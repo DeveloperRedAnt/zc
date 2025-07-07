@@ -8,6 +8,7 @@ import { Label } from '../label/label';
 
 type CustomInputProps = {
   label?: string;
+  classDiv?: string;
   required?: boolean;
   currency?: boolean;
   inputNumber?: boolean;
@@ -27,6 +28,7 @@ const formatNumber = (value: string | number) => {
 
 const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(({
   label,
+  classDiv,
   required = false,
   currency = false,
   inputNumber = false,
@@ -113,7 +115,7 @@ const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={clsx('flex flex-col gap-2', classDiv)}>
       {label && (
         <Label className="text-sm font-medium text-[#555555]">
           {label} {required && <span className="text-red-500">*</span>}

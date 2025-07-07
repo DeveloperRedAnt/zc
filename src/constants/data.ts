@@ -56,8 +56,8 @@ export const navItems: NavItem[] = [
   {
     groupTitle: '',
     title: 'List Toko',
-    url: '/dashboard/store-list',
-    urlActive: 'store-list',
+    url: '/dashboard/store',
+    urlActive: 'store',
     icon: 'shop',
     shortcut: ['u', 'u'],
     isActive: false,
