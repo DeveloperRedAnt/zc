@@ -5,30 +5,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card
 import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import SkeletonPreset from '@/components/skeleton/skeleton-preset';
 import { usePageLoading } from '@/hooks/use-page-loading/use-page-loading';
-import FilterStoreList from '@/modules/store/filter-store-list';
-import TableStoreList from '@/modules/store/table-store-list';
+import FilterMemberList from '@/modules/member/filter-member-list';
+import TableMemberList from '@/modules/member/table-member-list';
 import { Plus } from '@icon-park/react';
 import { useEffect, useState } from 'react';
 
-type Store = {
+type Member = {
   id: string;
-  storeName: string;
-  storeType: string;
-  storeCat: string;
-  address: string;
-  whatsapp: string;
+  memberName: string;
+  registered: string;
+  telpNumber: string;
+  monthly: string;
+  yearly: string;
+  overall: string;
+  status: string;
 };
 
 export default function Index() {
-  const [loadingDataStore, setLoadingDataStore] = useState(true);
+  const [loadingDataMember, setLoadingDataMember] = useState(true);
 
   // Form state for inputs
   const [_, setFormData] = useState({
-    storeName: '',
-    storeType: '',
-    storeCat: '',
-    address: '',
-    whatsapp: '',
+    id: '',
+    memberName: '',
+    registered: '',
+    telpNumber: '',
+    monthly: '',
+    yearly: '',
+    overall: '',
+    status: '',
   });
 
   const { isLoading, setLoading } = usePageLoading({
@@ -45,31 +50,35 @@ export default function Index() {
       }, 2000);
     }).then(() => {
       setTimeout(() => {
-        setLoadingDataStore(false);
+        setLoadingDataMember(false);
       }, 2000);
     });
   }, [setLoading]);
 
-  const handleAddStore = () => {
+  const handleAddMember = () => {
     setFormData({
-      storeName: '',
-      storeType: '',
-      storeCat: '',
-      address: '',
-      whatsapp: '',
+      id: '',
+      memberName: '',
+      registered: '',
+      telpNumber: '',
+      monthly: '',
+      yearly: '',
+      overall: '',
+      status: '',
     });
-    window.location.href = '/dashboard/store/add';
   };
 
-  const handleEditStore = (store: Store) => {
+  const handleEditMember = (member: Member) => {
     setFormData({
-      storeName: store.storeName,
-      storeType: store.storeType,
-      storeCat: store.storeCat,
-      address: store.address,
-      whatsapp: store.whatsapp,
+      id: member.id,
+      memberName: member.memberName,
+      registered: member.registered,
+      telpNumber: member.telpNumber,
+      monthly: member.monthly,
+      yearly: member.yearly,
+      overall: member.overall,
+      status: member.status,
     });
-    window.location.href = `/dashboard/store/${store.id}/edit`;
   };
 
   return (
@@ -79,7 +88,7 @@ export default function Index() {
           {isLoading ? (
             <SkeletonPreset w="w-32" h="h-6" className="rounded-sm ml-2.5" />
           ) : (
-            <CardTitle className="text-[1rem]"> List Toko </CardTitle>
+            <CardTitle className="text-[1rem]"> List Member </CardTitle>
           )}
           <div className="flex items-center gap-3">
             {isLoading ? (
@@ -93,10 +102,10 @@ export default function Index() {
                   type="button"
                   variant="outline"
                   className="text-[#555555] flex items-center"
-                  onClick={handleAddStore}
+                  onClick={handleAddMember}
                 >
                   <Plus />
-                  Tambah Toko
+                  Tambah Member
                 </Button>
               </>
             )}
@@ -107,8 +116,8 @@ export default function Index() {
             <SkeletonCardContent className="w-full" />
           ) : (
             <>
-              <FilterStoreList loadingDataStore={loadingDataStore} />
-              <TableStoreList isLoading={loadingDataStore} onEditStore={handleEditStore} />
+              <FilterMemberList loadingDataMember={loadingDataMember} />
+              <TableMemberList isLoading={loadingDataMember} onEditMember={handleEditMember} />
             </>
           )}
         </CardContent>

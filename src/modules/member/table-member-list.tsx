@@ -18,76 +18,90 @@ import {
 } from '@tanstack/react-table';
 import React from 'react';
 
-type Store = {
+type Member = {
   id: string;
-  storeName: string;
-  storeType: string;
-  storeCat: string;
-  address: string;
-  whatsapp: string;
+  memberName: string;
+  registered: string;
+  telpNumber: string;
+  monthly: string;
+  yearly: string;
+  overall: string;
+  status: string;
 };
 
-const storeData: Store[] = [
+const memberData: Member[] = [
   {
     id: '0001234',
-    storeName: 'PT Ezhe Source',
-    storeType: 'Retail',
-    storeCat: 'Makanan',
-    address: '2614 Sweetwood Drive, Arvada, CO 80002',
-    whatsapp: '089072488330',
+    memberName: 'Lorri Taya Warf',
+    registered: '02/07/25',
+    telpNumber: '089072488330',
+    monthly: 'Rp 145.714',
+    yearly: 'Rp 3.246.808',
+    overall: 'Rp 119.397.575',
+    status: 'Aktif',
   },
   {
     id: '0001233',
-    storeName: 'PT Specialty Restaurant Group TBK',
-    storeType: 'Food & Beverages',
-    storeCat: 'Cafe',
-    address: '-',
-    whatsapp: '087653221399',
+    memberName: 'Kathy Jane Pacheco',
+    registered: '27/06/25',
+    telpNumber: '087653221399',
+    monthly: 'Rp 65.259',
+    yearly: 'Rp 783.167',
+    overall: 'Rp 58.188.853',
+    status: 'Non-Aktif',
   },
   {
     id: '0001232',
-    storeName: 'CV Electronic Geek',
-    storeType: 'Retail',
-    storeCat: 'Frozen Food',
-    address: '-',
-    whatsapp: '089784444055',
+    memberName: 'Corina Juliet McCoy',
+    registered: '27/06/25',
+    telpNumber: '089784444055',
+    monthly: 'Rp 128.632',
+    yearly: 'Rp 6.112.419',
+    overall: 'Rp 107.726.040',
+    status: 'Aktif',
   },
   {
     id: '0001231',
-    storeName: 'PT Super Duper',
-    storeType: 'Retail',
-    storeCat: 'Kesehatan',
-    address: '4130 Butternut Lane, Alton, IL 62002',
-    whatsapp: '082562899707',
+    memberName: 'Judith Ruth Rodriguez',
+    registered: '21/06/25',
+    telpNumber: '082562899707',
+    monthly: 'Rp 192.620',
+    yearly: 'Rp 8.380.435',
+    overall: 'Rp 192.568.544',
+    status: 'Non-Aktif',
   },
   {
     id: '0001230',
-    storeName: 'CV Cut Rite Lawn Care',
-    storeType: 'Retail',
-    storeCat: 'Listrik dan Elektronik',
-    address: '-',
-    whatsapp: '085049966913',
+    memberName: 'Paula Eve Mora',
+    registered: '18/06/25',
+    telpNumber: '085048966913',
+    monthly: 'Rp 235.903',
+    yearly: 'Rp 21.580.203',
+    overall: 'Rp 170.768.667',
+    status: 'Aktif',
   },
   {
     id: '0001229',
-    storeName: "PT Johnson's General Stores",
-    storeType: 'Retail',
-    storeCat: 'Oleh-oleh',
-    address: '3024 Joes Road, Albany, NY 12207',
-    whatsapp: '088137525611',
+    memberName: 'Stephanie Taya Sharkey',
+    registered: '12/06/25',
+    telpNumber: '088137525611',
+    monthly: 'Rp 131.866',
+    yearly: 'Rp 28.279.278',
+    overall: 'Rp 184.678.584',
+    status: 'Aktif',
   },
 ];
 
-type TableProductListProps = {
+type TableMemberListProps = {
   isLoading?: boolean;
-  onEditStore?: (store: Store) => void;
+  onEditMember?: (member: Member) => void;
 };
 
-export default function Index({ isLoading = false, onEditStore }: TableProductListProps) {
-  const columnHelper = createColumnHelper<Store>();
+export default function Index({ isLoading = false, onEditMember }: TableMemberListProps) {
+  const columnHelper = createColumnHelper<Member>();
 
   const baseColumns = [
-    columnHelper.accessor('id', {
+    columnHelper.accessor('memberName', {
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
 
@@ -96,7 +110,7 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
             onClick={column.getToggleSortingHandler()}
             className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
           >
-            ID
+            Nama
             {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
             {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
             {!isSorted && <SortThree theme="outline" size="16" />}
@@ -106,7 +120,7 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
       cell: (info) => info.getValue(),
       enableSorting: true,
     }),
-    columnHelper.accessor('storeName', {
+    columnHelper.accessor('registered', {
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
 
@@ -115,7 +129,7 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
             onClick={column.getToggleSortingHandler()}
             className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
           >
-            Nama Toko
+            Terdaftar
             {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
             {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
             {!isSorted && <SortThree theme="outline" size="16" />}
@@ -125,50 +139,24 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
       cell: (info) => info.getValue(),
       enableSorting: true,
     }),
-    columnHelper.accessor('storeType', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Nama Organisasi
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-    }),
-    columnHelper.accessor('storeCat', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Nama Organisasi
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-    }),
-    columnHelper.accessor('address', {
-      header: () => <div className="font-semibold text-[#555555]">Alamat</div>,
+    columnHelper.accessor('telpNumber', {
+      header: () => <div className="font-semibold text-[#555555]">No. Telp</div>,
       cell: (info) => info.getValue(),
     }),
-    columnHelper.accessor('whatsapp', {
-      header: () => <div className="font-semibold text-[#555555]">No. Whatsapp</div>,
+    columnHelper.accessor('monthly', {
+      header: () => <div className="font-semibold text-[#555555]">Bulanan</div>,
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor('yearly', {
+      header: () => <div className="font-semibold text-[#555555]">Pembelian Tahunan</div>,
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor('overall', {
+      header: () => <div className="font-semibold text-[#555555]">Pembelian Tahunan</div>,
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor('status', {
+      header: () => <div className="font-semibold text-[#555555]">Pembelian Tahunan</div>,
       cell: (info) => info.getValue(),
     }),
     columnHelper.display({
@@ -179,7 +167,7 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
           <FileDisplayOne className="cursor-pointer" />
           <Edit
             className="cursor-pointer hover:text-blue-600 transition-colors"
-            onClick={() => onEditStore?.(row.original)}
+            onClick={() => onEditMember?.(row.original)}
           />
         </div>
       ),
@@ -217,7 +205,7 @@ export default function Index({ isLoading = false, onEditStore }: TableProductLi
   ];
 
   const table = useReactTable({
-    data: storeData,
+    data: memberData,
     columns: accordionColumns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

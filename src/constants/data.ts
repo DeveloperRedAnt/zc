@@ -76,8 +76,8 @@ export const navItems: NavItem[] = [
   {
     groupTitle: 'Member',
     title: 'List Member',
-    url: '/dashboard/user-list',
-    urlActive: 'user-list',
+    url: '/dashboard/member',
+    urlActive: 'member',
     icon: 'winkingfacewithopeneyes',
     shortcut: ['m', 'm'],
     isActive: false,
