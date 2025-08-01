@@ -1,9 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
-import CustomInput from '@/components/input/custom-input';
-import { Stepper } from '@/components/number-stepper/number-stepper';
-import FormFieldError from '@/components/form-field-error/form-field-error';
+import { Button } from '@/components/button/button';
 import {
   Dialog,
   DialogClose,
@@ -14,9 +11,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/dialog/dialog';
-import { Button } from '@/components/button/button';
-import { Delete } from '@icon-park/react';
+import FormFieldError from '@/components/form-field-error/form-field-error';
+import CustomInput from '@/components/input/custom-input';
+import { Stepper } from '@/components/number-stepper/number-stepper';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
+import { Delete } from '@icon-park/react';
+import { useRef } from 'react';
 
 type PriceMultiPackItem = {
   id: number;

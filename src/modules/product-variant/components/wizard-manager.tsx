@@ -1,12 +1,12 @@
 'use client';
 
-import { Button } from '@/components/button/button';
+// import { Button } from '@/components/button/button';
+// import { ProductVariantStore } from '../types'; // Adjust the import path as needed
+// import { useProductVariantStore } from '../store';
 import { CardContent, CardHeader } from '@/components/card/card';
 import { Progress } from '@/components/progress/progress';
 import { Text } from '@/components/text/text';
 import React, { useState } from 'react';
-import { useProductVariantStore } from '../store';
-import { ProductVariantStore } from '../types'; // Adjust the import path as needed
 import AddProductVariant from './step-1-add-variant';
 import AddDetailVariant from './step-2-detail-variant';
 import AddMultiPrice from './step-3-add-price';
@@ -14,7 +14,7 @@ import AddMultiPrice from './step-3-add-price';
 const WizardManager = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
-  const { formattedData } = useProductVariantStore() as ProductVariantStore;
+  // const { formattedData } = useProductVariantStore() as ProductVariantStore;
 
   // Move to step 2 with variants data from step 1
   const handleSaveVariant = () => {
@@ -73,7 +73,7 @@ const WizardManager = () => {
         {currentStep === 4 && (
           <>
             {/* this view will showed when u commented redirect function at step 3 */}
-            <pre className="p-4 bg-gray-100 rounded text-xs text-gray-700 mb-2 overflow-x-auto">
+            {/* <pre className="p-4 bg-gray-100 rounded text-xs text-gray-700 mb-2 overflow-x-auto">
               {JSON.stringify(formattedData, null, 2)}
             </pre>
             <div className="mt-2 flex justify-between items-center">
@@ -89,7 +89,7 @@ const WizardManager = () => {
                   Kembali ke Detail Varian
                 </Button>
               </div>
-            </div>
+            </div> */}
           </>
         )}
       </CardContent>

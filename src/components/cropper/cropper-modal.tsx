@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/dialog/dialog';
 import { Slider } from '@/components/slider/slider';
-import { Check, Close } from '@icon-park/react';
+import { Check } from '@icon-park/react';
 import { useState } from 'react';
 
 type Area = { x: number; y: number; width: number; height: number };
@@ -45,22 +45,16 @@ export const CropperDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="gap-0 p-0 sm:max-w-140 *:[button]:hidden">
+      <DialogContent
+        className="gap-0 p-0 sm:max-w-140 *:[button]:hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogDescription className="sr-only">Crop image dialog</DialogDescription>
         <DialogHeader className="contents space-y-0 text-left">
           <DialogTitle className="flex items-center justify-between border-b p-4 text-base">
             <div className="flex items-center gap-2">
               <span>{textModal}</span>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="-my-1 opacity-60"
-              onClick={onClose}
-            >
-              <Close aria-hidden="true" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
         <div className="p-4">

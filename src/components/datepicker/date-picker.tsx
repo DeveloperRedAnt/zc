@@ -7,7 +7,9 @@ import { cn } from '@/libs/utils';
 import { Calendar as CalendarIcon } from '@icon-park/react';
 import { format } from 'date-fns';
 import * as React from 'react';
-import { DateRange } from 'react-day-picker';
+import { DateRange as DateRangeType } from 'react-day-picker';
+
+export type DateRange = DateRangeType;
 
 type DatePickerProps = {
   label?: string;
@@ -17,24 +19,37 @@ type DatePickerProps = {
   className?: string;
   value?: Date | DateRange;
   onChange?: (date: Date | DateRange | undefined) => void;
+  closeOnSelect?: boolean;
 };
 
 export function DatePicker({
-  label = 'Select Date',
+  label = '',
   mode = 'single',
   mandatory = 'false',
   placeholder,
   className,
   value,
   onChange,
+  closeOnSelect = false,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const [internalValue, setInternalValue] = React.useState<Date | DateRange | undefined>(value);
+  const [internalValue, setInternalValue] = React.useState<Date | DateRange | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (!open) {
+      setInternalValue(value);
+    }
+  }, [value, open]);
 
   const handleSelect = (date: Date | undefined) => {
     if (!date) return;
 
-    if (mode !== 'range') return;
+    if (mode === 'single') {
+      setInternalValue(date);
+      onChange?.(date);
+      if (closeOnSelect) setOpen(false);
+      return;
+    }
 
     // Jika sudah ada from dan to → selalu reset
     if (
@@ -112,7 +127,7 @@ export function DatePicker({
               setOpen((prev) => !prev);
             }}
             className={cn(
-              'w-full justify-start text-left font-normal border-[#C2C7D0]',
+              'w-full justify-start text-left font-normal border-[#2563eb]',
               !value && 'text-muted-foreground',
               className
             )}
@@ -137,7 +152,15 @@ export function DatePicker({
             <Calendar
               mode="single"
               selected={internalValue as Date}
-              onSelect={handleSelect as (date: Date | undefined) => void}
+              onMonthChange={(month) => {
+                setInternalValue(month);
+              }}
+              month={internalValue as Date}
+              onSelect={(date) => {
+                setInternalValue(date);
+                onChange?.(date);
+                setOpen(false);
+              }}
               numberOfMonths={1}
               initialFocus
             />

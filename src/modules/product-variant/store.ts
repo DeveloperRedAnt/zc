@@ -10,12 +10,15 @@ import type {
   ProductVariants,
 } from './types';
 
-export const useProductVariantStore = create()(
+import type { ProductVariantStore } from './types';
+
+export const useProductVariantStore = create<ProductVariantStore>()(
   persist(
     (set) => ({
       productVariants: [] as ProductVariants,
       productVariantType: '' as ProductVariantType,
       formattedData: [] as FormattedDatas,
+      finalData: [] as FormattedDatas,
 
       addProductVariant: (productVariant: ProductVariant) =>
         set((state) => ({ productVariants: [...state.productVariants, productVariant] })),
@@ -75,11 +78,13 @@ export const useProductVariantStore = create()(
 
           if (index === -1) return state;
 
-          const updatedVariant = {
-            ...state.productVariants[index],
-            options: state.productVariants[index].options?.filter(
-              (option) => option.id !== optionID
-            ),
+          const currentVariant = state.productVariants[index];
+          if (!currentVariant) return state;
+          const updatedVariant: ProductVariant = {
+            ...currentVariant,
+            id: currentVariant.id,
+            type: currentVariant.type,
+            options: (currentVariant.options ?? []).filter((option) => option.id !== optionID),
           };
 
           const updatedVariants = [...state.productVariants];
@@ -96,21 +101,27 @@ export const useProductVariantStore = create()(
       addPricesVariantOption: (
         productVariantID: string,
         optionID: string,
-        price: { id: string; namePcs: string; quantity: string; price: string }
+        price: { id: string; namePcs: string; quantity: string; price: number | string }
       ) =>
         set((state) => {
+          const normalizedPrice: PricesVariantOption = {
+            ...price,
+            price: typeof price.price === 'string' ? parseFloat(price.price) : price.price,
+            quantity:
+              typeof price.quantity === 'string' ? parseFloat(price.quantity) : price.quantity,
+          };
           return {
             productVariants: state.productVariants.map((variant) => {
               if (variant.id !== productVariantID) return variant;
 
               return {
                 ...variant,
-                options: variant.options.map((option) => {
+                options: (variant.options ?? []).map((option) => {
                   if (option.id !== optionID) return option;
 
                   return {
                     ...option,
-                    prices: [...(option.prices || []), price],
+                    prices: [...(option.prices || []), normalizedPrice],
                   };
                 }),
               };
@@ -126,7 +137,20 @@ export const useProductVariantStore = create()(
       updateFormattedData: (id: string, data: Partial<FormattedData>) => {
         return set((state) => ({
           formattedData: state.formattedData.map((item) =>
-            item.id === id ? { ...data, id: item.id } : item
+            item.id === id
+              ? {
+                  ...item,
+                  ...data,
+                  id: item.id,
+                  name: data.name ?? item.name,
+                  thumbnail: data.thumbnail ?? item.thumbnail,
+                  barcode: data.barcode ?? item.barcode,
+                  sku: data.sku ?? item.sku,
+                  minStock: data.minStock ?? item.minStock,
+                  prices: data.prices ?? item.prices,
+                  typeprice: data.typeprice ?? item.typeprice,
+                }
+              : item
           ),
         }));
       },
@@ -198,6 +222,16 @@ export const useProductVariantStore = create()(
       clearFormattedData: () =>
         set(() => ({
           formattedData: [],
+        })),
+
+      setFinalData: (data: FormattedDatas) =>
+        set(() => ({
+          finalData: data,
+        })),
+
+      clearFinalData: () =>
+        set(() => ({
+          finalData: [],
         })),
     }),
     {

@@ -1,0 +1,75 @@
+# SelectPaginationSearch Component
+
+`SelectPaginationSearch` is a React component for searching and selecting paginated data using [react-select-async-paginate](https://github.com/vtaits/react-select-async-paginate).
+
+## Props
+
+| Name          | Type                                         | Description                        |
+|---------------|----------------------------------------------|------------------------------------|
+| `loadOptions` | `LoadOptions<OptionType, never, Additional>` | Async function to fetch data       |
+| `placeholder` | `string`                                     | Customizable input placeholder     |
+
+### `OptionType`
+
+```ts
+type OptionType = {
+  id: string | number;
+  name: string;
+};
+```
+
+### `Additional`
+
+```ts
+type Additional = { page: number };
+```
+
+## Usage Example
+
+```tsx
+import SelectPaginationSearch from "@/components/select-pagination-search/select-pagination-search";
+import { LoadOptions } from "react-select-async-paginate";
+
+const loadOptions: LoadOptions<OptionType, never, Additional> = async (
+  inputValue,
+  loadedOptions,
+  additional
+) => {
+  // Example fetch
+  const response = await fetch(`/api/products?search=${inputValue}&page=${additional.page}`);
+  const data = await response.json();
+  return {
+    options: data.items,
+    hasMore: data.hasMore,
+    additional: { page: additional.page + 1 },
+  };
+};
+
+<SelectPaginationSearch
+  loadOptions={loadOptions}
+  placeholder="Search for a product..."
+/>
+```
+
+## Features
+
+- Supports search and paginated data
+- Customizable placeholder
+- Strict TypeScript, no use of `any` or `unknown`
+
+## AsyncPaginate Props
+
+- `value`: Selected value
+- `loadOptions`: Async function to fetch options
+- `onChange`: Value change handler
+- `getOptionValue`: Function to get option value
+- `getOptionLabel`: Function to get option label
+- `additional`: Extra data for pagination (e.g., page)
+- `isSearchable`: Enables search input
+- `placeholder`: Input placeholder text
+- `debounceTimeout`: Debounce time for search
+
+---
+
+**Note:**  
+Make sure your API endpoint supports pagination and search according to your

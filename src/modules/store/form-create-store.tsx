@@ -1,33 +1,30 @@
 'use client';
 
-import Dropdown from '@/components/dropdown/dropdown';
-import type { OptionType } from '@/components/dropdown/dropdown';
+import FormFieldError from '@/components/form-field-error/form-field-error';
 import CustomInput from '@/components/input/custom-input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select/select';
 import { Skeleton } from '@/components/skeleton/skeleton';
-import React from 'react';
+import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
+import CustomLocationInput from '@/modules/store/components/prepend-click-location';
+import { FormStoreProps, StoreFormData } from '@/modules/store/types/form-create-store.types';
+import { ChevronDown } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import React, { useState, useEffect, useRef } from 'react';
 
-type FormStoreProps = {
-  loadingDataStore?: boolean;
-  optionsTypeStore: OptionType[];
-  optionsCatStore: OptionType[];
-  // Optional props untuk handling form state jika diperlukan
-  onFormChange?: (formData: {
-    namaToko?: string;
-    noWhatsapp?: string;
-    tipeToko?: OptionType | null;
-    lokasi?: string;
-    jenisToko?: OptionType | null;
-    alamat?: string;
-  }) => void;
-  initialValues?: {
-    namaToko?: string;
-    noWhatsapp?: string;
-    tipeToko?: OptionType | null;
-    lokasi?: string;
-    jenisToko?: OptionType | null;
-    alamat?: string;
-  };
-};
+const MapDialog = dynamic(() => import('./components/map-dialog'), {
+  ssr: false,
+});
+
+const DEFAULT_LAT = -6.2; // Jakarta
+const DEFAULT_LNG = 106.816666;
 
 const FormStore: React.FC<FormStoreProps> = ({
   optionsTypeStore,
@@ -36,105 +33,270 @@ const FormStore: React.FC<FormStoreProps> = ({
   initialValues,
   loadingDataStore = false,
 }) => {
+  // State untuk form
+  const [name, setName] = useState(initialValues?.name ?? '');
+  const [address, setAddress] = useState(initialValues?.address ?? '');
+  const [phone, setPhone] = useState(initialValues?.phone ?? '');
+  const [type, setType] = useState(initialValues?.type ?? '');
+  const [category, setCategory] = useState(initialValues?.category ?? '');
+  const [lat, setLat] = useState(typeof initialValues?.lat === 'number' ? initialValues.lat : null);
+  const [long, setLong] = useState(
+    typeof initialValues?.long === 'number' ? initialValues.long : null
+  );
+  const [location, setLocation] = useState(
+    typeof initialValues?.lat === 'number' &&
+      typeof initialValues?.long === 'number' &&
+      initialValues.lat !== 0 &&
+      initialValues.long !== 0
+      ? `${initialValues.lat}, ${initialValues.long}`
+      : ''
+  );
+  const [openMapDialog, setOpenMapDialog] = useState(false);
+  const [_isClient, setIsClient] = useState(false);
+
+  // Error handling
+  const { ref: nameRef, error: nameError, handleChange: onNameChange } = useRegisterField('name');
+  const {
+    ref: phoneRef,
+    error: phoneError,
+    handleChange: onPhoneChange,
+  } = useRegisterField('phone');
+  const { error: typeError, handleChange: onTypeChange } = useRegisterField('type', true, {
+    getValue: () => type,
+  });
+  const { error: categoryError, handleChange: onCategoryChange } = useRegisterField(
+    'category',
+    true,
+    { getValue: () => category }
+  );
+
+  const isFirstSync = useRef(true);
+  useEffect(() => {
+    if (isFirstSync.current && initialValues) {
+      setName(initialValues.name ?? '');
+      setAddress(initialValues.address ?? '');
+      setPhone(initialValues.phone ?? '');
+      setType(initialValues.type ?? '');
+      setCategory(initialValues.category ?? '');
+      setLat(typeof initialValues.lat === 'number' ? initialValues.lat : DEFAULT_LAT);
+      setLong(typeof initialValues.long === 'number' ? initialValues.long : DEFAULT_LNG);
+      setLocation(
+        typeof initialValues.lat === 'number' &&
+          typeof initialValues.long === 'number' &&
+          initialValues.lat !== 0 &&
+          initialValues.long !== 0
+          ? `${initialValues.lat}, ${initialValues.long}`
+          : ''
+      );
+      isFirstSync.current = false;
+    }
+  }, [initialValues]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Trigger perubahan ke parent
+  const triggerFormChange = (changed: Partial<StoreFormData>) => {
+    onFormChange?.({
+      name: changed.name ?? name,
+      address: changed.address ?? address,
+      phone: changed.phone ?? phone,
+      type: changed.type ?? type,
+      category: changed.category ?? category,
+      lat: 'lat' in changed && typeof changed.lat === 'number' ? changed.lat : lat ?? DEFAULT_LAT,
+      long:
+        'long' in changed && typeof changed.long === 'number' ? changed.long : long ?? DEFAULT_LNG,
+      // location: 'location' in changed ? changed.location : location, // Removed because not in StoreFormData
+    });
+  };
   return (
     <>
       {loadingDataStore ? (
         <div className="space-y-2">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-12 w-full rounded-md" />
         </div>
       ) : (
-        <div className="flex flex-col">
-          <div className="flex flex-row gap-2 p-[10px]">
-            <CustomInput
-              required
-              label="Nama Toko"
-              placeholder="cth: Toko Cahaya Sejati"
-              value={initialValues?.namaToko || ''}
-              onChange={(e) => {
-                onFormChange?.({
-                  ...initialValues,
-                  namaToko: e.target.value,
-                });
-              }}
-              isWidthFull
-              classDiv="w-1/2"
-            />
-            <CustomInput
-              required
-              label="No. Whatsapp"
-              placeholder="cth: 0811223344556"
-              value={initialValues?.noWhatsapp || ''}
-              onChange={(e) => {
-                onFormChange?.({
-                  ...initialValues,
-                  noWhatsapp: e.target.value,
-                });
-              }}
-              isWidthFull
-              classDiv="w-1/2"
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-row gap-4 items-start">
+            <div className="w-1/2">
+              <CustomInput
+                required
+                label="Nama Toko"
+                placeholder="cth: Toko Cahaya Sejati"
+                ref={nameRef}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  onNameChange();
+                  triggerFormChange({ name: e.target.value });
+                }}
+                isWidthFull
+                className={`h-9 border ${nameError ? '!border-[#F08181]' : 'border-[#C2C7D0]'}`}
+              />
+              <FormFieldError message={nameError} />
+            </div>
+            <div className="w-1/2">
+              <CustomInput
+                required
+                label="No. Whatsapp"
+                placeholder="cth: 0811223344556"
+                ref={phoneRef}
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  onPhoneChange();
+                  triggerFormChange({ phone: e.target.value });
+                }}
+                isWidthFull
+                className={`h-9 border ${phoneError ? '!border-[#F08181]' : 'border-[#C2C7D0]'}`}
+                inputNumber
+              />
+              <FormFieldError message={phoneError} />
+            </div>
           </div>
-          <div className="flex flex-row gap-2 p-[10px]">
-            <Dropdown
-              label="Tipe Toko"
-              options={optionsTypeStore}
-              value={initialValues?.tipeToko || null}
-              onChange={(value) => {
-                onFormChange?.({
-                  ...initialValues,
-                  tipeToko: value,
-                });
-              }}
-              placeholder="Pilih Tipe"
-              required
-              classDiv="w-1/2"
-            />
-            <CustomInput
-              label="Lokasi"
-              placeholder="Pilih Lokasi"
-              appendIcon="LocalTwo"
-              value={initialValues?.lokasi || ''}
-              onChange={(e) => {
-                onFormChange?.({
-                  ...initialValues,
-                  lokasi: e.target.value,
-                });
-              }}
-              isWidthFull
-              classDiv="w-1/2"
-            />
+          <div className="flex flex-row gap-4 items-start">
+            <div className="w-1/2">
+              <label className="block mb-2 font-medium text-sm">
+                Tipe Toko<span className="text-[#F08181]">*</span>
+              </label>
+              <Select
+                value={type}
+                onValueChange={(val) => {
+                  setType(val);
+                  onTypeChange();
+                  triggerFormChange({ type: val });
+                }}
+              >
+                <SelectTrigger
+                  icon={<ChevronDown size={18} />}
+                  className="w-full h-10 border pb-1 mt-1"
+                >
+                  <SelectValue placeholder="Pilih Tipe Toko" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Tipe Toko</SelectLabel>
+                    {optionsTypeStore.map((opt) => (
+                      <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FormFieldError message={typeError} />
+            </div>
+            <div className="w-1/2">
+              <CustomLocationInput
+                label="Lokasi"
+                value={location || ''}
+                placeholder="Pilih Lokasi"
+                readOnly={false}
+                onAppendClick={() => setOpenMapDialog(true)}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  if (!e.target.value) {
+                    setLat(null);
+                    setLong(null);
+                    triggerFormChange({ lat: undefined, long: undefined });
+                  } else {
+                    // location is not a property of StoreFormData, so we only update the local state
+                  }
+                }}
+                className="w-full h-9"
+              />
+            </div>
           </div>
-          <div className="flex flex-row gap-2 p-[10px]">
-            <Dropdown
-              label="Jenis Toko"
-              options={optionsCatStore}
-              value={initialValues?.jenisToko || null}
-              onChange={(value) => {
-                onFormChange?.({
-                  ...initialValues,
-                  jenisToko: value,
-                });
-              }}
-              placeholder="Pilih Jenis"
-              required
-              classDiv="w-1/2"
-            />
-            <CustomInput
-              label="Alamat"
-              placeholder="cth: Jl. Raya | No. 2"
-              className="h-[95px]"
-              value={initialValues?.alamat || ''}
-              onChange={(e) => {
-                onFormChange?.({
-                  ...initialValues,
-                  alamat: e.target.value,
-                });
-              }}
-              isWidthFull
-              classDiv="w-1/2"
-            />
+          <div className="flex flex-row gap-4 items-start">
+            <div className="w-1/2">
+              <label className="block mb-2 font-medium text-sm">
+                Jenis Toko<span className="text-[#F08181]">*</span>
+              </label>
+              <Select
+                value={category}
+                onValueChange={(val) => {
+                  setCategory(val);
+                  onCategoryChange();
+                  triggerFormChange({ category: val });
+                }}
+              >
+                <SelectTrigger
+                  icon={<ChevronDown size={18} />}
+                  className="w-full h-9 border pb-1 mt-1"
+                >
+                  <SelectValue placeholder="Pilih Jenis Toko" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Jenis Toko</SelectLabel>
+                    {optionsCatStore.map((opt) => (
+                      <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <FormFieldError message={categoryError} />
+            </div>
+            <div className="w-1/2">
+              <CustomInput
+                label="Alamat"
+                placeholder="cth: Jl. Raya | No. 2"
+                value={address}
+                asTextarea={true}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  triggerFormChange({ address: e.target.value });
+                }}
+                isWidthFull
+                className="min-h-[48px] h-9"
+              />
+            </div>
           </div>
+          {/* Map Dialog */}
+          {openMapDialog && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
+              onClick={() => setOpenMapDialog(false)}
+            >
+              <div
+                className="bg-white rounded-lg shadow-lg w-full max-w-[90vw] h-full flex flex-col relative"
+                style={{ minWidth: 900, maxWidth: '90vw', height: '90vh' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex-1 flex flex-col">
+                  <MapDialog
+                    lat={lat ?? DEFAULT_LAT}
+                    lng={long ?? DEFAULT_LNG}
+                    setLatLng={(newLat: number, newLong: number) => {
+                      setLat(newLat);
+                      setLong(newLong);
+                      setLocation(`${newLat}, ${newLong}`);
+                      triggerFormChange({ lat: newLat, long: newLong });
+                    }}
+                    name={name}
+                    address={address}
+                    triggerFormChange={(changed: {
+                      lat?: number;
+                      lng?: number;
+                      location?: string;
+                      address?: string;
+                      closeDialog?: boolean;
+                    }) => {
+                      if (changed.address) setAddress(changed.address);
+                      triggerFormChange({
+                        ...changed,
+                      });
+                      if (changed.closeDialog) setOpenMapDialog(false);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

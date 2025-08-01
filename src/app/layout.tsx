@@ -1,5 +1,9 @@
 export const dynamic = 'force-dynamic';
 
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_MOCKING === 'enabled') {
+  import('@/mocks/startMock');
+}
+
 import ClientAppShell from '@/components/layouts/ClientAppShell';
 import Providers from '@/components/layouts/providers';
 import { fontVariables } from '@/libs/font';
@@ -11,7 +15,9 @@ import { cookies } from 'next/headers';
 import '@/styles/global.css';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
+import MockProvider from '@/app/MockProvider';
 import NextAuthProvider from '@/components/auth/NextAuthProvider';
+import SetAxiosToken from '@/components/auth/SetAxiosToken';
 
 const META_THEME_COLORS = {
   light: '#ffffff',
@@ -51,13 +57,18 @@ export default async function RootLayout({
           isScaled ? 'theme-scaled' : '',
           fontVariables
         )}
+        cz-shortcut-listen="true"
+        suppressHydrationWarning
       >
         <NuqsAdapter>
-          <NextAuthProvider>
-            <ClientAppShell>
-              <Providers activeThemeValue={activeThemeValue as string}>{children}</Providers>
-            </ClientAppShell>
-          </NextAuthProvider>
+          <MockProvider>
+            <NextAuthProvider>
+              <SetAxiosToken />
+              <ClientAppShell>
+                <Providers activeThemeValue={activeThemeValue as string}>{children}</Providers>
+              </ClientAppShell>
+            </NextAuthProvider>
+          </MockProvider>
         </NuqsAdapter>
       </body>
     </html>

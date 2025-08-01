@@ -92,6 +92,9 @@
     /* skeleton */
     --bg-skeleton-dark:#D8D8D8;
 
+    /* ZYCAS specific colors */
+    --btn-succes: #75BF85;
+
 }
 
 .dark {
@@ -456,3 +459,13 @@
 .bg-skeleton-dark {
     background-color: var(--bg-skeleton-dark);
 }
+
+.font-medium {
+    font-weight: 500;
+}
+
+.btn-succes {
+    background-color: var(--btn-succes);
+    color: var(--toast-success-fg);
+}
+

@@ -2,6 +2,7 @@
 import {
   AdProduct,
   BuildingOne,
+  Coupon,
   DashboardOne,
   DataFile,
   Delete,
@@ -11,6 +12,7 @@ import {
   ShoppingBagOne,
   ShoppingCart,
   System,
+  TagOne,
   User,
   ViewGridDetail,
   WinkingFaceWithOpenEyes,
@@ -32,5 +34,7 @@ export const IconsPark = {
   winkingfacewithopeneyes: WinkingFaceWithOpenEyes,
   datafile: DataFile,
   adproduct: AdProduct,
+  tagone: TagOne,
+  voucher: Coupon,
   // Add other icon mappings here
 };

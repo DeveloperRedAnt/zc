@@ -3,6 +3,7 @@ import { IconsPark } from '@/components/icons/icons-park';
 
 export interface NavItem {
   groupTitle: string;
+  id: string;
   title: string;
   url: string;
   urlActive?: string;

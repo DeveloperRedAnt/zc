@@ -22,7 +22,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<ToastWithId[]>([]);
 
   const showToast = useCallback((toast: Omit<ToastProps, 'onClose'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    // Generate id only on the client to avoid SSR mismatch
+    const id =
+      typeof window !== 'undefined' ? Math.random().toString(36).substring(2, 9) : 'ssr-toast-id';
     setToasts((prev) => [...prev, { ...toast, id, onClose: () => hideToast(id) }]);
     setTimeout(() => hideToast(id), 5000);
   }, []);

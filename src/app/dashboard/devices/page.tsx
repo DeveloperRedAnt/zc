@@ -1,90 +1,57 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/card/card';
-import { ServerTranslatedText } from '@/components/i18n';
-import { getServerT } from '@/libs/server-i18n';
+import { Card, CardContent, CardDescription } from '@/components/card/card';
+import { Heading } from '@/components/heading/heading';
+import { Text } from '@/components/text/text';
+import DialogRevokeDevice from '@/modules/devices/components/dialog-revoke-device';
 
-export async function generateMetadata() {
-  const t = await getServerT();
+export function generateMetadata() {
   return {
-    title: t('devices.page.title'),
-    description: t('devices.page.description'),
+    title: 'Zycash Dashboard',
+    description: 'Welcome to Zycash Dashboard.',
   };
 }
 
-export default async function DevicesPage() {
+const devices = [
+  {
+    device_id: '01',
+    name: 'Advan C27',
+    date: '08 Desember 2024',
+  },
+  {
+    device_id: 'A2',
+    name: 'Samsung S7 Tab',
+    date: '15 Desember 2024',
+  },
+  {
+    device_id: 'G5',
+    name: 'Galaxy S20',
+    date: '28 Desember 2024',
+  },
+];
+
+export default function Index() {
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">
-          <ServerTranslatedText id="devices.heading">Devices</ServerTranslatedText>
-        </h1>
-        <p className="text-muted-foreground">
-          <ServerTranslatedText id="devices.subheading">
-            Manage your connected devices and view their status
-          </ServerTranslatedText>
-        </p>
+    <>
+      <div className="p-4">
+        <Heading level="h4" weight="semibold" className="text-base">
+          List Device Tertaut
+        </Heading>
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <ServerTranslatedText id="devices.overview.title">Overview</ServerTranslatedText>
-            </CardTitle>
-            <CardDescription>
-              <ServerTranslatedText id="devices.overview.description">
-                Summary of all connected devices
-              </ServerTranslatedText>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>
-              <ServerTranslatedText id="devices.overview.content">
-                This section will display statistics and overview information about your devices.
-              </ServerTranslatedText>
-            </p>
+      {devices.map((item) => (
+        <Card className="m-4" key={item.device_id}>
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <Text weight="bold" className="text-[#0FA6C1]">
+                {item.device_id}
+              </Text>
+              <Text>{item.name}</Text>
+              <CardDescription className="mt-3">Tanggal ditautkan: {item.date}</CardDescription>
+            </div>
+            <div>
+              <DialogRevokeDevice />
+            </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <ServerTranslatedText id="devices.status.title">Status</ServerTranslatedText>
-            </CardTitle>
-            <CardDescription>
-              <ServerTranslatedText id="devices.status.description">
-                Current status of your devices
-              </ServerTranslatedText>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>
-              <ServerTranslatedText id="devices.status.content">
-                This section will display the current status and health of your connected devices.
-              </ServerTranslatedText>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <ServerTranslatedText id="devices.management.title">Management</ServerTranslatedText>
-            </CardTitle>
-            <CardDescription>
-              <ServerTranslatedText id="devices.management.description">
-                Manage and configure your devices
-              </ServerTranslatedText>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>
-              <ServerTranslatedText id="devices.management.content">
-                This section will provide tools to manage and configure your connected devices.
-              </ServerTranslatedText>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      ))}
+    </>
   );
 }

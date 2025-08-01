@@ -129,11 +129,11 @@ if (response.error_code === null) {
 
 | Error Code Range | Slug | Description |
 |------------------|------|-------------|
-| 1001 - 1050 | `/login` | Authentication related errors |
-| 1051 - 1100 | `/dashboard` | Dashboard access errors |
-| 1101 - 1150 | `/profile` | Profile management errors |
-| 1151 - 1200 | `/product` | Product related errors |
-| 1201 - 1250 | `/user` | User management errors |
+| 1001 - 1200 | `/login` | Authentication related errors |
+| 1201 - 1400 | `/dashboard` | Dashboard access errors |
+| 1401 - 1600 | `/profile` | Profile management errors |
+| 1601 - 1800 | `/product` | Product related errors |
+| 1801 - 2000 | `/user` | User management errors |
 
 ### HTTP Status Codes
 
@@ -234,8 +234,8 @@ While POST is the primary method for authentication, the API also supports:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0 | 2025-01-01 | Initial API v2 release |
-| 2.1 | 2025-01-15 | Added batch processing support |
+| 2.0 | 2025-07-01 | Initial API v2 release |
+| 2.1 | 2025-07-15 | Added batch processing support |
 
 ---
 

@@ -41,5 +41,5 @@ export const Default: Story = {
 };
 
 export const ProfileUpload: Story = {
-  render: () => <CropperImage variant='profile-upload' />
+  render: () => <CropperImage variant="profile-upload" />,
 };

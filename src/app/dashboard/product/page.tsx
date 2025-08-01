@@ -1,4 +1,6 @@
 'use client';
+import { ProductSchema } from '@/__generated__/api/dto';
+import { useListProducts } from '@/__generated__/api/hooks';
 import { Button } from '@/components/button/button';
 import SkeletonButton from '@/components/button/skeleton-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
@@ -12,37 +14,60 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function Index() {
-  const [loadingDataProduct, setLoadingDataProduct] = useState(true);
   const router = useRouter();
+  const [filters, setFilters] = useState<ProductSchema>({
+    page: 1,
+    per_page: 10,
+    search: '',
+    sort_by: 'name',
+    sort_direction: 'asc',
+    status: undefined,
+  });
 
   const { isLoading, setLoading } = usePageLoading({
     autoStart: false,
     initialDelay: 0,
   });
 
+  // API call untuk mendapatkan data products
+  const {
+    data: productsResponse,
+    isLoading: isLoadingProducts,
+    error: productsError,
+  } = useListProducts({
+    'x-device-id': '1',
+    'x-store-id': '1',
+    'x-organization-id': '1',
+    body: filters,
+  });
+
   useEffect(() => {
     setLoading(true);
-    new Promise<void>((resolve) => {
-      setTimeout(() => {
-        setLoading(false);
-        resolve();
-      }, 2000);
-    }).then(() => {
-      setTimeout(() => {
-        setLoadingDataProduct(false);
-      }, 2000);
-    });
+    setTimeout(() => {
+      setLoading(false);
+    }, 2000);
   }, [setLoading]);
+
+  // Handle filter changes - Fixed function name
+  const handleFilterChange = (newFilters: Partial<ProductSchema>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
+
+  // Handle error
+  if (productsError) {
+    console.error('Error fetching products:', productsError);
+  }
 
   return (
     <>
-      <Card className="my-[1rem] font-normal">
-        <CardHeader className="border-b flex-row flex justify-between items-center">
-          {isLoading ? (
-            <SkeletonPreset w="w-32" h="h-6" className="rounded-sm ml-2.5" />
-          ) : (
-            <CardTitle className="text-[1rem]"> List Produk </CardTitle>
-          )}
+      <Card>
+        <CardHeader className="flex flex-row justify-between">
+          {isLoading ? <SkeletonPreset /> : <CardTitle>List Produk</CardTitle>}
           <div className="flex items-center gap-3">
             {isLoading ? (
               <>
@@ -57,8 +82,8 @@ export default function Index() {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="text-[#555555] flex items-center"
+                  variant="info"
+                  className="flex items-center"
                   onClick={() => router.push('/dashboard/product/add')}
                 >
                   <Plus />
@@ -68,13 +93,23 @@ export default function Index() {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-4">
+        <CardContent>
           {isLoading ? (
-            <SkeletonCardContent className="w-full" />
+            <SkeletonCardContent />
           ) : (
             <>
-              <FilterProductList loadingDataProduct={loadingDataProduct} />
-              <TableProductList isLoading={loadingDataProduct} />
+              <FilterProductList
+                onFilterChange={handleFilterChange}
+                currentFilters={filters}
+                loadingDataProduct={isLoadingProducts}
+              />
+              <TableProductList
+                data={productsResponse?.data || []}
+                isLoading={isLoadingProducts}
+                meta={productsResponse?.meta}
+                onPageChange={handlePageChange}
+                currentPage={filters.page || 1}
+              />
             </>
           )}
         </CardContent>

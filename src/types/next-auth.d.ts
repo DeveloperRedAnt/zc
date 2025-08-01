@@ -1,16 +1,23 @@
+import type { Organizations } from '@/__generated__/api/dto/auth.dto';
 import type { DefaultSession, DefaultUser } from 'next-auth';
 
 declare module 'next-auth' {
-  type Session = {
+  interface Session extends DefaultSession {
     user: {
       id: string;
       role: string;
+      name?: string;
+      email?: string;
+      image?: string;
+      organizations?: Organizations; // <-- pindahkan ke dalam user
     } & DefaultSession['user'];
-  };
+    token?: string;
+  }
 
-  type User = {
+  interface User extends DefaultUser {
     role: string;
-  } & DefaultUser;
+    organizations?: Organizations; // <-- tambahkan di User juga
+  }
 }
 
 declare module 'next-auth/jwt' {
@@ -18,5 +25,7 @@ declare module 'next-auth/jwt' {
     id: string;
     role?: string;
     name?: string;
+    token?: string;
+    organizations?: Organizations;
   }
 }

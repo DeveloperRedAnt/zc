@@ -1,0 +1,270 @@
+'use client';
+import {
+  useCreateOrganization,
+  useGetOrganizationsOfUser,
+  useUpdateOrganization,
+} from '@/__generated__/api/hooks';
+import { Button } from '@/components/button/button';
+import SkeletonButton from '@/components/button/skeleton-button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
+import SkeletonCardContent from '@/components/card/skeleton-card-content';
+import SkeletonPreset from '@/components/skeleton/skeleton-preset';
+import { toast } from '@/components/toast/toast';
+import FilterOrganizationList from '@/modules/organization/components/filter-organization-list';
+import OrganizationConfirmDialog from '@/modules/organization/components/organization-confirm-dialog';
+import {
+  type OrganizationFormData,
+  OrganizationFormDialog,
+} from '@/modules/organization/components/organization-form-dialog';
+import TableOrganizationList from '@/modules/organization/components/table-organization-list';
+import { Plus } from '@icon-park/react';
+import { useMemo, useState } from 'react';
+type Organization = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  nib: string;
+  npwp: string;
+};
+
+export default function ListOrganizationPage() {
+  const [dialogOrganizationOpen, setDialogOrganizationOpen] = useState(false);
+  const [dialogOrganizationConfirm, setDialogOrganizationConfirm] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [formData, setFormData] = useState<OrganizationFormData>({
+    name: '',
+    phone: '',
+    email: '',
+    nib: '',
+    npwp: '',
+  });
+  const { mutate: mutationForCreateOrganization, isPending: isPendingCreateOrganization } = useCreateOrganization();
+  const { mutate: mutationForUpdateOrganization, isPending: isPendingUpdateOrganization } = useUpdateOrganization();
+
+  const onSubmitCreateOrganization = () => {
+    mutationForCreateOrganization(
+      {
+        'x-device-id': '1',
+        body: {
+          name: formData.name,
+          phone: Number(formData.phone),
+          email: formData.email,
+          npwp: formData.npwp,
+          nib: formData.nib,
+        },
+      },
+      {
+        onSuccess: () => {
+          onSuccessOperation(isEditMode);
+        },
+        onError: (error: Error) => {
+          onErrorOperation(isEditMode, error.message);
+        },
+      }
+    );
+  };
+
+  const onSubmitUpdateOrganization = () => {
+    mutationForUpdateOrganization(
+      {
+        id: selectedOrganization?.id || '',
+        body: {
+          name: formData.name,
+          phone: Number(formData.phone),
+          email: formData.email,
+          npwp: formData.npwp,
+          nib: formData.nib,
+        },
+      },
+      {
+        onSuccess: () => {
+          onSuccessOperation(isEditMode);
+        },
+        onError: (error: Error) => {
+          onErrorOperation(isEditMode, error.message);
+        },
+      }
+    );
+  };
+
+  const onSuccessOperation = (isEditMode: boolean) => {
+    toast.success(isEditMode ? 'Terupdate!' : 'Tersimpan!', {
+      description: isEditMode
+        ? 'Organisasi Anda telah berhasil diupdate'
+        : 'Organisasi Anda telah berhasil tersimpan',
+      className: 'bg-[#75BF85]',
+    });
+    setDialogOrganizationConfirm(false);
+    setIsEditMode(false);
+    setSelectedOrganization(null);
+  };
+
+  const onErrorOperation = (isEditMode: boolean, message: string) => {
+    toast.error(isEditMode ? 'Gagal diupdate!' : 'Gagal tersimpan!', {
+      description: message,
+      className: 'bg-[#75BF85]',
+    });
+    setDialogOrganizationConfirm(false);
+    setIsEditMode(false);
+    setSelectedOrganization(null);
+  };
+
+  // Form state for inputs
+ 
+
+  const { data = [], isLoading } = useGetOrganizationsOfUser({
+    'user-id': '1',
+    'x-device-id': '1',
+  });
+
+  const handleAddOrganization = () => {
+    setIsEditMode(false);
+    setSelectedOrganization(null);
+    setFormData({
+      name: '',
+      phone: '',
+      email: '',
+      nib: '',
+      npwp: '',
+    });
+    setDialogOrganizationOpen(true);
+  };
+
+  const handleEditOrganization = (organization: Organization) => {
+    setIsEditMode(true);
+    setSelectedOrganization(organization);
+    setFormData({
+      name: organization.name,
+      phone: organization.phone,
+      email: organization.email,
+      nib: organization.nib,
+      npwp: organization.npwp,
+    });
+    setDialogOrganizationOpen(true);
+  };
+
+  const handleResetForm = () => {
+    if (selectedOrganization) {
+      setFormData({
+        name: selectedOrganization.name,
+        phone: selectedOrganization.phone,
+        email: selectedOrganization.email,
+        nib: selectedOrganization.nib,
+        npwp: selectedOrganization.npwp,
+      });
+    } else {
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        nib: '',
+        npwp: '',
+      });
+    }
+  };
+
+  const handleInputChange = (field: keyof OrganizationFormData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const organizations = useMemo(() => {
+    if (!data) return [];
+
+    return data as Organization[];
+  }, [data]);
+
+  const [limit, setLimit] = useState<number>(10);
+  const allowedPageSizes = [10, 25, 50, 100];
+  const queryLimit = Number(limit);
+  const validatedLimit = allowedPageSizes.includes(queryLimit) ? queryLimit : 10;
+
+  const [showErrors, setShowErrors] = useState(false);
+  // const validation = FormShecmaOrganizationValidation.safeParse(formData);
+  // const isValid = validation.success;
+  // const errors = validation.success ? {} : validation.error.flatten().fieldErrors;
+
+  const handleSubmit = () => {
+    setShowErrors(true);
+    // if (isValid) {
+    //   setDialogOrganizationConfirm(true);
+    //   setDialogOrganizationOpen(false);
+    // }
+  };
+
+  return (
+    <>
+      <Card className="my-[1rem] font-normal">
+        <CardHeader className="border-b flex-row flex justify-between items-center">
+          {isLoading ? (
+            <SkeletonPreset w="w-32" h="h-6" className="rounded-sm ml-2.5" />
+          ) : (
+            <CardTitle className="text-[1rem]"> List Organisasi </CardTitle>
+          )}
+          <div className="flex items-center gap-3">
+            {isLoading ? (
+              <SkeletonButton className="w-[110px]" />
+            ) : (
+              <Button
+                variant="success"
+                className="flex gap-1"
+                size="sm"
+                onClick={handleAddOrganization}
+              >
+                <Plus /> Tambah Organisasi
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          {isLoading ? (
+            <SkeletonCardContent className="w-full" />
+          ) : (
+            <>
+              <FilterOrganizationList loadingDataOrganization={false} />
+              <TableOrganizationList
+                isLoading={false}
+                onEditOrganization={handleEditOrganization}
+                organizations={organizations}
+                defaultPageSize={validatedLimit}
+                setLimit={setLimit}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Form Dialog Component */}
+
+      <OrganizationFormDialog
+        open={dialogOrganizationOpen}
+        isEditMode={isEditMode}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onReset={handleResetForm}
+        onSubmit={handleSubmit}
+        errors={showErrors ? errors : {}}
+        isValid={isValid}
+      />
+
+      {/* Confirmation Dialog Component */}
+      <OrganizationConfirmDialog
+        isOpen={dialogOrganizationConfirm}
+        onOpenChange={setDialogOrganizationConfirm}
+        isEditMode={isEditMode}
+        isLoading={isPendingCreateOrganization || isPendingUpdateOrganization}
+        onCancel={() => {
+          setDialogOrganizationConfirm(false);
+          setDialogOrganizationOpen(true);
+        }}
+        onConfirm={() => {
+          isEditMode ? onSubmitUpdateOrganization() : onSubmitCreateOrganization();
+        }}
+      />
+    </>
+  );
+}

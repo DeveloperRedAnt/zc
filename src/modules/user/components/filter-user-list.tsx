@@ -3,19 +3,39 @@
 import Dropdown from '@/components/dropdown/dropdown';
 import type { OptionType } from '@/components/dropdown/dropdown';
 import CustomInput from '@/components/input/custom-input';
-import React, { useState } from 'react';
+import { type StatusFilter } from '@/modules/user/store';
+import React, { useEffect, useState } from 'react';
 
 const optionsStatus: OptionType[] = [
-  { label: 'Semua status user', value: 1 },
-  { label: 'Aktif', value: 2 },
-  { label: 'Dicabut', value: 3 },
+  { label: 'Semua status user', value: 'all' },
+  { label: 'Aktif', value: 'active' },
+  { label: 'Dicabut', value: 'inactive' },
 ];
 
-export default function Index() {
-  const [selectedStatus, setSelectedStatus] = useState<OptionType | null>({
-    label: 'Semua status user',
-    value: 1,
-  });
+export type FilterUserListProps = {
+  search: string;
+  setSearch: (search: string) => void;
+  status: string;
+  setStatus: (status: string) => void;
+};
+
+export default function Index({
+  search: searchParams,
+  setSearch,
+  status,
+  setStatus,
+}: FilterUserListProps) {
+  const [searchInput, setSearchInput] = useState(searchParams);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput || '');
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, setSearch]);
+
   return (
     <>
       <div>
@@ -24,8 +44,10 @@ export default function Index() {
             <Dropdown
               label="Filter Status"
               options={optionsStatus}
-              value={selectedStatus}
-              onChange={setSelectedStatus}
+              value={optionsStatus.find((o) => o.value === status) ?? null}
+              onChange={(option) => {
+                if (option?.value) setStatus(option.value as StatusFilter);
+              }}
               placeholder="Pilih Status"
               className="mt-2"
             />
@@ -36,6 +58,10 @@ export default function Index() {
               prependIcon="Search"
               placeholder="Cari..."
               className="h-10"
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
+              value={searchInput}
             />
           </div>
         </div>

@@ -1,0 +1,715 @@
+# Product Management API Documentation
+
+## Overview
+This API endpoint provides functionality to create, read, update, and delete products with comprehensive features including variants, composites, pricing options, stock tracking, and expiry management.
+
+## Endpoints
+
+### Create Product
+```
+POST /api/products
+```
+
+### Get Product List
+```
+GET /api/products
+```
+
+### Get Product Detail
+```
+GET /api/products/{id}
+```
+
+### Update Product
+```
+PUT /api/products/{id}
+```
+
+### Delete Product
+```
+DELETE /api/products/{id}
+```
+
+### Get Product Tags
+```
+GET /api/products/tags
+```
+
+### Bulk Stock Update
+```
+POST /api/products/bulk-stock
+```
+
+## Response Format
+
+### Success Response
+**Status Code:** `200 OK` | `201 Created`
+
+**Content-Type:** `application/json`
+
+### Response Schema
+
+#### ProductResponse
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | ProductData | Product information |
+| `error_code` | null | Error code (null on success) |
+
+#### ProductData
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the product |
+| `name` | string | Yes | Product name |
+| `thumbnail` | string | No | URL to product thumbnail image |
+| `is_active` | boolean | Yes | Product status in POS system |
+| `is_favorite` | boolean | Yes | Product favorite status |
+| `tags` | Array&lt;string&gt; | No | Product tags for categorization |
+| `combination_type` | string | Yes | Product type: "single" or "variant" |
+| `variants` | Array&lt;ProductVariant&gt; | No | Product variants (if combination_type is "variant") |
+| `composites` | Array&lt;ProductComposite&gt; | No | Product composites (if combination_type is "composite") |
+| `content` | string | No | Product description/content |
+| `unit` | string | Yes | Product unit (e.g., "Pcs", "Kg") |
+| `package` | string | No | Product packaging information |
+| `barcode` | string | Yes | Product barcode |
+| `sku` | string | Yes | Stock Keeping Unit identifier |
+| `pricing_type` | string | Yes | Pricing type: "single" or "bulk" |
+| `stock_tracking` | boolean | Yes | Stock tracking enabled status |
+| `current_stock` | integer | No | Current stock quantity |
+| `minimum_stock` | integer | Yes | Minimum stock threshold |
+| `expiry_tracking` | boolean | Yes | Expiry tracking enabled status |
+| `expiry_notification_days` | integer | No | Days before expiry notification |
+| `created_at` | string | Yes | Product creation timestamp |
+| `updated_at` | string | Yes | Product last update timestamp |
+
+#### ProductVariant
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the variant |
+| `name` | string | Yes | Price variant name |
+| `barcode` | string | Yes | Variant barcode |
+| `sku` | string | Yes | Variant SKU |
+| `min_stock` | number | Yes | Minimal stock for this variant |
+| `thumbnail` | file | No | Product thumbnail image (jpg, jpeg, png, max 2MB) |
+| `prices` | object | No | Variant price attributes (name, quantity, etc.) |
+
+#### PriceVariant
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the variant |
+| `name` | string | Yes | Price variant name |
+| `quantity` | integer | Yes | Quantity for this price variant |
+| `price` | number | Yes | Price for this variant |
+
+#### CreateProductRequest
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `thumbnail` | file | No | Product thumbnail image (jpg, jpeg, png, max 2MB) |
+| `name` | string | Yes | Product name |
+| `is_active` | boolean | No | Product active status (default: true) |
+| `is_favorite` | boolean | No | Product favorite status (default: false) |
+| `tags` | Array&lt;string&gt; | No | Product tags |
+| `combination_type` | string | Yes | Product type: "single" or "variant" |
+| `variants` | Array&lt;ProductVariant&gt; | No | Product variants |
+| `composites` | Array&lt;ProductComposite&gt; | No | Product composites |
+| `content` | string | No | Product description |
+| `unit` | string | Yes | Product unit |
+| `package` | string | No | Product packaging |
+| `barcode` | string | Yes | Product barcode |
+| `sku` | string | Yes | Product SKU |
+| `pricing_type` | string | Yes | Pricing type: "single" or "bulk" |
+| `stock_tracking` | boolean | No | Stock tracking enabled (default: true) |
+| `minimum_stock` | integer | No | Minimum stock (default: 0) |
+| `expiry_tracking` | boolean | No | Expiry tracking enabled (default: false) |
+| `expiry_notification_days` | integer | No | Expiry notification days (default: 7) |
+
+#### Composite
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the composite product |
+| `batch_production_quantity` | integer | Yes | Number of composite units produced in a single batch |
+| `products` | Array&lt;CompositeProduct&gt; | Yes | List of component products required for the composite |
+
+#### CompositeProduct
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the component product entry |
+| `product_id` | string | Yes | Identifier of the product used as a component |
+| `quantity` | integer | Yes | Number of units of this product required per batch |
+
+#### ProductListResponse
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | Array&lt;ProductData&gt; | List of products |
+| `pagination` | PaginationData | Pagination information |
+| `error_code` | null | Error code (null on success) |
+
+#### PaginationData
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `current_page` | integer | Yes | Current page number |
+| `total_pages` | integer | Yes | Total number of pages |
+| `total_items` | integer | Yes | Total number of items |
+| `items_per_page` | integer | Yes | Items per page |
+
+## Example Success Response
+
+### Create Product Response
+```json
+{
+  "data": {
+    "id": "prod_123456",
+    "name": "Laptop Gaming ASUS ROG",
+    "thumbnail": "https://cdn.example.com/images/prod_123456.jpg",
+    "is_active": true,
+    "is_favorite": false,
+    "tags": ["elektronik", "gaming"],
+    "combination_type": "single",
+    "variants": [
+        {
+        "id": "123",
+        "name": "Product A Variant 1",
+        "barcode": "8991234567890",
+        "sku": "SKU123",
+        "min_stock": 10,
+        "thumbnail": "https://example.com/image.jpg",
+        "prices": [
+          {
+            "id": "p1",
+            "name_price": "Paket 1",
+            "price": 10000,
+            "quantity": 1
+          }
+        ]
+      }
+    ],
+    "composites": [
+        {
+        "id": "456",
+        "batch_production_quantity": 10,
+        "products": [
+          {
+            "id": "p1",
+            "product_id": "Product 1",
+            "quantity": 20
+          },
+          {
+            "id": "p1",
+            "product_id": "Product 2",
+            "quantity": 10
+          }
+        ]
+      }
+    ],
+    "content": "Laptop gaming dengan spesifikasi tinggi",
+    "unit": "Pcs",
+    "package": "Box",
+    "barcode": "1234567890123",
+    "sku": "LAPTOP-001",
+    "pricing_type": "bulk",
+    "stock_tracking": true,
+    "current_stock": 50,
+    "minimum_stock": 10,
+    "expiry_tracking": false,
+    "expiry_notification_days": 7,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T15:45:00Z"
+  },
+  "error_code": null
+}
+```
+
+### Product List Response
+```json
+{
+  "data": [
+    {
+      "id": "prod_123456",
+      "name": "Laptop Gaming ASUS ROG",
+      "thumbnail": "https://cdn.example.com/images/prod_123456.jpg",
+      "is_active": true,
+      "is_favorite": false,
+      "tags": ["elektronik", "gaming"],
+      "combination_type": "single",
+      "variants": [],
+      "content": "Laptop gaming dengan spesifikasi tinggi",
+      "unit": "Pcs",
+      "package": "Box",
+      "barcode": "1234567890123",
+      "sku": "LAPTOP-001",
+      "pricing_type": "single",
+      "stock_tracking": true,
+      "current_stock": 50,
+      "minimum_stock": 10,
+      "expiry_tracking": false,
+      "expiry_notification_days": 7,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T15:45:00Z"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "total_pages": 10,
+    "total_items": 200,
+    "items_per_page": 20
+  },
+  "error_code": null
+}
+```
+
+### Tags Response
+```json
+{
+  "data": ["elektronik", "fashion", "makanan", "minuman", "gaming"],
+  "error_code": null
+}
+```
+
+## Example Error Response
+
+### Validation Error
+```json
+{
+  "data": {
+    "message": "Validation failed",
+    "errors": [
+      {
+        "field": "name",
+        "message": "Nama produk harus diisi"
+      },
+      {
+        "field": "barcode",
+        "message": "Barcode sudah digunakan"
+      }
+    ]
+  },
+  "error_code": 1001
+}
+```
+
+### Product Not Found
+```json
+{
+  "data": {
+    "message": "Product not found"
+  },
+  "error_code": 1404
+}
+```
+
+## OpenAPI Schema Definition
+
+```yaml
+components:
+  schemas:
+    PriceVariant:
+      type: object
+      required:
+        - name
+        - quantity
+        - price
+      properties:
+        name:
+          type: string
+          description: Price variant name
+          example: "Kemasan"
+        quantity:
+          type: integer
+          description: Quantity for this price variant
+          minimum: 1
+          example: 12
+        price:
+          type: number
+          description: Price for this variant
+          minimum: 0
+          example: 15000000
+
+    ProductVariant:
+      type: object
+      required:
+        - id
+        - barcode
+        - sku
+        - price
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the variant
+          example: "var_123"
+        barcode:
+          type: string
+          description: Variant barcode
+          example: "1234567890124"
+        sku:
+          type: string
+          description: Variant SKU
+          example: "LAPTOP-001-RED"
+        price:
+          type: number
+          description: Variant price
+          minimum: 0
+          example: 15000000
+        attributes:
+          type: object
+          description: Variant attributes
+          example: {"color": "red", "size": "L"}
+
+    ProductData:
+      type: object
+      required:
+        - id
+        - name
+        - is_active
+        - is_favorite
+        - combination_type
+        - unit
+        - barcode
+        - sku
+        - pricing_type
+        - stock_tracking
+        - minimum_stock
+        - expiry_tracking
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the product
+          example: "prod_123456"
+        name:
+          type: string
+          description: Product name
+          example: "Laptop Gaming ASUS ROG"
+        thumbnail:
+          type: string
+          format: uri
+          description: URL to product thumbnail image
+          example: "https://cdn.example.com/images/prod_123456.jpg"
+        is_active:
+          type: boolean
+          description: Product status in POS system
+          example: true
+        is_favorite:
+          type: boolean
+          description: Product favorite status
+          example: false
+        tags:
+          type: array
+          description: Product tags for categorization
+          items:
+            type: string
+          example: ["elektronik", "gaming"]
+        combination_type:
+          type: string
+          enum: ["single", "variant"]
+          description: Product type
+          example: "single"
+        variants:
+          type: array
+          description: Product variants
+          items:
+            $ref: '#/components/schemas/ProductVariant'
+        content:
+          type: string
+          description: Product description/content
+          example: "Laptop gaming dengan spesifikasi tinggi"
+        unit:
+          type: string
+          description: Product unit
+          example: "Pcs"
+        package:
+          type: string
+          description: Product packaging information
+          example: "Box"
+        barcode:
+          type: string
+          description: Product barcode
+          pattern: '^[0-9]{13}$'
+          example: "1234567890123"
+        sku:
+          type: string
+          description: Stock Keeping Unit identifier
+          example: "LAPTOP-001"
+        pricing_type:
+          type: string
+          enum: ["single", "bulk"]
+          description: Pricing type
+          example: "single"
+        stock_tracking:
+          type: boolean
+          description: Stock tracking enabled status
+          example: true
+        current_stock:
+          type: integer
+          description: Current stock quantity
+          minimum: 0
+          example: 50
+        minimum_stock:
+          type: integer
+          description: Minimum stock threshold
+          minimum: 0
+          example: 10
+        expiry_tracking:
+          type: boolean
+          description: Expiry tracking enabled status
+          example: false
+        expiry_notification_days:
+          type: integer
+          description: Days before expiry notification
+          minimum: 1
+          example: 7
+        created_at:
+          type: string
+          format: date-time
+          description: Product creation timestamp
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Product last update timestamp
+          example: "2024-01-15T15:45:00Z"
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - combination_type
+        - unit
+        - barcode
+        - sku
+        - pricing_type
+      properties:
+        thumbnail:
+          type: string
+          format: binary
+          description: Product thumbnail image (jpg, jpeg, png, max 2MB)
+        name:
+          type: string
+          description: Product name
+          example: "Laptop Gaming ASUS ROG"
+        is_active:
+          type: boolean
+          description: Product active status
+          default: true
+        is_favorite:
+          type: boolean
+          description: Product favorite status
+          default: false
+        tags:
+          type: array
+          description: Product tags
+          items:
+            type: string
+          example: ["elektronik", "gaming"]
+        combination_type:
+          type: string
+          enum: ["single", "variant"]
+          description: Product type
+          example: "single"
+        variants:
+          type: array
+          description: Product variants
+          items:
+            $ref: '#/components/schemas/ProductVariant'
+        content:
+          type: string
+          description: Product description
+          example: "Laptop gaming dengan spesifikasi tinggi"
+        unit:
+          type: string
+          description: Product unit
+          example: "Pcs"
+        package:
+          type: string
+          description: Product packaging
+          example: "Box"
+        barcode:
+          type: string
+          description: Product barcode
+          pattern: '^[0-9]{13}$'
+          example: "1234567890123"
+        sku:
+          type: string
+          description: Product SKU
+          example: "LAPTOP-001"
+        pricing_type:
+          type: string
+          enum: ["single", "bulk"]
+          description: Pricing type
+          example: "single"
+        stock_tracking:
+          type: boolean
+          description: Stock tracking enabled
+          default: true
+        minimum_stock:
+          type: integer
+          description: Minimum stock
+          minimum: 0
+          default: 0
+        expiry_tracking:
+          type: boolean
+          description: Expiry tracking enabled
+          default: false
+        expiry_notification_days:
+          type: integer
+          description: Expiry notification days
+          minimum: 1
+          default: 7
+
+    ProductResponse:
+      type: object
+      required:
+        - data
+        - error_code
+      properties:
+        data:
+          $ref: '#/components/schemas/ProductData'
+        error_code:
+          type: null
+          description: Error code (null on success)
+
+    ProductListResponse:
+      type: object
+      required:
+        - data
+        - pagination
+        - error_code
+      properties:
+        data:
+          type: array
+          description: List of products
+          items:
+            $ref: '#/components/schemas/ProductData'
+        pagination:
+          $ref: '#/components/schemas/PaginationData'
+        error_code:
+          type: null
+          description: Error code (null on success)
+
+    PaginationData:
+      type: object
+      required:
+        - current_page
+        - total_pages
+        - total_items
+        - items_per_page
+      properties:
+        current_page:
+          type: integer
+          description: Current page number
+          example: 1
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 10
+        total_items:
+          type: integer
+          description: Total number of items
+          example: 200
+        items_per_page:
+          type: integer
+          description: Items per page
+          example: 20
+
+    ErrorResponse:
+      type: object
+      required:
+        - data
+        - error_code
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message
+              example: "Product not found"
+            errors:
+              type: array
+              description: Detailed validation errors
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "name"
+                  message:
+                    type: string
+                    example: "Nama produk harus diisi"
+        error_code:
+          type: integer
+          description: Error code
+          example: 1001
+
+    BulkStockRequest:
+      type: object
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          description: List of products to update stock
+          items:
+            type: object
+            required:
+              - id
+              - stock
+            properties:
+              id:
+                type: string
+                description: Product ID
+                example: "prod_123456"
+              stock:
+                type: integer
+                description: New stock quantity
+                minimum: 0
+                example: 100
+```
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "data": {
+    "message": "Invalid request parameters",
+    "errors": [
+      {
+        "field": "name",
+        "message": "Nama produk harus diisi"
+      }
+    ]
+  },
+  "error_code": 1001
+}
+```
+
+### 404 Not Found
+```json
+{
+  "data": {
+    "message": "Product not found"
+  },
+  "error_code": 1404
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "data": {
+    "message": "Internal server error"
+  },
+  "error_code": 5000
+}
+```
+
+## Notes
+- All prices are returned in the base currency unit (e.g., rupiah)
+- Barcodes should follow standard EAN-13 format
+- Thumbnail URLs should be valid HTTP/HTTPS URLs
+- The `minimum_stock` field is used for inventory management and low-stock alerts
+- Product variants are only available when `combination_type` is "variant"
+- Price variants are only available when `pricing_type` is "bulk"
+- File uploads for thumbnails support jpg, jpeg, png formats with maximum size of 2MB
+- Stock tracking can be disabled for digital products or services
+- Expiry tracking is useful for perishable goods and medications

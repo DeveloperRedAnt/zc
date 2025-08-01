@@ -9,16 +9,23 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import DOMPurify from 'dompurify';
 
 interface ProductPaduan {
-  product: string;
+  name: string;
   quantity: string;
+}
+
+import type { CompositeComponent } from '@/modules/products/storing-data/product-composite/types';
+
+interface CompositeData {
+  components: CompositeComponent[];
+  production_per_batch: number;
+  current_stock: string;
 }
 
 const columnHelperProductPaduan = createColumnHelper<ProductPaduan>();
 const headerProductPaduan = [
-  columnHelperProductPaduan.accessor('product', {
+  columnHelperProductPaduan.accessor('name', {
     header: 'Produk yang dipadukan',
     cell: (info) => info.getValue(),
   }),
@@ -27,20 +34,13 @@ const headerProductPaduan = [
     cell: (info) => info.getValue(),
   }),
 ];
-const productPaduanData = [
-  {
-    product: 'Kaos Combed 34 cm (Merah - Small)',
-    quantity: '1 pcs',
-  },
-  {
-    product: 'Kopi Gato - 250ml',
-    quantity: '2 botol',
-  },
-];
 
-export default function Index() {
+export default function Index({ data }: { data: CompositeData }) {
   const tableProductPaduan = useReactTable({
-    data: productPaduanData,
+    data: data.components.map((item) => ({
+      name: item.product_name ?? '-',
+      quantity: String(item.quantity),
+    })),
     columns: headerProductPaduan,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -56,9 +56,9 @@ export default function Index() {
         </CardHeader>
         <CardContent className="p-4 text-sm">
           <InformationText
-            text={DOMPurify.sanitize(
+            text={
               'Mengatur penggabungan beberapa produk yang dibutuhkan untuk menjadi produk ini. Jika Anda mengaktifkan Produk Paduan, maka <strong>Anda tidak dapat membuat Produk Varian.</strong>'
-            )}
+            }
           />
           <div className="mt-6">
             <DataTable width="100%" table={tableProductPaduan} isLoading={false} />
@@ -66,11 +66,11 @@ export default function Index() {
               <div className="flex flex-wrap w-full">
                 <div className="text-[14px] w-1/2 mt-6">
                   <p className="font-semibold"> Jumlah Produksi per Batch: </p>
-                  <p className="font-[400] mt-1"> 5 </p>
+                  <p className="font-[400] mt-1"> {data.production_per_batch || '-'} </p>
                 </div>
                 <div className="text-[14px] w-1/2 mt-6">
                   <p className="font-semibold"> Stok produk saat ini: </p>
-                  <p className="font-[400] mt-1"> 100 pcs </p>
+                  <p className="font-[400] mt-1"> {data.current_stock || '-'} </p>
                 </div>
               </div>
             </div>

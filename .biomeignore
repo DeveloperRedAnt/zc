@@ -1,0 +1,6 @@
+.next/
+node_modules/
+dist/
+public/
+__generated__/
+src/__generated__/

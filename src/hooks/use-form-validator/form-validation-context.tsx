@@ -41,13 +41,15 @@ export function FormValidationProvider({ children }: { children: React.ReactNode
 
   const clearError = (key: string) => {
     setErrorMap((prev) => {
-        const { [key]: _, ...rest } = prev;
-        return rest;
+      const { [key]: _, ...rest } = prev;
+      return rest;
     });
-    };
+  };
 
   return (
-    <FormValidationContext.Provider value={{ registerField, getRegisteredFields, setErrors, getError, clearError }}>
+    <FormValidationContext.Provider
+      value={{ registerField, getRegisteredFields, setErrors, getError, clearError }}
+    >
       {children}
     </FormValidationContext.Provider>
   );

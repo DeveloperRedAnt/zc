@@ -19,6 +19,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.text-black {
+  color: #555555;
+}
+
+.text-red {
+  color: #F08181;
+}
+
+.text-grey {
+  color: #C2C7D0;
+}
+
 
 @layer base {
   * {

@@ -11,6 +11,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    return <FormFieldError message="Email atau password salah" />
-  }
+    return <FormFieldError message="Email atau password salah" />;
+  },
 };

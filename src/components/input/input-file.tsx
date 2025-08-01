@@ -36,7 +36,9 @@ export default function InputFile({
     if (file) {
       if (file.size > maxSize) {
         alert(`Ukuran file maksimal ${(maxSize / (1024 * 1024)).toFixed(2)} MB`);
-        inputRef.current && (inputRef.current.value = '');
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
         setInternalPreview(null);
         onChange?.(null);
         return;
@@ -78,7 +80,6 @@ export default function InputFile({
           style={{ width: '138px', height: '138px' }}
         />
       </div>
-
 
       {/* Input */}
       <div className="flex-1">

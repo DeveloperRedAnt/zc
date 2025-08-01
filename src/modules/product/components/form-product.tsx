@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
+import type { useFormValidator } from '@/hooks/use-form-validator/use-form-validator';
 import FormPriceMultiPack from '@/modules/product/components/form-price-multi-pack';
 import FormProductComposite from '@/modules/product/components/form-product-composite';
 import FormProductDetail from '@/modules/product/components/form-product-detail';
@@ -9,9 +10,16 @@ import FormProductInformation from '@/modules/product/components/form-product-in
 import FormProductVariant from '@/modules/product/components/form-product-variant';
 import FormTrackStockProduct from '@/modules/product/components/form-track-stock-product';
 import { ArrowRight, Check } from '@icon-park/react';
-import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
-import type { useFormValidator } from '@/hooks/use-form-validator/use-form-validator';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
+import { useProductVariantStore } from '@/modules/product-variant/store';
+import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
+import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
+import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
+import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
+import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
+import { useMemo } from 'react';
 
 type FormProductFormProps = {
   toggleStatusTrackingEnabled: boolean;
@@ -26,8 +34,27 @@ export default function FormProductForm({
   validateFields,
   router,
 }: FormProductFormProps) {
+  const productInfo = useProductInformationStore((state) => state);
+  const productDetail = useProductDetailStore((state) => state);
+  const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
+  const trackStock = useTrackStockProductStore((state) => state.data);
+  const composite = useProductCompositeStore((state) => state.data);
+  const variant = useProductVariantStore((state) => state.finalData);
+
   const { getRegisteredFields, setErrors } = useFormValidationContext();
 
+  // Gabungkan semua store
+  //@ts-ignore
+  const _finalPayload = useMemo(() => {
+    return {
+      ...productInfo,
+      ...productDetail,
+      ...trackStock,
+      default_prices: multiPack,
+      composite,
+      variant,
+    };
+  }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -36,7 +63,7 @@ export default function FormProductForm({
 
     if (!isValid) return;
 
-    router.push('/dashboard/product/add/set-first-stock');
+    router.push('/dashboard/products/1/create/set-first-stock');
   };
 
   return (
@@ -78,6 +105,7 @@ export default function FormProductForm({
                   type="button"
                   variant="outline"
                   className="mt-2 ml-[1px] flex items-center"
+                  onClick={handleSubmit}
                 >
                   Simpan Produk
                   <Check />

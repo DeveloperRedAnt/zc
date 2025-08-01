@@ -1,6 +1,6 @@
 // AUTO-GENERATED React Query Client
 import { QueryClient } from '@tanstack/react-query';
-import { ValidationError } from './client';
+import { ValidationError } from './client/base.client';
 
 // Create a QueryClient for React Query
 export const queryClient = new QueryClient({

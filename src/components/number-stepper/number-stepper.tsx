@@ -1,17 +1,11 @@
 'use client';
 
 import { Minus, Plus } from '@icon-park/react';
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from '../button/button';
+import FormFieldError from '../form-field-error/form-field-error';
 import CustomInput from '../input/custom-input';
 import { Label } from '../label/label';
-import FormFieldError from '../form-field-error/form-field-error';
 
 interface StepperProps {
   label?: string;
@@ -26,16 +20,7 @@ interface StepperProps {
 
 export const Stepper = forwardRef<HTMLInputElement, StepperProps>(
   (
-    {
-      label,
-      value,
-      min = 0,
-      max = Infinity,
-      readOnly = false,
-      required = false,
-      error,
-      onChange,
-    },
+    { label, value, min = 0, max = Infinity, readOnly = false, required = false, error, onChange },
     ref
   ) => {
     const isControlled = typeof value === 'number' && typeof onChange === 'function';
@@ -48,12 +33,12 @@ export const Stepper = forwardRef<HTMLInputElement, StepperProps>(
       if (isControlled && typeof value === 'number') {
         setInternalValue(value);
       }
-    }, [value]);
+    }, [value, isControlled]);
 
     const currentValue = isControlled ? value! : internalValue;
 
     const setValue = (newVal: number) => {
-      if (newVal < min || newVal > max || isNaN(newVal)) return;
+      if (newVal < min || newVal > max || Number.isNaN(newVal)) return;
       if (!isControlled) setInternalValue(newVal);
       onChange?.(newVal);
     };
@@ -66,7 +51,7 @@ export const Stepper = forwardRef<HTMLInputElement, StepperProps>(
       setValue(currentValue + 1);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const newValue = Number(e.target.value);
       if (!Number.isNaN(newValue)) {
         setValue(newValue);

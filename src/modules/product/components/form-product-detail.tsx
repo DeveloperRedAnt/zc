@@ -5,6 +5,7 @@ import Dropdown, { OptionType } from '@/components/dropdown/dropdown';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import { Input } from '@/components/input/input';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
+import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
 import { Refresh } from '@icon-park/react';
 import { useRef, useState } from 'react';
 
@@ -18,24 +19,24 @@ const optionsUnit: OptionType[] = [
 export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean }) {
   const [selectedUnit, setSelectedUnit] = useState<OptionType | null>(null);
 
-  // Ref untuk Dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const productDetailStore = useProductDetailStore(); // ✅ Init store
 
   // Register field: Content
   const {
     ref: contentRef,
     error: contentError,
-    handleChange: onContentChange,
+    handleChange: originalOnContentChange,
   } = useRegisterField('productDetail.content');
 
   // Register field: Packaging
   const {
     ref: packagingRef,
     error: packagingError,
-    handleChange: onPackagingChange,
+    handleChange: originalOnPackagingChange,
   } = useRegisterField('productDetail.packaging');
 
-  // Register field: Unit (Dropdown) dengan custom ref + getValue
+  // Register field: Unit (Dropdown)
   const { error: unitError, handleChange: onUnitChange } = useRegisterField(
     'productDetail.unit',
     true,
@@ -44,9 +45,35 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
     }
   );
 
+  // ✅ Update store on content change
+  const onContentChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    originalOnContentChange();
+    productDetailStore.setProductDetail({ content: e.target.value });
+  };
+
+  // ✅ Update store on packaging change
+  const onPackagingChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    originalOnPackagingChange();
+    productDetailStore.setProductDetail({ package: e.target.value });
+  };
+
+  // ✅ Update barcode on packaging change
+  const onBarcodeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    originalOnPackagingChange();
+    productDetailStore.setProductDetail({ barcode: e.target.value });
+  };
+
+  // ✅ Update sku on packaging change
+  const onSkuChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    originalOnPackagingChange();
+    productDetailStore.setProductDetail({ sku: e.target.value });
+  };
+
+  // ✅ Update store on dropdown change
   const handleDropdownChange = (val: OptionType | null) => {
     setSelectedUnit(val);
-    onUnitChange(); // clear error
+    onUnitChange(); // for validation
+    productDetailStore.setProductDetail({ unit_id: val ? Number(val.value) : null });
   };
 
   return (
@@ -122,13 +149,23 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
         <div className="flex flex-col items-start gap-4">
           <div className="w-full mt-2">
             <label className="block mb-2"> Barcode </label>
-            <Input type="text" className="border-[#C2C7D0]" placeholder="cth: 1199922838920" />
+            <Input
+              type="text"
+              className="border-[#C2C7D0]"
+              placeholder="cth: 1199922838920"
+              onChange={onBarcodeChange}
+            />
           </div>
         </div>
         <div className="flex flex-col items-start gap-4">
           <div className="w-full mt-2">
             <label className="block mb-2"> SKU </label>
-            <Input type="text" className="border-[#C2C7D0]" placeholder="cth: 782217821" />
+            <Input
+              type="text"
+              className="border-[#C2C7D0]"
+              placeholder="cth: 782217821"
+              onChange={onSkuChange}
+            />
           </div>
         </div>
       </div>

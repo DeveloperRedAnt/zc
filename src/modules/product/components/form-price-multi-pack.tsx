@@ -1,48 +1,28 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/button/button';
-import { Plus, Refresh } from '@icon-park/react';
 import { InformationText } from '@/components/information-text/information-text';
 import { Label } from '@/components/label/label';
 import { RadioGroup, RadioGroupItem } from '@/components/radio-group/radio-group';
-import MultiPackItem from './multi-pack-item'; // ⬅️ komponen per item
-
-type PriceMultiPackItem = {
-  id: number;
-  itemName: string;
-  quantity: number;
-  price: number;
-};
+import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
+import { Plus, Refresh } from '@icon-park/react';
+import MultiPackItem from './multi-pack-item';
 
 export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolean }) {
-  const [priceMultiPackList, setPriceMultiPackList] = useState<PriceMultiPackItem[]>([
-    { id: Date.now(), itemName: '', quantity: 1, price: 0 },
-  ]);
-
-  const handleAdd = () => {
-    setPriceMultiPackList((prev) => [
-      ...prev,
-      { id: Date.now(), itemName: '', quantity: 1, price: 0 },
-    ]);
-  };
-
-  const handleRemove = (id: number) => {
-    setPriceMultiPackList((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const updateField = (id: number, field: keyof PriceMultiPackItem, value: string | number) => {
-    setPriceMultiPackList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
-    );
-  };
+  const {
+    priceMultiPackList,
+    addMultiPackItem,
+    updateMultiPackItem,
+    removeMultiPackItem,
+    resetMultiPack,
+  } = usePriceMultiPackStore();
 
   return (
     <div className="pb-6 border-b border-[#C2C7D0] border-t">
       <div className="pt-6 mb-4 flex justify-between items-center">
         <p>Harga Multi Satuan</p>
         {isEdit && (
-          <Button type="button" variant="outline">
+          <Button type="button" variant="outline" onClick={resetMultiPack}>
             <Refresh />
             Reset
           </Button>
@@ -79,12 +59,17 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
           key={item.id}
           index={index}
           item={item}
-          onChange={updateField}
-          onRemove={priceMultiPackList.length > 1 ? () => handleRemove(item.id) : undefined}
+          onChange={updateMultiPackItem}
+          onRemove={priceMultiPackList.length > 1 ? () => removeMultiPackItem(item.id) : undefined}
         />
       ))}
 
-      <Button type="button" variant="outline" className="text-[#555555] mt-4" onClick={handleAdd}>
+      <Button
+        type="button"
+        variant="outline"
+        className="text-[#555555] mt-4"
+        onClick={addMultiPackItem}
+      >
         <Plus theme="filled" size="24" fill="#555555" />
         Opsi Harga
       </Button>

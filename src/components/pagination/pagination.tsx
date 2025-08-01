@@ -39,6 +39,7 @@ const PaginationLink = ({
   isActive,
   asChild,
   size = 'icon',
+  onClick,
   ...props
 }: PaginationLinkProps) => {
   const styles = buttonStyles({ variant: isActive ? 'outline' : 'ghost', size });
@@ -49,6 +50,10 @@ const PaginationLink = ({
       aria-current={isActive ? 'page' : undefined}
       className={styles.base({ className })}
       {...props}
+      onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        if (onClick) onClick(e);
+      }}
     />
   );
 };

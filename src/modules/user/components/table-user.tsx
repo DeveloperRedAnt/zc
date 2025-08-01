@@ -1,3 +1,6 @@
+'use client';
+
+import { useGetEmployee } from '@/__generated__/api/hooks/user.hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,6 +10,7 @@ import {
 } from '@/components/dropdown-menu/dropdown-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { useUserEditStore } from '@/modules/user/user-edit-store';
 import {
   Edit,
   FileDisplayOne,
@@ -27,240 +31,345 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useMemo, useCallback, useState } from 'react';
+import DialogFormResetPass from './dialog-form-reset-pass';
+import DialogFormResetPin from './dialog-form-reset-pin';
 
 type User = {
+  id: number;
   image: string;
   name: string;
   email: string;
-  whatsapp: string;
-  countStore: string;
-  status: 'Aktif' | 'Dicabut';
+  phone: string;
+  store_count: string;
+  is_active: boolean;
 };
 
-const getTextClass = (status: string) =>
-  status === 'Dicabut' ? 'text-[#C2C7D0]' : 'text-[#555555]';
+const getTextClass = (active: boolean) => (!active ? 'text-[#C2C7D0]' : 'text-black');
 
 const columnHelper = createColumnHelper<User>();
-const baseColumns = [
-  columnHelper.accessor('image', {
-    header: () => (
-      <div className="flex justify-center">
-        <ImageFiles theme="filled" className="text-[1rem]" fill="#555555" />
-      </div>
-    ),
-    cell: (info) => (
-      <div className="flex justify-center">
-        <img
-          src={info.getValue()}
-          alt={`${info.row.original.name} product`}
-          className="w-8 h-8 object-cover rounded-md"
-        />
-      </div>
-    ),
-  }),
-  columnHelper.accessor('name', {
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted();
 
-      return (
-        <div
-          onClick={column.getToggleSortingHandler()}
-          className="font-bold text-[#555555] cursor-pointer select-none flex items-center gap-1 justify-between"
-        >
-          Nama Produk
-          {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-          {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-          {!isSorted && <SortThree theme="outline" size="16" />}
-        </div>
-      );
-    },
-    cell: (info) => (
-      <span className={getTextClass(info.row.original.status)}>{info.getValue()}</span>
-    ),
-    enableSorting: true,
-  }),
-  columnHelper.accessor('email', {
-    header: () => <div className="font-bold text-[#555555]">Email</div>,
-    cell: (info) => (
-      <span className={getTextClass(info.row.original.status)}>{info.getValue()}</span>
-    ),
-  }),
-  columnHelper.accessor('whatsapp', {
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted();
+function getSortableHeader(
+  label: string,
+  field: keyof User,
+  currentSortBy: string,
+  currentDirection: 'asc' | 'desc',
+  onSortChange: (field: string, direction: 'asc' | 'desc') => void
+) {
+  const isSorted = currentSortBy === field;
 
-      return (
-        <div
-          onClick={column.getToggleSortingHandler()}
-          className="font-bold text-[#555555] cursor-pointer select-none flex items-center gap-1 justify-between"
-        >
-          Whatsapp
-          {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-          {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-          {!isSorted && <SortThree theme="outline" size="16" />}
-        </div>
-      );
-    },
-    cell: (info) => (
-      <span className={getTextClass(info.row.original.status)}>{info.getValue()}</span>
-    ),
-    enableSorting: true,
-  }),
-  columnHelper.accessor('countStore', {
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted();
-
-      return (
-        <div
-          onClick={column.getToggleSortingHandler()}
-          className="font-bold text-[#555555] cursor-pointer select-none flex items-center gap-1 justify-between"
-        >
-          Jumlah Toko
-          {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-          {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-          {!isSorted && <SortThree theme="outline" size="16" />}
-        </div>
-      );
-    },
-    cell: (info) => (
-      <span className={getTextClass(info.row.original.status)}>{info.getValue()}</span>
-    ),
-    enableSorting: true,
-  }),
-  columnHelper.accessor('status', {
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted();
-      return (
-        <div
-          onClick={column.getToggleSortingHandler()}
-          className="font-bold text-[#555555] cursor-pointer select-none flex items-center justify-between gap-1"
-        >
-          Status
-          {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-          {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-          {!isSorted && <SortThree theme="outline" size="16" />}
-        </div>
-      );
-    },
-    cell: (info) => {
-      const value = info.getValue();
-      const isAktif = value === 'Aktif';
-      return (
-        <div
-          className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[4.4rem] mx-auto text-center ${
-            isAktif ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#FAFAFA] text-[#C2C7D0]'
-          }`}
-        >
-          {value}
-        </div>
-      );
-    },
-    enableSorting: true,
-    enableColumnFilter: true,
-  }),
-  columnHelper.display({
-    id: 'aksi',
-    header: () => <div className="font-bold text-[#555555] text-center">Aksi</div>,
-    cell: () => (
-      <div className="flex gap-2 justify-center items-center">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <MoreOne className="cursor-pointer" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side="right"
-            align="end"
-            sideOffset={4}
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <FileDisplayOne
-                  size="16"
-                  style={{ width: '16.34px', height: '16px' }}
-                  className="mr-2"
-                />
-                Detail User
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Edit size="16" style={{ width: '16.34px', height: '16px' }} className="mr-2" />
-                Edit User
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <SwitchButton
-                  theme="outline"
-                  size="16"
-                  style={{ width: '16.34px', height: '16px' }}
-                  className="mr-2"
-                />
-                Edit Permission
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <OpenOne
-                  theme="outline"
-                  size="16"
-                  style={{ width: '16.34px', height: '16px' }}
-                  className="mr-2"
-                />
-                Reset Password
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Refresh size="16" style={{ width: '16.34px', height: '16px' }} className="mr-2" />
-                Reset PIN
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    ),
-  }),
-];
-
-const userData: User[] = [
-  {
-    image: '/assets/zycas/default-image-user.png',
-    name: 'Kurt Bates',
-    email: 'iva838@outlook.com',
-    whatsapp: '+6289209481722',
-    countStore: '3 Toko',
-    status: 'Aktif',
-  },
-  {
-    image: '/assets/zycas/default-image-user.png',
-    name: 'Corina McCoy',
-    email: 's.t.sharkey@outlook.com',
-    whatsapp: '+6288144139191',
-    countStore: '1 Toko',
-    status: 'Aktif',
-  },
-  {
-    image: '/assets/zycas/default-image-user.png',
-    name: 'Stephanie Sharkey',
-    email: 'f.j.swann@aol.com',
-    whatsapp: '+6282677396240',
-    countStore: '1 Toko',
-    status: 'Dicabut',
-  },
-];
-
-export default function Index() {
-  const table = useReactTable({
-    data: userData,
-    columns: baseColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: {},
-  });
+  const handleClick = () => {
+    if (!isSorted) return onSortChange(field, 'asc');
+    if (currentDirection === 'asc') return onSortChange(field, 'desc');
+    return onSortChange(field, 'asc');
+  };
 
   return (
-    <>
-      <div className="container mx-auto py-2">
-        <DataTable table={table} />
-        <DataTablePagination table={table} isLoading={false} />
-      </div>
-    </>
+    <div
+      onClick={handleClick}
+      className="font-bold text-black cursor-pointer select-none flex items-center gap-1 justify-between"
+    >
+      {label}
+      {isSorted ? (
+        currentDirection === 'asc' ? (
+          <SortAmountUp size={16} />
+        ) : (
+          <SortAmountDown size={16} />
+        )
+      ) : (
+        <SortThree size={16} />
+      )}
+    </div>
+  );
+}
+
+export type TableUserProps = {
+  page: number;
+  setPage: (page: number) => void;
+  perPage: number;
+  setPerPage: (perPage: number) => void;
+  sortBy: string;
+  setSortBy: (sortBy: string) => void;
+  sortOrder: string;
+  setSortOrder: (sortOrder: string) => void;
+  search: string;
+  setSearch: (search: string) => void;
+  status: string;
+  setStatus: (status: string) => void;
+};
+
+export default function TableUser({
+  page,
+  setPage,
+  perPage,
+  setPerPage,
+  search,
+  sortBy,
+  setSortBy,
+  sortOrder,
+  setSortOrder,
+  status,
+}: TableUserProps) {
+  // Memoize callback functions to prevent unnecessary rerenders
+  const setSort = useCallback(
+    (field: string, direction: string) => {
+      switch (field) {
+        case 'name':
+          setSortBy('name');
+          setSortOrder(direction);
+          break;
+        case 'phone':
+          setSortBy('phone');
+          setSortOrder(direction);
+          break;
+        case 'status':
+          setSortBy('is_active');
+          setSortOrder(direction);
+          break;
+      }
+    },
+    [setSortBy, setSortOrder]
+  );
+
+  const sortDirection = useMemo(() => (sortOrder === 'asc' ? 'asc' : 'desc'), [sortOrder]);
+
+  const router = useRouter();
+  const params = useMemo(
+    () => ({
+      'x-device-id': '1',
+      'x-organization-id': '1',
+      body: {
+        search,
+        page: page,
+        per_page: perPage,
+        search_by_status: status,
+        sort_by: sortBy,
+        sort_direction: sortDirection,
+      },
+    }),
+    [search, status, page, sortBy, sortDirection, perPage]
+  );
+
+  const { data = [], isLoading } = useGetEmployee({
+    'x-device-id': '1',
+    'x-store-id': '1',
+    'x-organization-id': '1',
+    body: {
+      search,
+      page: params.body.page,
+      per_page: params.body.per_page,
+      search_by_status: params.body.search_by_status || 'all',
+      sort_by: params.body.sort_by || 'name',
+      sort_direction: params.body.sort_direction || 'asc',
+    },
+  });
+
+  const [toggleResetPassModal, setToggleResetPassModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+  const [toggleResetPinModal, setToggleResetPinModal] = useState(false);
+
+  // Memoizing columns with proper dependencies
+  const baseColumns = useMemo(
+    () => [
+      columnHelper.accessor('image', {
+        header: () => (
+          <div className="flex justify-center">
+            <ImageFiles fill="#555555" />
+          </div>
+        ),
+        cell: (info) => (
+          <div className="flex justify-center">
+            <img
+              src={info.getValue()}
+              alt={`${info.row.original.name} profile`}
+              className="w-8 h-8 object-cover rounded-md"
+            />
+          </div>
+        ),
+      }),
+      columnHelper.accessor('name', {
+        header: () => getSortableHeader('Nama User', 'name', sortBy, sortDirection, setSort),
+        cell: (info) => (
+          <span className={getTextClass(info.row.original.is_active)}>{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('email', {
+        header: () => <div className="font-bold text-black">Email</div>,
+        cell: (info) => (
+          <span className={getTextClass(info.row.original.is_active)}>{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('phone', {
+        header: () => getSortableHeader('No. Whatsapp', 'phone', sortBy, sortDirection, setSort),
+        cell: (info) => (
+          <span className={getTextClass(info.row.original.is_active)}>{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('store_count', {
+        header: () =>
+          getSortableHeader('Jumlah Toko', 'store_count', sortBy, sortDirection, setSort),
+        cell: (info) => (
+          <span className={getTextClass(info.row.original.is_active)}>{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('is_active', {
+        header: () => getSortableHeader('Status', 'is_active', sortBy, sortDirection, setSort),
+        cell: (info) => {
+          const value = info.getValue();
+          return (
+            <div
+              className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[4.4rem] mx-auto text-center ${
+                value ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#FAFAFA] text-[#C2C7D0]'
+              }`}
+            >
+              {value ? 'Aktif' : 'Dicabut'}
+            </div>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'aksi',
+        header: () => <div className="font-bold text-black text-center">Aksi</div>,
+        cell: (info) => (
+          <div className="flex gap-2 justify-center items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <MoreOne className="cursor-pointer" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="min-w-56 rounded-lg"
+                side="right"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/dashboard/users/${info.row.original.id}`)}
+                  >
+                    <FileDisplayOne size="16" className="mr-2" /> Detail User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const userData = {
+                        id: info.row.original.id,
+                        name: info.row.original.name,
+                        whatsapp: info.row.original.phone,
+                        ktp: '',
+                        email: info.row.original.email,
+                        image: info.row.original.image,
+                        isActive: info.row.original.is_active,
+                      };
+
+                      const store = useUserEditStore.getState();
+                      store.setUserData(userData);
+                      store.setOriginalData(userData); // simpan original
+                      router.push(`/dashboard/users/${info.row.original.id}/edit`);
+                    }}
+                  >
+                    <Edit size="16" className="mr-2" /> Edit User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      router.push(`/dashboard/users/${info.row.original.id}/edit-permission`);
+                    }}
+                  >
+                    <SwitchButton size="16" className="mr-2" /> Edit Permission
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedUserId(info.row.original.id);
+                      setToggleResetPassModal(true);
+                    }}
+                  >
+                    <OpenOne size="16" className="mr-2" /> Reset Password
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedUserId(info.row.original.id);
+                      setToggleResetPinModal(true);
+                    }}
+                  >
+                    <Refresh size="16" className="mr-2" /> Reset PIN
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      }),
+    ],
+    [sortBy, sortDirection, setSort, router]
+  );
+
+  // Memoize data to prevent unnecessary rerenders
+  const tableData = useMemo(() => data, [data]);
+
+  // Memoize the table options object
+  const tableOptions = useMemo(
+    () => ({
+      data: tableData,
+      columns: baseColumns,
+      manualSorting: true,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      state: {
+        pagination: {
+          pageIndex: (page || 1) - 1,
+          pageSize: perPage || 10,
+        },
+        sorting: sortBy
+          ? [
+              {
+                id: sortBy,
+                desc: sortOrder === 'desc',
+              },
+            ]
+          : [],
+      },
+    }),
+    [tableData, baseColumns, page, perPage, sortBy, sortOrder]
+  );
+
+  // Call useReactTable at the top level with memoized options
+  const table = useReactTable(tableOptions);
+
+  return (
+    <div className="container mx-auto py-2">
+      <DataTable table={table} />
+      <DataTablePagination
+        onPage={setPage}
+        onPageSize={setPerPage}
+        table={table}
+        isLoading={isLoading}
+        page={page}
+        pageSize={perPage}
+      />
+
+      {/* MODAL FORM RESET PASSWORD */}
+      <DialogFormResetPass
+        open={toggleResetPassModal}
+        onOpenChange={setToggleResetPassModal}
+        selectedUserId={selectedUserId}
+        onResetSuccess={() => {
+          setToggleResetPassModal(false);
+          setSelectedUserId(null);
+        }}
+      />
+
+      {/* MODAL FORM RESET PIN */}
+      <DialogFormResetPin
+        open={toggleResetPinModal}
+        onOpenChange={setToggleResetPinModal}
+        selectedUserId={selectedUserId}
+        onResetSuccess={() => {
+          setToggleResetPinModal(false);
+          setSelectedUserId(null);
+        }}
+      />
+    </div>
   );
 }

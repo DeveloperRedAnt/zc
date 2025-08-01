@@ -33,8 +33,11 @@ import {
 
 import { UserAvatarProfile } from '@/components/user-avatar-profile/user-avatar-profile';
 import { navItems } from '@/constants/data';
+import { useLogout } from '@/hooks/use-logout';
+import { useOrganizationStore } from '@/store/organization-store';
 import { BankCard, HistoryQuery, LinkTwo, MoreOne, Power, Remind } from '@icon-park/react';
 import { IconChevronRight, IconPhotoUp } from '@tabler/icons-react';
+import Cookies from 'js-cookie';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
@@ -54,6 +57,8 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
   const segments = pathname.split('/');
   const segment = segments[2] || segments[1] || '';
   const router = useRouter();
+  const logout = useLogout('/sign-in');
+  const clearOrganization = useOrganizationStore((state) => state.clearOrganization);
 
   const totalNavItems = React.useMemo(() => {
     return navItems.reduce((count, item) => {
@@ -63,6 +68,12 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
       return count + 1;
     }, 0);
   }, []);
+
+  const handleLogout = React.useCallback(() => {
+    clearOrganization();
+    Cookies.remove('flex');
+    logout();
+  }, [clearOrganization, logout]);
 
   return (
     <Sidebar collapsible="icon">
@@ -265,7 +276,7 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <Power
                       theme="filled"
                       size="16"
@@ -273,13 +284,7 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                       fill="#FC8888"
                       className="mr-2"
                     />
-                    <button
-                      type="button"
-                      onClick={() => router.push('/login')}
-                      className="text-[#FC8888]"
-                    >
-                      Log Out
-                    </button>
+                    <span className="text-[#FC8888]">Log Out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

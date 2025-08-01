@@ -1,3 +1,6 @@
+'use client';
+
+import { useGetEmployeeDetail } from '@/__generated__/api/hooks';
 import { CropperDialog } from '@/components/cropper/cropper-modal';
 import { getCroppedImg } from '@/components/cropper/getCroppedImg';
 import { useTranslation } from '@/libs/i18n';
@@ -7,6 +10,13 @@ import TeamCard from '../card-photo/card-team';
 import UserDetail from './user-detail';
 
 function DashboardLayout() {
+  const { data, isLoading } = useGetEmployeeDetail({
+    'x-device-id': '1',
+    'x-store-id': '1',
+    'x-organization-id': '1',
+    id: 1,
+  });
+
   const { t } = useTranslation();
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isOpenCropper, setIsOpenCropper] = useState(false);
@@ -49,6 +59,10 @@ function DashboardLayout() {
     setIsOpenCropper(false);
   }
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex flex-row gap-6 items-start w-full">
       {/* Input file tersembunyi */}
@@ -61,8 +75,8 @@ function DashboardLayout() {
       />
       <div className="w-[258px] flex-shrink-0">
         <TeamCard
-          image={profileImage} // image source
-          name="Paus Leo"
+          image={data?.image || profileImage} // image source
+          name={data?.name || ''}
           onPasswordChange={onPasswordDialog}
           onLogout={onLogoutDialog}
           onUploadClick={handleUploadClick}
@@ -70,7 +84,13 @@ function DashboardLayout() {
       </div>
       {/* UserDetail Container - Constrained width */}
       <div className="flex-1">
-        <UserDetail />
+        <UserDetail
+          identityNumber={data?.id_number || ''}
+          phoneNumber={data?.phone || ''}
+          email={data?.email || ''}
+          organization={{ id: 0, name: '' }}
+          stores={data?.stores || []}
+        />
       </div>
       <AlertDialogAddOn
         open={isAlertOpen}

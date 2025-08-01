@@ -2,45 +2,55 @@ import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-const isProtectedRoute = (path: string) => {
-  // Protect root path and dashboard routes
-  return path === '/' || path.startsWith('/dashboard');
-};
+const DASHBOARD = '/dashboard';
+const SIGN_IN = '/sign-in';
+const SELECT_ORG = '/login/select-organization';
+const STORE_ADD = '/login/add-store';
 
-const isAuthPage = (path: string) => {
-  return path.startsWith('/sign-in') || path.startsWith('/sign-up');
-};
+const isProtected = (p: string) =>
+  p === '/' ||
+  p.startsWith(DASHBOARD) ||
+  p.startsWith(SELECT_ORG) ||
+  p.startsWith('/login/add-store') ||
+  p.startsWith('/login/add-organization');
 
-export default async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default async function middleware(req: NextRequest): Promise<NextResponse> {
+  const url = req.nextUrl;
+  const path = url.pathname;
+  const token = await getToken({ req });
+  const flex = req.cookies.get('flex')?.value;
 
-  // // Handle protected routes
-  if (isProtectedRoute(pathname)) {
-    const token = await getToken({ req: request });
-
-    // Redirect to sign-in if not authenticated
-    if (!token) {
-      const signInUrl = new URL('/sign-in', request.url);
-      signInUrl.searchParams.set('callbackUrl', encodeURI(request.url));
-      return NextResponse.redirect(signInUrl);
+  if (token) {
+    if (flex === 'dashboard') {
+      if (
+        path === '/' ||
+        path === SIGN_IN ||
+        path.startsWith(SELECT_ORG) ||
+        path.startsWith(STORE_ADD)
+      ) {
+        return NextResponse.redirect(url.origin + DASHBOARD);
+      }
+    } else if (flex === 'select-organization') {
+      if (path === '/' || path === SIGN_IN) {
+        return NextResponse.redirect(url.origin + SELECT_ORG);
+      }
+    } else if (flex === 'add-store') {
+      if (path === '/' || path === SIGN_IN || path !== STORE_ADD) {
+        return NextResponse.redirect(url.origin + STORE_ADD);
+      }
     }
+
+    return NextResponse.next();
   }
 
-  // Handle auth pages (optional: redirect to dashboard if already signed in)
-  if (isAuthPage(pathname)) {
-    const token = await getToken({ req: request });
-
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+  if (isProtected(path)) {
+    const dest = `${url.origin}${SIGN_IN}?callbackUrl=${encodeURIComponent(req.url)}`;
+    return NextResponse.redirect(dest);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
-  matcher: '/((?!_next|_vercel|monitoring|.*\\..*).*)',
+  matcher: '/((?!_next|_vercel|monitoring|api/auth|.*\\..*).*)',
 };

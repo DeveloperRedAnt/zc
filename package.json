@@ -3,11 +3,12 @@
   "version": "0.1.2",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "prelint": "biome check --apply-unsafe src",
+    "lint": "biome format --write .",
+    "build": "pnpm lint && next build",
     "analyze": "cross-env ANALYZE=true pnpm build",
     "start": "next start",
     "build-stats": "cross-env ANALYZE=true NEXT_TELEMETRY_DISABLED=1 npm run build",
-    "lint": "biome check --apply-unsafe .",
     "format": "biome format --write .",
     "commit": "git add . && git commit -m",
     "skip-checks": "git commit --no-verify -m",
@@ -56,6 +57,7 @@
     "@t3-oss/env-nextjs": "^0.13.4",
     "@tabler/icons-react": "^3.33.0",
     "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-query-devtools": "^5.83.0",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/user-event": "github:testing-library/user-event",
     "@types/next": "^9.0.0",
@@ -66,12 +68,16 @@
     "consola": "^3.4.2",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
-    "dompurify": "^3.2.6",
+    "dayjs": "^1.11.13",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "js-cookie": "^3.0.5",
     "kbar": "0.1.0-beta.45",
+    "leaflet": "^1.9.4",
+    "leaflet-geosearch": "^4.2.0",
     "lexical": "^0.31.1",
     "lucide-react": "^0.511.0",
+    "msw": "^2.10.4",
     "next": "^15.3.2",
     "next-auth": "^4.24.11",
     "next-intl": "^4.3.1",
@@ -83,6 +89,8 @@
     "react-day-picker": "^9.7.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.56.3",
+    "react-leaflet": "^5.0.0",
+    "react-leaflet-geosearch": "^0.3.4",
     "react-resizable-panels": "^3.0.2",
     "react-select": "^5.10.1",
     "recharts": "^2.15.3",
@@ -120,6 +128,9 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@types/dompurify": "^3.2.0",
+    "@types/js-cookie": "^3.0.6",
+    "@types/leaflet": "^1.9.4",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.5",
     "@vitejs/plugin-react": "^4.4.1",
@@ -140,6 +151,7 @@
     "npm-run-all": "^4.1.5",
     "postcss": "^8.5.3",
     "postcss-load-config": "^6.0.1",
+    "react-select-async-paginate": "^0.7.11",
     "semantic-release": "^24.2.3",
     "start-server-and-test": "^2.0.11",
     "storybook": "^8.6.12",
@@ -178,5 +190,10 @@
       "@semantic-release/github"
     ]
   },
-  "packageManager": "pnpm@10.6.2+sha512.47870716bea1572b53df34ad8647b42962bc790ce2bf4562ba0f643237d7302a3d6a8ecef9e4bdfc01d23af1969aa90485d4cebb0b9638fa5ef1daef656f6c1b"
+  "packageManager": "pnpm@10.6.2+sha512.47870716bea1572b53df34ad8647b42962bc790ce2bf4562ba0f643237d7302a3d6a8ecef9e4bdfc01d23af1969aa90485d4cebb0b9638fa5ef1daef656f6c1b",
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }

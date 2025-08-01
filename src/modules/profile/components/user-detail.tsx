@@ -1,68 +1,65 @@
+import * as DTO from '@/__generated__/api/dto';
 import { Card, CardContent, CardHeader } from '@/components/card/card';
 import { useTranslation } from '@/libs/i18n';
 import DetailField from '../card-photo/detail-field';
-import PermissionList, { PermissionSection } from './permission-detail';
+import PermissionList from './permission-detail';
 
-// const userConfig = [
+// const _sectionsData: PermissionSection[] = [
 //   {
-//     key: 'ktp',
-//     label: 'KTP:',
-//     value: '3405513543610002',
-//     labelClassName: 'font-semibold text-sm',
+//     id: '#1123',
+//     title: '#1123 - Indosemar Juanda',
+//     permissionCount: 3,
+//     jabatan: 'Kasir',
+//     categories: [
+//       {
+//         title: 'Kasir',
+//         permissions: [
+//           'Buat Transaksi',
+//           'Tutup Kasir',
+//           'Tampilan Tabel',
+//           'Split Bill',
+//           'Buka Kasir',
+//           'Tampilan Grid',
+//           'Produk Cuma-Cuma',
+//         ],
+//       },
+//       {
+//         title: 'Produk',
+//         permissions: ['Lihat List Produk', 'Lihat Detail Produk'],
+//       },
+//     ],
 //   },
 //   {
-//     key: 'whatsapp',
-//     label: 'No. Whatsapp:',
-//     value: '08235189613166',
-//     labelClassName: 'font-semibold text-sm',
-//   },
-//   {
-//     key: 'email',
-//     label: 'Email:',
-//     value: 'shanju@gmail.com',
-//     labelClassName: 'font-semibold text-sm',
+//     id: '#1124',
+//     title: '#1124 - Contoh Lain',
+//     permissionCount: 2,
+//     jabatan: 'Manager',
+//     categories: [
+//       {
+//         title: 'Manajemen',
+//         permissions: ['Kelola Staf', 'Lihat Laporan'],
+//       },
+//     ],
 //   },
 // ];
 
-const sectionsData: PermissionSection[] = [
-  {
-    id: '#1123',
-    title: '#1123 - Indosemar Juanda',
-    permissionCount: 3,
-    jabatan: 'Kasir',
-    categories: [
-      {
-        title: 'Kasir',
-        permissions: [
-          'Buat Transaksi',
-          'Tutup Kasir',
-          'Tampilan Tabel',
-          'Split Bill',
-          'Buka Kasir',
-          'Tampilan Grid',
-          'Produk Cuma-Cuma',
-        ],
-      },
-      {
-        title: 'Produk',
-        permissions: ['Lihat List Produk', 'Lihat Detail Produk'],
-      },
-    ],
-  },
-  {
-    id: '#1124',
-    title: '#1124 - Contoh Lain',
-    permissionCount: 2,
-    jabatan: 'Manager',
-    categories: [
-      {
-        title: 'Manajemen',
-        permissions: ['Kelola Staf', 'Lihat Laporan'],
-      },
-    ],
-  },
-];
-export default function UserDetail() {
+export type UserDetailProps = {
+  identityNumber: string;
+  phoneNumber: string;
+  email: string;
+  organization: {
+    id: number;
+    name: string;
+  };
+  stores: DTO.EmployeeStoreSchema[];
+};
+export default function UserDetail({
+  identityNumber,
+  phoneNumber,
+  email,
+  organization,
+  stores,
+}: UserDetailProps) {
   const { t } = useTranslation();
 
   // User configuration with translations
@@ -70,20 +67,37 @@ export default function UserDetail() {
     {
       key: 'ktp',
       label: t('profile.userProfile.userDetail.fields.ktp'),
-      value: '3405513543610002',
+      value: identityNumber,
       labelClassName: "font-semibold font-['Poppins:SemiBold']",
     },
     {
       key: 'whatsapp',
       label: t('profile.userProfile.userDetail.fields.whatsapp'),
-      value: '08235189613166',
+      value: phoneNumber,
     },
     {
       key: 'email',
       label: t('profile.userProfile.userDetail.fields.email'),
-      value: 'shanju@gmail.com',
+      value: email,
     },
   ];
+
+  const permissions = stores.map((store) => {
+    const categories = store.permission_groups.map((group) => {
+      return {
+        title: group.name,
+        permissions: group.permissions.map((permission) => permission.name),
+      };
+    });
+    return {
+      id: store.id.toString(),
+      title: store.name,
+      permissionCount: 2,
+      jabatan: '',
+      categories: categories,
+    };
+  });
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -107,10 +121,10 @@ export default function UserDetail() {
           <div className="font-normal text-sm mt-2 mb-2">
             {t('profile.userProfile.userDetail.organization')}{' '}
           </div>
-          <div className="text-sm">{t('profile.userProfile.userDetail.orgExample')}</div>
+          <div className="text-sm">{`${organization.id} - ${organization.name}`}</div>
         </div>
         <div>
-          <PermissionList sections={sectionsData} initiallyExpanded="#1123" />
+          <PermissionList sections={permissions} initiallyExpanded="#1123" />
         </div>
       </CardContent>
     </Card>

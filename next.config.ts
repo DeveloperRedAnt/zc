@@ -15,7 +15,7 @@ const baseConfig: NextConfig = {
     ];
   },
   eslint: {
-    dirs: ['.'],
+    ignoreDuringBuilds: true, // Nonaktifkan ESLint bawaan Next.js saat build
   },
   poweredByHeader: false,
   reactStrictMode: true,

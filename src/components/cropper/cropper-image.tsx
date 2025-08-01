@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import InputFile from '@/components/input/input-file';
 import { CropperDialog } from '@/components/cropper/cropper-modal';
 import { getCroppedImg } from '@/components/cropper/getCroppedImg';
+import InputFile from '@/components/input/input-file';
 import { UploadPicture } from '@icon-park/react';
+import { useEffect, useRef, useState } from 'react';
 
 type CropArea = { x: number; y: number; width: number; height: number };
 
@@ -26,15 +26,18 @@ export default function CropperImage({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [, setCroppedAreaPixels] = useState<{ zoom: number; area: CropArea } | null>(null);
+  const [_croppedAreaPixels, setCroppedAreaPixels] = useState<{
+    zoom: number;
+    area: CropArea;
+  } | null>(null);
   const previousFileIdRef = useRef<string | null>(null);
 
   const previewUrlRef = useRef<string | null>(null);
   const croppedImageRef = useRef<string | null>(null);
 
-  const revokeUrl = (url: string | null) => {
+  function revokeUrl(url: string | null) {
     if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
-  };
+  }
 
   const handleFileChange = (file: File | null) => {
     if (!file) return;

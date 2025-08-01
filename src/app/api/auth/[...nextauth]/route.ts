@@ -1,97 +1,113 @@
+import type { Organizations } from '@/__generated__/api/dto/auth.dto';
+import axios from 'axios';
 import type { NextAuthOptions } from 'next-auth';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-// Mock users database
-const users = [
-  // {
-  //   id: '1',
-  //   name: 'Admin User',
-  //   whatsapp: '6281234567890',
-  //   password: 'admin123',
-  //   image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-  //   role: 'admin',
-  // },
-  // {
-  //   id: '2',
-  //   name: 'Test User',
-  //   whatsapp: '6289876543210',
-  //   password: 'user123',
-  //   image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-  //   role: 'user',
-  // },
-  {
-    id: '3',
-    name: 'Zycash User',
-    whatsapp: '08197567193',
-    password: 'password',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zycash',
-    role: 'user',
-  },
-];
+// Menggunakan API URL dari environment variable atau fallback ke default URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-zycas.eling.my.id';
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        whatsapp: { label: 'Nomor WhatsApp', type: 'tel' },
+        whatsapp: {
+          label: 'Nomor WhatsApp',
+          type: 'tel',
+        },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.whatsapp || !credentials?.password) {
+        try {
+          const whatsapp = credentials?.whatsapp ?? '';
+          const password = credentials?.password ?? '';
+          if (!whatsapp || !password) return null;
+
+          const response = await axios.post(
+            `${API_URL}/api/employee/token`,
+            {
+              phone: whatsapp,
+              password: password,
+            },
+            {
+              headers: {
+                accept: 'application/json',
+                'x-device-id': '1',
+                'x-store-id': '1',
+                'x-organization-id': '1',
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          const data = response.data;
+          if (data?.token) {
+            return {
+              id: whatsapp,
+              whatsapp: whatsapp,
+              token: data.token,
+              role: data.role || 'admin',
+              organizations: data.organizations,
+            };
+          }
+          return null;
+        } catch (_e) {
           return null;
         }
-
-        // Find user by WhatsApp number
-        const user = users.find((user) => user.whatsapp === credentials.whatsapp);
-
-        // Check if user exists and password matches
-        if (user && user.password === credentials.password) {
-          // Return user object without password
-          const { password: _, ...userWithoutPassword } = user;
-          return userWithoutPassword;
-        }
-
-        return null;
       },
     }),
   ],
   pages: {
     signIn: '/sign-in',
-    error: '/sign-in', // Error code passed in query string as ?error=
+    error: '/sign-in',
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Add user data to the token when first signed in
       if (user) {
-        // Use type assertion for custom user properties
-        const customUser = user as { id: string; role?: string; name?: string };
+        const customUser = user as {
+          id: string;
+          role?: string;
+          name?: string;
+          token?: string;
+          organizations: Organizations;
+        };
         token.id = customUser.id;
         if (customUser.role) token.role = customUser.role;
         if (customUser.name) token.name = customUser.name;
+        if (customUser.token) token.token = customUser.token;
+        if (customUser.organizations) token.organizations = customUser.organizations;
       }
+
       return token;
     },
     async session({ session, token }) {
-      // Add user data from token to the session
       if (session.user) {
-        // Use type assertion for the session.user to add custom properties
-        const user = session.user as {
+        // Define proper types to avoid TypeScript errors
+        type UserWithCustomProps = typeof session.user & {
+          organizations?: Organizations;
           id?: string;
           role?: string;
           name?: string;
-          email?: string;
-          image?: string;
         };
+
+        // Cast user with proper type
+        const user = session.user as UserWithCustomProps;
+
+        // Assign properties
+        user.organizations = token.organizations as Organizations;
         user.id = token.id as string;
-        // Use interface JWT from types instead of any
         user.role = (token as { role?: string }).role as string;
         user.name = (token as { name?: string }).name as string;
+
+        // Handle token
+        if (token.token) {
+          (session as typeof session & { token?: string }).token = (token as { token?: string })
+            .token as string;
+        }
       }
       return session;
     },

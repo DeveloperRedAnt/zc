@@ -30,7 +30,7 @@ export function useRegisterField(
           return el?.value ?? '';
         }),
     });
-  }, [key, required, registerField]);
+  }, [key, required, registerField, finalRef, options?.getValue]);
 
   const error = getError(key);
 

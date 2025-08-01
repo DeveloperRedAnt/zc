@@ -24,7 +24,12 @@ import { ArrowLeft, Check, Delete, FullSelection, Plus } from '@icon-park/react'
 import cryptoRandomString from 'crypto-random-string';
 import React, { useEffect, useState, useRef } from 'react';
 import { useProductVariantStore } from '../store';
-import { PricesVariantOption, ProductVariantStore, ProductVariants } from '../types';
+import {
+  FormattedDatas,
+  PricesVariantOption,
+  ProductVariantStore,
+  ProductVariants,
+} from '../types';
 
 type AddMultiPriceProps = {
   onSave: (data: ProductVariants) => void;
@@ -43,20 +48,27 @@ interface BulkPriceOption {
 const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [_selectedIds, setSelectedIds] = useState<string[]>([]);
-  const { formattedData, updateFormattedDataPrices, clearFormattedData } =
-    useProductVariantStore() as ProductVariantStore & {
-      updateFormattedDataPrices: (
-        id: string,
-        prices: PricesVariantOption[],
-        typeprice: string
-      ) => void;
-      bulkUpdateFormattedDataPrices: (
-        selectedIds: string[],
-        prices: PricesVariantOption[],
-        typeprice: string
-      ) => void;
-      clearFormattedData();
-    };
+  const {
+    formattedData,
+    updateFormattedDataPrices,
+    clearFormattedData,
+    clearAllData,
+    setFinalData,
+  } = useProductVariantStore() as ProductVariantStore & {
+    updateFormattedDataPrices: (
+      id: string,
+      prices: PricesVariantOption[],
+      typeprice: string
+    ) => void;
+    bulkUpdateFormattedDataPrices: (
+      selectedIds: string[],
+      prices: PricesVariantOption[],
+      typeprice: string
+    ) => void;
+    clearFormattedData();
+    clearAllData();
+    setFinalData: (data: FormattedDatas) => void;
+  };
 
   const [typePrice, setTypePrice] = useState<'Grosir' | 'Multi Kemasan'>('Multi Kemasan');
 
@@ -79,7 +91,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
           id: price.id ?? cryptoRandomString({ length: 10 }),
           namePcs: price.namePcs ?? '',
           quantity: price.quantity ?? 1,
-          prices: price.prices ?? 0,
+          price: price.price ?? 0,
         }));
       } else {
         // Initialize with one empty price option if no existing data
@@ -88,7 +100,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
             id: cryptoRandomString({ length: 10 }),
             namePcs: '',
             quantity: 1,
-            prices: 0,
+            price: 0,
           },
         ];
       }
@@ -124,7 +136,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
           id: cryptoRandomString({ length: 10 }),
           namePcs: '',
           quantity: 1,
-          prices: 0,
+          price: 0,
         };
       }
 
@@ -152,7 +164,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
         id: cryptoRandomString({ length: 10 }),
         namePcs: '',
         quantity: 1,
-        prices: 0,
+        price: 0,
       };
 
       const updatedPrices = [...currentPrices, newPrice];
@@ -212,7 +224,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
       id: cryptoRandomString({ length: 10 }),
       namePcs: option.unitName,
       quantity: option.quantity,
-      prices: option.price,
+      price: option.price,
     }));
 
     // Update state lokal untuk selected items
@@ -236,15 +248,15 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
 
   const handleRedirect = () => {
     clearFormattedData();
-    window.location.href = '/dashboard/product/add';
+    clearAllData();
+    window.location.href = '/dashboard/products/add';
   };
 
   // MAIN SAVE FUNCTION - Dipanggil dari button "Simpan/Update Varian Produk"
   const handleSave = () => {
-    // Validasi: Pastikan semua priceOptions sudah terisi dengan benar
+    // Validasi
     const allValid = formattedData.every((variant) => {
       const prices = priceVariantRefs.current[variant.id] || [];
-      // Setidaknya satu price option, dan semua field wajib terisi
       return (
         prices.length > 0 &&
         prices.every(
@@ -253,8 +265,8 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
             opt.namePcs.trim() !== '' &&
             typeof opt.quantity === 'number' &&
             opt.quantity > 0 &&
-            typeof opt.prices === 'number' &&
-            opt.prices > 0
+            typeof opt.price === 'number' &&
+            opt.price > 0
         )
       );
     });
@@ -268,13 +280,15 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
       return;
     }
 
-    // Batch update semua prices ke store (mirip dengan AddDetailVariant)
+    // Simpan prices ke Zustand
     for (const formattedItem of formattedData) {
       const prices = priceVariantRefs.current[formattedItem.id] || [];
-
-      // Update prices dan typeprice ke store
       updateFormattedDataPrices(formattedItem.id, prices, typePrice);
     }
+
+    // Ambil data terbaru dari Zustand (bukan dari variable formattedData lama)
+    const latestFormattedData = useProductVariantStore.getState().formattedData;
+    setFinalData(JSON.parse(JSON.stringify(latestFormattedData)));
 
     toast.success('Data berhasil disimpan!', {
       description: 'Semua harga varian telah berhasil disimpan',
@@ -453,12 +467,12 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
                         placeholder="0"
                         currency
                         prependText="Rp"
-                        value={priceOption.prices || 0}
+                        value={priceOption.price || 0}
                         onChange={(e) =>
                           handleInputChange(
                             data.id,
                             priceIndex,
-                            'prices',
+                            'price',
                             parseInt(e.target.value) || 0
                           )
                         }

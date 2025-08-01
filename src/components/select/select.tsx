@@ -1,3 +1,4 @@
+'use client';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import * as Lucide from 'lucide-react';
 import * as React from 'react';

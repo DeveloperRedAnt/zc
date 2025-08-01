@@ -1,4 +1,5 @@
 import { Button } from '@/components/button/button';
+import { useLogout } from '@/hooks/use-logout';
 import { useTranslation } from '@/libs/i18n';
 import { AsteriskKey, KeyTwo, Logout } from '@icon-park/react';
 import imgImage from '../assets/mock-profile.png';
@@ -56,6 +57,7 @@ export default function TeamCard({
   onPinChange,
   onLogout,
 }: TeamCardProps) {
+  const logout = useLogout();
   const { t } = useTranslation();
   // Derived values
   const profileSrc = image || imgImage.src;
@@ -63,7 +65,7 @@ export default function TeamCard({
   // Use the same NOOP reference instead of creating new functions
   const handlePasswordChange = onPasswordChange || NOOP;
   const handlePinChange = onPinChange || NOOP;
-  const handleLogout = onLogout || NOOP;
+  const handleLogout = onLogout || logout;
 
   return (
     <div className={CARD_STYLES.container}>

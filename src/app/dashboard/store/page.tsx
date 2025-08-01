@@ -1,118 +1,60 @@
 'use client';
+
 import { Button } from '@/components/button/button';
-import SkeletonButton from '@/components/button/skeleton-button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
-import SkeletonCardContent from '@/components/card/skeleton-card-content';
-import SkeletonPreset from '@/components/skeleton/skeleton-preset';
-import { usePageLoading } from '@/hooks/use-page-loading/use-page-loading';
-import FilterStoreList from '@/modules/store/filter-store-list';
-import TableStoreList from '@/modules/store/table-store-list';
+import { PageLayout } from '@/components/page-layout/page-layout';
+import FilterStore from '@/modules/store/components/filter-store';
+import TableStore from '@/modules/store/components/table-store';
+import { useSearchParams } from '@/modules/store/hooks/use-search-params';
 import { Plus } from '@icon-park/react';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
-type Store = {
-  id: string;
-  storeName: string;
-  storeType: string;
-  storeCat: string;
-  address: string;
-  whatsapp: string;
-};
+export default function StoreListPage() {
+  const router = useRouter();
+  const {
+    search,
+    setSearch,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+  } = useSearchParams();
 
-export default function Index() {
-  const [loadingDataStore, setLoadingDataStore] = useState(true);
-
-  // Form state for inputs
-  const [_, setFormData] = useState({
-    storeName: '',
-    storeType: '',
-    storeCat: '',
-    address: '',
-    whatsapp: '',
-  });
-
-  const { isLoading, setLoading } = usePageLoading({
-    autoStart: false,
-    initialDelay: 0,
-  });
-
-  useEffect(() => {
-    setLoading(true);
-    new Promise<void>((resolve) => {
-      setTimeout(() => {
-        setLoading(false);
-        resolve();
-      }, 2000);
-    }).then(() => {
-      setTimeout(() => {
-        setLoadingDataStore(false);
-      }, 2000);
-    });
-  }, [setLoading]);
-
-  const handleAddStore = () => {
-    setFormData({
-      storeName: '',
-      storeType: '',
-      storeCat: '',
-      address: '',
-      whatsapp: '',
-    });
-    window.location.href = '/dashboard/store/add';
-  };
-
-  const handleEditStore = (store: Store) => {
-    setFormData({
-      storeName: store.storeName,
-      storeType: store.storeType,
-      storeCat: store.storeCat,
-      address: store.address,
-      whatsapp: store.whatsapp,
-    });
-    window.location.href = `/dashboard/store/${store.id}/edit`;
-  };
+  // Reset page to 1 when search changes
+  React.useEffect(() => {
+    if (search && page > 1) {
+      setPage(1);
+    }
+  }, [search, page, setPage]);
 
   return (
     <>
-      <Card className="my-[1rem] font-normal">
-        <CardHeader className="border-b flex-row flex justify-between items-center">
-          {isLoading ? (
-            <SkeletonPreset w="w-32" h="h-6" className="rounded-sm ml-2.5" />
-          ) : (
-            <CardTitle className="text-[1rem]"> List Toko </CardTitle>
-          )}
-          <div className="flex items-center gap-3">
-            {isLoading ? (
-              <>
-                <SkeletonButton className="w-[110px]" />
-                <SkeletonButton className="w-[140px] mr-3.5" />
-              </>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-[#555555] flex items-center"
-                  onClick={handleAddStore}
-                >
-                  <Plus />
-                  Tambah Toko
-                </Button>
-              </>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          {isLoading ? (
-            <SkeletonCardContent className="w-full" />
-          ) : (
-            <>
-              <FilterStoreList loadingDataStore={loadingDataStore} />
-              <TableStoreList isLoading={loadingDataStore} onEditStore={handleEditStore} />
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <PageLayout
+        title="List Toko"
+        button={
+          <Button variant="outline" onClick={() => router.push('/dashboard/store/add')}>
+            <Plus />
+            Tambah Toko
+          </Button>
+        }
+      >
+        <FilterStore search={search} setSearch={setSearch} />
+        <TableStore
+          search={search}
+          page={page}
+          limit={limit}
+          setLimit={setLimit}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          setPage={setPage}
+          setSortBy={setSortBy}
+          setSortOrder={setSortOrder}
+        />
+      </PageLayout>
     </>
   );
 }
