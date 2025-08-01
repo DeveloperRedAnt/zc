@@ -23,7 +23,7 @@ export type TypeToZod<T> = Required<{
   
   // --- Axios Instances ---
   export const apiClientWithHeaders = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: "https://api-zycas.eling.my.id",
     headers: {
       'accept': 'application/json',
       'x-device-id': '1',
