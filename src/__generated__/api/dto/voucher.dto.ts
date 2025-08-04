@@ -33,3 +33,12 @@ export interface VoucherItem {
 
 
 export type GetVoucherListResponse = BaseResponseSchemaPagination<VoucherItem[]>
+
+export type createVoucherRequest = {
+  name: string;
+  code: string;
+  start_at?: string;
+  end_at?: string;
+  type: string;
+  amount: number;
+};

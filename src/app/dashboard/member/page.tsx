@@ -2,31 +2,21 @@
 
 import { Button } from '@/components/button/button';
 import { PageLayout } from '@/components/page-layout/page-layout';
+import CreateMemberPopup from '@/modules/member/components/create-member-popup';
+import DetailMemberPopup from '@/modules/member/components/detail-member-popup';
 import FilterMember from '@/modules/member/components/filter-member';
 import TableMember from '@/modules/member/components/table-member';
 import { useMemberSearchParams } from '@/modules/member/hooks/use-search-params';
+import { Member } from '@/modules/member/types/member';
 import { Plus } from '@icon-park/react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-type Member = {
-  id: number;
-  name: string;
-  created_at: string;
-  phone: string;
-  is_active: boolean;
-  purchases_summary: {
-    montly: number;
-    yearly: number;
-    all_time: number;
-  };
-  monthly_formatted: string;
-  yearly_formatted: string;
-  all_time_formatted: string;
-  registered_formatted: string;
-};
+// Using the imported Member type from '@/modules/member/types/member'
 
 export default function MemberListPage() {
-  const router = useRouter();
+  const [isMemberPopupOpen, setIsMemberPopupOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [popupMode, setPopupMode] = useState<'create' | 'edit' | 'detail'>('create');
 
   const {
     search,
@@ -44,16 +34,33 @@ export default function MemberListPage() {
   } = useMemberSearchParams();
 
   const handleAddMember = () => {
-    // Clear any stored data and navigate to create page
-    localStorage.removeItem('memberId');
-    localStorage.removeItem('memberFormData');
-    router.push('/dashboard/members/create');
+    setSelectedMember(null); // Reset for create mode
+    setPopupMode('create');
+    setIsMemberPopupOpen(true);
   };
 
   const handleEditMember = (member: Member) => {
-    // Store member data for editing
-    localStorage.setItem('memberId', member.id.toString());
-    localStorage.setItem('memberFormData', JSON.stringify(member));
+    setSelectedMember(member); // Set member data for edit mode
+    setPopupMode('edit');
+    setIsMemberPopupOpen(true);
+  };
+
+  const handleDetailMember = (member: Member) => {
+    setSelectedMember(member); // Set member data for detail view
+    setPopupMode('detail');
+    setIsMemberPopupOpen(true);
+  };
+
+  const handleMemberAction = () => {
+    setIsMemberPopupOpen(false);
+    setSelectedMember(null);
+  };
+
+  const handlePopupClose = (open: boolean) => {
+    setIsMemberPopupOpen(open);
+    if (!open) {
+      setSelectedMember(null);
+    }
   };
 
   return (
@@ -81,7 +88,27 @@ export default function MemberListPage() {
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
         onEditMember={handleEditMember}
+        onDetailMember={handleDetailMember}
       />
+
+      {/* Create/Edit Member Popup - hanya tampil jika mode bukan detail */}
+      {popupMode !== 'detail' && (
+        <CreateMemberPopup
+          isOpen={isMemberPopupOpen}
+          onOpenChange={handlePopupClose}
+          member={selectedMember} // Pass member data for edit mode, null for create mode
+          onSuccess={handleMemberAction}
+        />
+      )}
+
+      {/* Detail Member Popup - hanya tampil jika mode detail */}
+      {popupMode === 'detail' && (
+        <DetailMemberPopup
+          isOpen={isMemberPopupOpen}
+          onOpenChange={handlePopupClose}
+          member={selectedMember} // Pass member data for detail view
+        />
+      )}
     </PageLayout>
   );
 }

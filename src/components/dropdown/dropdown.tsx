@@ -113,6 +113,7 @@ function Dropdown<Multi extends boolean = false>({
           container: (base) => ({
             ...base,
             width: '100%',
+            fontSize: '14px',
           }),
           control: (base, state) => ({
             ...base,
@@ -130,16 +131,19 @@ function Dropdown<Multi extends boolean = false>({
                 ? 'var(--color-zycas-primary)'
                 : 'var(--color-gray-300)',
             },
+            fontSize: '14px',
           }),
           valueContainer: (base) => ({
             ...base,
             padding: '0 8px',
             marginTop: '-2px',
+            fontSize: '14px',
           }),
           input: (base) => ({
             ...base,
             margin: '0px',
             color: 'black',
+            fontSize: '14px',
           }),
           indicatorsContainer: (base) => ({
             ...base,
@@ -151,7 +155,25 @@ function Dropdown<Multi extends boolean = false>({
           }),
           menu: (base) => ({
             ...base,
+            fontSize: '14px',
             zIndex: 50,
+          }),
+          option: (base) => ({
+            ...base,
+            fontSize: '14px',
+            padding: '8px 12px',
+          }),
+          singleValue: (base) => ({
+            ...base,
+            fontSize: '14px',
+          }),
+          multiValue: (base) => ({
+            ...base,
+            fontSize: '14px',
+          }),
+          multiValueLabel: (base) => ({
+            ...base,
+            fontSize: '14px',
           }),
         }}
       />

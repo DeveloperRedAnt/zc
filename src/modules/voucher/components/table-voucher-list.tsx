@@ -1,13 +1,6 @@
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
-import {
-  Edit,
-  FileDisplayOne,
-  Right,
-  SortAmountDown,
-  SortAmountUp,
-  SortThree,
-} from '@icon-park/react';
+import { Edit, Right, SortAmountDown, SortAmountUp, SortThree } from '@icon-park/react';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -16,16 +9,25 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { format } from 'date-fns';
 import React, { useMemo } from 'react';
 
 type Voucher = {
   id: string;
   name: string;
   type: string;
+  amount: number;
   quantity: string;
   period: string;
+  code: string;
   voucher_code: string;
   status: string;
+  start_at: string;
+  end_at: string;
+  store: {
+    id: number;
+    name: string;
+  };
 };
 
 type TableProductListProps = {
@@ -57,20 +59,7 @@ function TableVoucherList({
 }: TableProductListProps) {
   const columnHelper = createColumnHelper<Voucher>();
 
-  // Memoize the mapped data to prevent unnecessary calculations
-  const dataTable = useMemo(
-    () =>
-      vouchers.map((voucher) => ({
-        id: voucher.id,
-        name: voucher.name,
-        type: voucher.type,
-        quantity: voucher.quantity,
-        period: voucher.period,
-        voucher_code: voucher.voucher_code,
-        status: voucher.status,
-      })),
-    [vouchers]
-  );
+  const dataTable = useMemo(() => vouchers, [vouchers]);
 
   const baseColumns = [
     columnHelper.accessor('name', {
@@ -110,11 +99,11 @@ function TableVoucherList({
       },
       cell: (info) => {
         const value = info.getValue();
-        const isPersent = value === 'Persen';
+        const isPersent = value === 'persen';
         return (
           <div
             className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[90px] text-center ${
-              isPersent ? 'bg-[#E3FBFF] text-[#0FA6C1]' : 'bg-[#FFF5DF] text-[#FCBA33]'
+              isPersent ? 'bg-[#FFF5DF] text-[#FCBA33]' : 'bg-[#E3FBFF] text-[#0FA6C1]'
             }`}
           >
             {value}
@@ -139,7 +128,13 @@ function TableVoucherList({
           </div>
         );
       },
-      cell: (info) => info.getValue(),
+      cell: (info) => {
+        const amount = info.row.original.amount;
+        const type = info.row.original.type;
+        return type === 'nominal'
+          ? `Rp ${new Intl.NumberFormat('id-ID').format(amount)}`
+          : `${amount}%`;
+      },
       enableSorting: true,
     }),
     columnHelper.accessor('period', {
@@ -158,10 +153,14 @@ function TableVoucherList({
           </div>
         );
       },
-      cell: (info) => info.getValue(),
+      cell: (info) => {
+        const start = info.row.original.start_at;
+        const end = info.row.original.end_at;
+        return `${format(new Date(start), 'yyyy/MM/dd')} - ${format(new Date(end), 'yyyy/MM/dd')}`;
+      },
       enableSorting: true,
     }),
-    columnHelper.accessor('voucher_code', {
+    columnHelper.accessor('code', {
       header: ({ column }) => {
         const isSorted = column.getIsSorted();
 
@@ -196,7 +195,18 @@ function TableVoucherList({
           </div>
         );
       },
-      cell: (info) => info.getValue(),
+      cell: (info) => {
+        const value = info.getValue();
+        return (
+          <div
+            className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[4.4rem] mx-auto text-center ${
+              value ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#FAFAFA] text-[#C2C7D0]'
+            }`}
+          >
+            {value ? 'Aktif' : 'Non-Aktif'}
+          </div>
+        );
+      },
       enableSorting: true,
     }),
     columnHelper.display({
@@ -204,7 +214,7 @@ function TableVoucherList({
       header: () => <div className="font-semibold text-[#555555] text-center">Aksi</div>,
       cell: ({ row }) => (
         <div className="flex gap-2 justify-center items-center">
-          <FileDisplayOne className="cursor-pointer" />
+          {/* Removed invalid type="button" prop */}
           <Edit
             className="cursor-pointer hover:text-blue-600 transition-colors"
             onClick={() => onEditVoucher?.(row.original)}

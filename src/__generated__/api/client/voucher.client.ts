@@ -27,7 +27,6 @@ export const getVoucher = async (
     urlencoded.append("sort_direction", body.sort_direction || "asc");
 
     const response = await apiClientWithHeaders.get(url, { headers, params: urlencoded });
-    console.log("response voucher", response.data)
     return response.data;
   } catch (error) {
     if (error instanceof ValidationError) throw error;
@@ -38,6 +37,49 @@ export const getVoucher = async (
       if (axiosError.response && axiosError.response.status === 403) console.error('Access denied');
       throw new Error('HTTP ' + (axiosError.response && axiosError.response.status || 'unknown') + ': ' + axiosError.message);
     }
+    throw error;
+  }
+};
+
+export const createVoucher = async (params: {
+  'x-device-id': string;
+  'x-store-id': string;
+  'x-organization-id': string;
+  body: DTO.createVoucherRequest,
+}) => {
+  try {
+    let url = `/api/vouchers`;
+    const headers = {
+      'x-device-id': params['x-device-id'],
+      'x-store-id': params['x-store-id'],
+      'x-organization-id': params['x-organization-id'],
+    };
+    const response = await apiClientWithHeaders.post(url, params.body, { headers });
+    return response.data;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    throw error;
+  }
+};
+
+export const updateVoucher = async (params: {
+  id: number;
+  'x-device-id': string;
+  'x-store-id': string;
+  'x-organization-id': string;
+  body: DTO.createVoucherRequest,
+}) => {
+  try {
+    let url = `/api/vouchers/${params.id}`;
+    const headers = {
+      'x-device-id': params['x-device-id'],
+      'x-store-id': params['x-store-id'],
+      'x-organization-id': params['x-organization-id'],
+    };
+    const response = await apiClientWithHeaders.put(url, params.body, { headers });
+    return response.data;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
     throw error;
   }
 };

@@ -18,6 +18,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import MockProvider from '@/app/MockProvider';
 import NextAuthProvider from '@/components/auth/NextAuthProvider';
 import SetAxiosToken from '@/components/auth/SetAxiosToken';
+import { OrganizationProvider } from '@/modules/organization/context';
 
 const META_THEME_COLORS = {
   light: '#ffffff',
@@ -63,10 +64,12 @@ export default async function RootLayout({
         <NuqsAdapter>
           <MockProvider>
             <NextAuthProvider>
-              <SetAxiosToken />
-              <ClientAppShell>
-                <Providers activeThemeValue={activeThemeValue as string}>{children}</Providers>
-              </ClientAppShell>
+              <OrganizationProvider>
+                <SetAxiosToken />
+                <ClientAppShell>
+                  <Providers activeThemeValue={activeThemeValue as string}>{children}</Providers>
+                </ClientAppShell>
+              </OrganizationProvider>
             </NextAuthProvider>
           </MockProvider>
         </NuqsAdapter>

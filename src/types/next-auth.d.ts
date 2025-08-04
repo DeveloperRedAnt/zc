@@ -12,6 +12,8 @@ declare module 'next-auth' {
       organizations?: Organizations; // <-- pindahkan ke dalam user
     } & DefaultSession['user'];
     token?: string;
+    selectedOrganization?: string;
+    organizations?: Organizations;
   }
 
   interface User extends DefaultUser {
@@ -27,5 +29,6 @@ declare module 'next-auth/jwt' {
     name?: string;
     token?: string;
     organizations?: Organizations;
+    selectedOrganization?: string;
   }
 }

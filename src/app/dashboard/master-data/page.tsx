@@ -2,6 +2,7 @@
 
 import { PageLayout } from '@/components/page-layout/page-layout';
 import InteractiveTabs from '@/modules/master-data/components/interactive-tab';
+import ProductUnitContent from '@/modules/master-data/components/product-unit/product-unit-content';
 import QueueCounterContent from '@/modules/master-data/components/queue-counter-content';
 import TaxMasterContent from '@/modules/master-data/components/tax-master-content';
 
@@ -47,7 +48,7 @@ const tabContents = [
       id: 'unit-produk',
       label: 'Unit Produk',
     },
-    content: <PlaceholderContent title="Unit Produk" />,
+    content: <ProductUnitContent />,
   },
   {
     tab: {

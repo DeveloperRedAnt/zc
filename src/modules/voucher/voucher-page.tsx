@@ -1,30 +1,52 @@
 'use client';
-import { useGetVoucher } from '@/__generated__/api/hooks/voucher.hooks';
-// Add custom hook for debounced updates
+import {
+  useCreateVoucher,
+  useGetVoucher,
+  useUpdateVoucher,
+} from '@/__generated__/api/hooks/voucher.hooks';
+// Components
 import { Button } from '@/components/button/button';
 import SkeletonButton from '@/components/button/skeleton-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
 import SkeletonCardContent from '@/components/card/skeleton-card-content';
+import type { OptionType } from '@/components/dropdown/dropdown';
 import SkeletonPreset from '@/components/skeleton/skeleton-preset';
+import { toast } from '@/components/toast/toast';
 import FilterVoucherList from '@/modules/voucher/components/filter-voucher-list';
 import TableVoucherList from '@/modules/voucher/components/table-voucher-list';
 import VoucherConfirmDialog from '@/modules/voucher/components/voucher-confirm-dialog';
 import VoucherDialog from '@/modules/voucher/components/voucher-dialog';
 import { Plus } from '@icon-park/react';
+import { format } from 'date-fns';
 import { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from './hooks/use-search-params';
-import { Voucher, defaultVoucherData } from './types/voucher-types';
+import { Range, defaultVoucherData } from './types/voucher-types';
+
+const optionsStatus: OptionType[] = [
+  { label: 'Pilih Tipe', value: '' },
+  { label: 'Nominal', value: 'nominal' },
+  { label: 'Persen', value: 'percent' },
+];
 
 export default function VoucherPage() {
   const [dialogVoucherOpen, setDialogVoucherOpen] = useState(false);
   const [dialogVoucherConfirm, setDialogVoucherConfirm] = useState(false);
-  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [selectedVoucher, setSelectedVoucher] = useState<TableVoucher | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState(defaultVoucherData);
+  const [selectedStoreVoucher, setSelectedStoreVoucher] = useState<OptionType | null>(null);
+  const [selectedRange, setSelectedRange] = useState<Range | undefined>(undefined);
+
+  const [selectedStatus, setSelectedStatus] = useState<OptionType | null>({
+    label: 'Pilih Tipe',
+    value: '',
+  });
+
+  const { mutateAsync: createVoucher } = useCreateVoucher();
+  const { mutateAsync: updateVoucher } = useUpdateVoucher();
 
   const {
     search,
-    setSearch,
     page,
     setPage,
     perPage,
@@ -33,32 +55,36 @@ export default function VoucherPage() {
     setSortBy,
     sortOrder,
     setSortOrder,
-    setStatus,
     status,
+    setStatus,
     from,
     setFrom,
     to,
     setTo,
+    setSearch,
   } = useSearchParams();
 
   // Prepare request params (don't over-optimize here)
-  const requestParams = {
-    params: {
-      'x-device-id': '1',
-      'x-organization-id': '1',
-      'x-store-id': '1',
-    },
-    body: {
-      search,
-      page,
-      per_page: perPage,
-      sort_by: sortBy,
-      sort_direction: (sortOrder as 'asc' | 'desc') || undefined,
-      search_by_status: status || 'all',
-      start_at: from,
-      end_at: to,
-    },
-  };
+  const requestParams = useMemo(
+    () => ({
+      params: {
+        'x-device-id': '1',
+        'x-organization-id': '1',
+        'x-store-id': '1', // Adding required x-store-id parameter
+      },
+      body: {
+        search,
+        page,
+        per_page: perPage,
+        sort_by: sortBy,
+        sort_direction: (sortOrder as 'asc' | 'desc') || undefined,
+        search_by_status: status || '',
+        start_at: from,
+        end_at: to,
+      },
+    }),
+    [search, page, perPage, sortBy, sortOrder, status, from, to]
+  );
 
   // We're not memoizing the params anymore so React Query can detect changes properly
   const { isLoading, data: respVoucher } = useGetVoucher(requestParams);
@@ -68,32 +94,74 @@ export default function VoucherPage() {
     setSelectedVoucher(null);
     setFormData(defaultVoucherData);
     setDialogVoucherOpen(true);
+    setSelectedStatus({ label: 'Pilih Tipe', value: '' });
+    setSelectedRange(undefined);
+    setSelectedStoreVoucher(null);
   }, []);
 
-  const handleEditVoucher = useCallback((voucher: Voucher) => {
-    setIsEditMode(true);
-    setSelectedVoucher(voucher);
+  const handleSelectVoucher = useCallback((voucher: TableVoucher) => {
+    setSelectedVoucher(voucher); // Now accepts TableVoucher type
     setFormData({
+      ...defaultVoucherData,
       name: voucher.name,
+      period: `${voucher.start_at} - ${voucher.end_at}`,
+      code: voucher.code,
+      store: voucher.store.id,
+      amount: voucher.amount,
       type: voucher.type,
-      quantity: voucher.quantity,
-      period: voucher.period,
-      voucher_code: voucher.voucher_code,
-      status: voucher.status,
     });
-    setDialogVoucherOpen(true);
+    setSelectedStoreVoucher({
+      label: `#${voucher.store.id} - ${voucher.store.name}`,
+      value: voucher.store.id,
+    });
+    setSelectedRange({
+      from: new Date(voucher.start_at),
+      to: new Date(voucher.end_at),
+    });
+
+    // Find matching status option
+    const matchedStatus = optionsStatus.find((opt) => opt.value === voucher.type);
+    setSelectedStatus(matchedStatus || null);
   }, []);
+
+  const handleEditVoucher = useCallback(
+    (voucher: TableVoucher) => {
+      // Fix type comparison - 'persen' is not part of the expected type
+      if (voucher.type === 'percent' || voucher.type === 'nominal') {
+        // Types are already correct, no need to modify
+      } else {
+        // Default to 'nominal' for any unexpected type
+        voucher.type = 'nominal';
+      }
+
+      setIsEditMode(true);
+      handleSelectVoucher(voucher);
+      setDialogVoucherOpen(true);
+    },
+    [handleSelectVoucher]
+  );
 
   const handleResetForm = useCallback(() => {
     if (isEditMode && selectedVoucher) {
       setFormData({
         name: selectedVoucher.name,
         type: selectedVoucher.type,
-        quantity: selectedVoucher.quantity,
-        period: selectedVoucher.period,
-        voucher_code: selectedVoucher.voucher_code,
-        status: selectedVoucher.status,
+        amount: selectedVoucher.amount,
+        period: `${selectedVoucher.start_at} - ${selectedVoucher.end_at}`,
+        code: selectedVoucher.code,
+        store: selectedVoucher.store.id,
       });
+      setSelectedStoreVoucher({
+        label: `#${selectedVoucher.store.id} - ${selectedVoucher.store.name}`,
+        value: selectedVoucher.store.id,
+      });
+      setSelectedRange({
+        from: new Date(selectedVoucher.start_at),
+        to: new Date(selectedVoucher.end_at),
+      });
+
+      const optionVoucherPercent = optionsStatus.find((opt) => opt.value === selectedVoucher.type);
+      setSelectedStatus(optionVoucherPercent || null);
     } else {
       setFormData(defaultVoucherData);
     }
@@ -102,34 +170,143 @@ export default function VoucherPage() {
   const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: field === 'amount' ? (value !== '' ? Number(value) : 0) : value,
     }));
   }, []);
 
-  const handleDialogSuccess = useCallback(() => {
+  const handleDialogSuccess = useCallback(async () => {
+    try {
+      const amount = Number(formData.amount);
+
+      const voucherPayload = {
+        name: formData.name,
+        code: formData.code,
+        type: selectedStatus?.value?.toString() || '',
+        amount,
+        start_at: selectedRange?.from ? format(selectedRange.from, 'yyyy-MM-dd') : undefined,
+        end_at: selectedRange?.to ? format(selectedRange.to, 'yyyy-MM-dd') : undefined,
+        store: Number(selectedStoreVoucher?.value),
+      };
+
+      if (isEditMode && selectedVoucher) {
+        await updateVoucher({
+          id: Number(selectedVoucher.id),
+          'x-device-id': '1',
+          'x-store-id': String(voucherPayload.store),
+          'x-organization-id': '1',
+          body: voucherPayload,
+        });
+      } else {
+        await createVoucher({
+          'x-device-id': '1',
+          'x-store-id': String(voucherPayload.store),
+          'x-organization-id': '1',
+          body: voucherPayload,
+        });
+      }
+
+      toast.success(isEditMode ? 'Terupdate!' : 'Tersimpan!', {
+        description: isEditMode
+          ? 'Voucher Anda telah berhasil diupdate'
+          : 'Voucher Anda telah berhasil tersimpan',
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+      toast.error('Gagal menyimpan voucher', {
+        description: 'Silakan periksa data Anda dan coba lagi',
+      });
+    }
+
     setDialogVoucherConfirm(false);
+    setDialogVoucherOpen(false);
     setIsEditMode(false);
     setSelectedVoucher(null);
-  }, []);
+    setFormData(defaultVoucherData);
+    setSelectedRange(undefined);
+    setSelectedStoreVoucher(null);
+    setSelectedStatus({ label: 'Pilih Tipe', value: '' });
+  }, [
+    createVoucher,
+    updateVoucher,
+    formData,
+    selectedRange,
+    selectedStoreVoucher,
+    isEditMode,
+    selectedVoucher,
+    selectedStatus,
+  ]);
 
-  const dataVouchers: Voucher[] = useMemo(() => {
+  // Define interfaces to handle API response and TableVoucherList compatibility
+  interface ApiVoucherResponse {
+    id: number | string;
+    name: string;
+    type: string;
+    amount: number;
+    quantity?: string;
+    period?: string;
+    code: string;
+    voucher_code?: string;
+    status?: string;
+    start_at: string;
+    end_at: string;
+    store: {
+      id: number;
+      name: string;
+    };
+    is_active?: boolean;
+  }
+
+  // This matches the internal Voucher type from TableVoucherList
+  // with is_active added for compatibility with voucher-types.ts Voucher
+  // Use this type across the component for consistency
+  type TableVoucher = {
+    id: string; // Keep as string for UI display purposes
+    name: string;
+    type: string;
+    amount: number;
+    quantity: string;
+    period: string;
+    code: string;
+    voucher_code: string;
+    status: string;
+    start_at: string;
+    end_at: string;
+    store: {
+      id: number;
+      name: string;
+    };
+    is_active: boolean;
+  };
+
+  const dataVouchers = useMemo<TableVoucher[]>(() => {
     if (!respVoucher?.data) return [];
 
-    return respVoucher?.data.map((voucher) => ({
+    const mappedData = (respVoucher?.data || []).map((voucher: ApiVoucherResponse) => ({
       id: String(voucher.id),
       name: voucher.name,
       type: voucher.type,
-      quantity: String(voucher.amount),
-      period: `${voucher.start_at} - ${voucher.end_at}`,
-      voucher_code: voucher.code,
-      status: voucher.is_active ? 'Aktif' : 'Non-Aktif',
+      amount: voucher.amount,
+      quantity: voucher.quantity || '',
+      period: voucher.period || '',
+      code: voucher.code,
+      voucher_code: voucher.voucher_code || voucher.code,
+      status: voucher.is_active ? 'Aktif' : 'Non-Aktif', // Match the expected status format in TableVoucherList
+      start_at: voucher.start_at,
+      end_at: voucher.end_at,
+      store: voucher.store,
+      is_active: !!voucher.is_active, // Convert to boolean for compatibility
     }));
-  }, [respVoucher]);
 
+    return mappedData;
+  }, [respVoucher]);
   return (
     <>
       <Card className="my-[1rem] font-normal">
-        <CardHeader className="bg-[#F2FAFF] flex flex-col lg:flex-row lg:items-center lg:justify-between p-4">
+        <CardHeader className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4">
           <div className="flex flex-col">
             <CardTitle className="text-lg font-bold">
               {isLoading ? (
@@ -144,7 +321,7 @@ export default function VoucherPage() {
               <SkeletonButton className="h-[40px] w-[120px] rounded-md" />
             ) : (
               <>
-                <Button variant="success" onClick={handleAddVoucher}>
+                <Button variant="info" onClick={handleAddVoucher}>
                   <Plus size={14} /> Tambah Voucher
                 </Button>
 
@@ -155,10 +332,17 @@ export default function VoucherPage() {
                   formData={formData}
                   onInputChange={handleInputChange}
                   onReset={handleResetForm}
+                  selectedStoreVoucher={selectedStoreVoucher}
+                  setSelectedStoreVoucher={setSelectedStoreVoucher}
+                  selectedRange={selectedRange}
+                  setSelectedRange={setSelectedRange}
                   onConfirm={() => {
                     setDialogVoucherConfirm(true);
                     setDialogVoucherOpen(false);
                   }}
+                  optionsStatus={optionsStatus}
+                  selectedStatus={selectedStatus}
+                  setSelectedStatus={setSelectedStatus}
                 />
 
                 <VoucherConfirmDialog
@@ -193,7 +377,7 @@ export default function VoucherPage() {
               />
               <TableVoucherList
                 isLoading={isLoading}
-                onEditVoucher={handleEditVoucher}
+                onEditVoucher={(org) => handleEditVoucher(org as TableVoucher)}
                 page={page}
                 vouchers={dataVouchers}
                 setPage={setPage}

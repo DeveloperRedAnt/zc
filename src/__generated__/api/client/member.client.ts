@@ -18,7 +18,7 @@ export const listMembers = async (params: {
       'x-organization-id': params['x-organization-id'],
     };
     const response = await apiClientWithHeaders.get(url, { headers, params: params.body });
-    
+
     const members = response.data.data.map((member: DTO.MemberListResponse) => ({
       ...member,
       // Format currency values
@@ -39,7 +39,60 @@ export const listMembers = async (params: {
   }
 };
 
-// Helper functions
+/**
+ * Create Member
+ */
+export const createMember = async (params: {
+  'x-device-id': string;
+  'x-store-id': string;
+  'x-organization-id': string;
+  body: DTO.CreateMemberPayloadSchema;
+}): Promise<DTO.CreateMemberResponse> => {
+  try {
+    const url = '/api/members';
+    const headers = {
+      'x-device-id': params['x-device-id'],
+      'x-store-id': params['x-store-id'],
+      'x-organization-id': params['x-organization-id'],
+    };
+    
+    const response = await apiClientWithHeaders.post(url, params.body, { headers });
+    
+    return response.data;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    throw error;
+  }
+};
+
+/**
+ * Edit Member
+ */
+export const editMember = async (params: {
+  'x-device-id': string;
+  'x-store-id': string;  
+  'x-organization-id': string;
+  id: string;
+  body: DTO.EditMemberPayloadSchema;
+}): Promise<DTO.EditMemberResponse> => {
+  try {
+    const url = `/api/members/${params.id}`;
+    const headers = {
+      'x-device-id': params['x-device-id'],
+      'x-store-id': params['x-store-id'],
+      'x-organization-id': params['x-organization-id'],
+    };
+    
+    const response = await apiClientWithHeaders.put(url, params.body, { headers });
+    
+    return response.data;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    throw error;
+  }
+};
+
+// Helper functions (if needed for other purposes)
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',

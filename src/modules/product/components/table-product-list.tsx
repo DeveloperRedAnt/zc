@@ -290,7 +290,7 @@ export default function TableProductList({
               </thead>
               <tbody>
                 {details.map((d) => (
-                  <tr key={d.sku}>
+                  <tr key={d.sku + d.barcode}>
                     <td className="px-6 py-[19px] border-b">{d.name}</td>
                     <td className="px-6 py-[19px] border-b">{d.barcode}</td>
                     <td className="px-6 py-[19px] border-b">{d.sku}</td>

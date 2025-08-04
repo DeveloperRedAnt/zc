@@ -27,18 +27,27 @@ export type TypeToZod<T> = Required<{
     headers: {
       'accept': 'application/json',
       'x-device-id': '1',
-      'x-store-id': '1',
       'x-organization-id': '1',
       'Content-Type': 'application/json',
     },
   });
   
   // Add response interceptor for error handling
-  apiClientWithHeaders.interceptors.response.use((response) => response, (error) => {
+  apiClientWithHeaders.interceptors.response.use((response) => response, async (error) => {
     if (error.response) {
         const { status, data } = error.response;
         error.message = 'API Error ' + status + ': ' + (data && data.message || error.message);
         error.data = data;
+        
+        // Handle 401 unauthorized errors by logging out
+        if (status === 401 && typeof window !== 'undefined') {
+          try {
+            const { signOut } = await import('next-auth/react');
+            await signOut({ redirect: true, callbackUrl: '/sign-in' });
+          } catch (logoutError) {
+            console.error('Error during automatic logout:', logoutError);
+          }
+        }
     }
     return Promise.reject(error);
   });
@@ -70,7 +79,7 @@ export type TypeToZod<T> = Required<{
   }, error => Promise.reject(error));
   
   export const apiClientWithHeadersWithoutContentType = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: "https://api-zycas.eling.my.id",
     headers: {
       'x-device-id': '1',
       'x-store-id': '1',
@@ -78,11 +87,21 @@ export type TypeToZod<T> = Required<{
     },
   });
   
-  apiClientWithHeadersWithoutContentType.interceptors.response.use((response) => response, (error) => {
+  apiClientWithHeadersWithoutContentType.interceptors.response.use((response) => response, async (error) => {
     if (error.response) {
         const { status, data } = error.response;
         error.message = 'API Error ' + status + ': ' + (data && data.message || error.message);
         error.data = data;
+        
+        // Handle 401 unauthorized errors by logging out
+        if (status === 401 && typeof window !== 'undefined') {
+          try {
+            const { signOut } = await import('next-auth/react');
+            await signOut({ redirect: true, callbackUrl: '/sign-in' });
+          } catch (logoutError) {
+            console.error('Error during automatic logout:', logoutError);
+          }
+        }
     }
     return Promise.reject(error);
   });

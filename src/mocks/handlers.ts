@@ -1,11 +1,9 @@
 import { http, HttpResponse } from 'msw';
 import { setFirstStockHandler, stockDetailHandler } from './set_first_stock';
 
-// Menggunakan API URL dari environment variable atau fallback ke default URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-zycas.eling.my.id';
 
 export const handlers = [
-  http.get(`${API_URL}/api/v2/products`, () => {
+  http.get(`https://api-zycas.eling.my.id/api/v2/products`, () => {
     return HttpResponse.json({
       response_code: '00',
       response_message: 'success',

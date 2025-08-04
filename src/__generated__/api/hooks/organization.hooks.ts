@@ -6,10 +6,10 @@ import {
   useMutation,
   useQuery,
 } from "@tanstack/react-query";
+import { createStandardQueryKey } from "../../../utils/query-key";
 import * as api from "../client";
 import { apiClientWithHeaders } from "../client/base.client";
 import * as DTO from "../dto";
-import { getQueryKey } from "./base.hooks";
 
 // --- Queries ---
 export function useGetOrganization(
@@ -17,19 +17,24 @@ export function useGetOrganization(
   options?: UseQueryOptions<DTO.OrganizationSchema>
 ) {
   return useQuery({
-    queryKey: getQueryKey("getOrganization", params),
-    queryFn: () => api.getOrganization(params),
+    queryKey: createStandardQueryKey("getOrganization", params),
+    queryFn: () => {
+      console.log("test")
+      return api.getOrganization(params)
+    },
     ...options,
   });
 }
 
 export function useGetOrganizationsOfUser(
   params: DTO.GetOrganizationOfUserRequestSchema,
-  options?: UseQueryOptions<DTO.OrganizationSchema>
+  options?: UseQueryOptions<Array<DTO.OrganizationSchema>>
 ) {
   return useQuery({
-    queryKey: getQueryKey("getOrganizationsOfUser", params),
-    queryFn: () => api.GetOrganizationOfUser(params),
+    queryKey: createStandardQueryKey("getOrganizationsOfUser", params),
+    queryFn: () =>{
+      return api.GetOrganizationOfUser(params)
+    },
     ...options,
   });
 }
@@ -76,6 +81,7 @@ export const useListOrganizationEmployees = async (params: {
   };
 }) => {
   try {
+
     const url = `/api/store-of-org/${params["x-organization-id"]}`;
 
     const headers = {
@@ -105,7 +111,7 @@ export function useSelectOrganization(
   options?: UseQueryOptions<DTO.SelectOrganizationSchema>
 ) {
   return useQuery({
-    queryKey: getQueryKey("selectOrganization", params),
+    queryKey: ["selectOrganization", { "x-device-id": params["x-device-id"], "x-organization-id": params["x-organization-id"] }],
     queryFn: () => {
       return api.SelectOrganization({
         "x-device-id": params["x-device-id"],
@@ -139,14 +145,7 @@ export function useGetDashboardOrganizationsEmploye(
   options?: UseQueryOptions<DTO.ApiResponseOrganizationByEmployee>
 ) {
   return useQuery({
-    queryKey: [
-      "getDashboardOrganizations",
-      params.page,
-      params.per_page,
-      params.search,
-      params.sort_by,
-      params.sort_direction,
-    ],
+    queryKey: createStandardQueryKey("getDashboardOrganizations", params),
     queryFn: () => api.getDashboardOrganizations(params),
     ...options,
   });

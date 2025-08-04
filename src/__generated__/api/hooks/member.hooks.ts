@@ -1,6 +1,6 @@
 // User domain React Query hooks
 
-import {  UseQueryOptions, useQuery } from '@tanstack/react-query';
+import {  UseMutationOptions, UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import * as api from '../client';
 import * as DTO from '../dto';
 
@@ -46,6 +46,67 @@ export function useGetMember(
       return response;
     },
     placeholderData: (prev) => prev,
+    ...options,
+  });
+}
+
+/**
+ * Create Member
+ */
+export function useCreateMember(
+  options?: UseMutationOptions<
+    DTO.CreateMemberResponse,
+    Error,
+    {
+      'x-device-id': string;
+      'x-store-id': string;
+      'x-organization-id': string;
+      body: DTO.CreateMemberPayloadSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: async (params) => {
+      const response = await api.createMember(params);
+      return response;
+    },
+    onError: (error) => {
+      console.error('❌ Create Member Error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('✅ Create Member Success:', data);
+    },
+    ...options,
+  });
+}
+
+/**
+ * Edit Member
+ */
+export function useEditMember(
+  options?: UseMutationOptions<
+    DTO.EditMemberResponse,
+    Error,
+    {
+      'x-device-id': string;
+      'x-store-id': string;
+      'x-organization-id': string;
+      id: string;
+      body: DTO.EditMemberPayloadSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: async (params) => {
+      const response = await api.editMember(params);
+      return response;
+    },
+    onError: (error) => {
+      console.error('❌ Edit Member Error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('✅ Edit Member Success:', data);
+    },
     ...options,
   });
 }

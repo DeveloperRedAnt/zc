@@ -4,8 +4,6 @@ import type { NextAuthOptions } from 'next-auth';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-// Menggunakan API URL dari environment variable atau fallback ke default URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-zycas.eling.my.id';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           if (!whatsapp || !password) return null;
 
           const response = await axios.post(
-            `${API_URL}/api/employee/token`,
+            `https://api-zycas.eling.my.id/api/employee/token`,
             {
               phone: whatsapp,
               password: password,

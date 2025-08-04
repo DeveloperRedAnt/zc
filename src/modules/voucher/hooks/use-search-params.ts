@@ -21,7 +21,7 @@ export function useSearchParams() {
     setPage(1);
     setSortBy('asc');
     setSortOrder('asc');
-    setStatus('all');
+    setStatus('');
     setFrom('');
     setTo('');
   };

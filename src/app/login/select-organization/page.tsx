@@ -4,11 +4,12 @@ import type { OrganizationSchema } from '@/__generated__/api/dto/organization.dt
 import { useGetOrganizationsOfUser } from '@/__generated__/api/hooks/organization.hooks';
 import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
+import { useOrganization } from '@/modules/organization/context';
 import { useOrganizationStore } from '@/store/organization-store';
 import { Check } from '@icon-park/react';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import OrganizationSelect from './components/organization-select';
 import { SkeletonSelect } from './components/skeleton-organization-select';
 import {
@@ -23,8 +24,10 @@ export default function SelectOrganizationPage() {
   const [dataOrganization, setDataOrganization] = useState<{ value: string; label: string }[]>([]);
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
 
+  const { currentId, isLoading: isLoadingSelectedOrg, switchOrganization } = useOrganization();
+
   // Fetch organizations of user
-  const { data: rawDataOrganizationOfUser, isLoading: isLoadingOrganization } =
+  const { data: rawDataOrganizationOfUser, isLoading: isLoadingFetchOrganizations } =
     useGetOrganizationsOfUser(
       {
         'x-device-id': '1',
@@ -36,46 +39,57 @@ export default function SelectOrganizationPage() {
       }
     );
 
+  const isLoadingOrganization = isLoadingFetchOrganizations || isLoadingSelectedOrg;
+
   // Strictly type organization data
   const dataOrganizationOfUser: OrganizationSchema[] = Array.isArray(rawDataOrganizationOfUser)
     ? (rawDataOrganizationOfUser as OrganizationSchema[])
     : [];
 
   useEffect(() => {
-    // If user already in dashboard, block access to this page
-    // Wait for loading to finish
     if (isLoadingOrganization) return;
 
-    // If no organization, redirect to add-organization page
     if (dataOrganizationOfUser.length === 0) {
       setOrganization({ id: 0, name: '', flex: 'choose-organization' });
       router.replace('/login/add-organization');
       return;
     }
 
-    // Format organization options for select input
     setDataOrganization(formatOrganizationOptions(dataOrganizationOfUser));
   }, [dataOrganizationOfUser, isLoadingOrganization, router, setOrganization]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onChangeOrg = useCallback(
+    (selectedVal: string) => {
+      setSelectedOrg(selectedVal);
+      switchOrganization(selectedVal);
+    },
+    [switchOrganization]
+  );
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoadingLogin(true);
 
-    // Find selected organization from list
-    const orgList = dataOrganizationOfUser;
-    const fullOrg = getSelectedOrganization(selectedOrg, dataOrganization, orgList);
+    try {
+      // Find selected organization from list
+      const orgList = dataOrganizationOfUser;
+      const fullOrg = getSelectedOrganization(selectedOrg, dataOrganization, orgList);
 
-    if (fullOrg) {
-      setOrganization({ id: fullOrg.id, name: fullOrg.name, flex: 'dashboard' });
-      Cookies.set('flex', 'dashboard');
-      requestAnimationFrame(() => {
-        setLoadingLogin(false);
+      if (fullOrg) {
+        // Set the selected organization in store
+        setOrganization({ id: fullOrg.id, name: fullOrg.name, flex: 'dashboard' });
+        Cookies.set('flex', 'dashboard');
+        // Navigate to dashboard
         router.push('/dashboard');
-      });
-    } else {
+      }
+    } catch (error) {
+      console.error('Error selecting organization:', error);
+    } finally {
       setLoadingLogin(false);
     }
   };
+
+  // We'll handle the organization switching directly in handleSubmit instead of using an effect
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
@@ -95,7 +109,9 @@ export default function SelectOrganizationPage() {
         </div>
         <Card className="text-[#555555] rounded-lg shadow-lg">
           <CardHeader className="border-b flex-row flex justify-between items-center">
-            <CardTitle className="text-[1rem] font-semibold">Pilih Organisasi</CardTitle>
+            <CardTitle className="text-[1rem] font-semibold">
+              Pilih Organisasi: {currentId}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 p-0 text-[14px] font-[400]">
             <form onSubmit={handleSubmit} autoComplete="off">
@@ -127,7 +143,7 @@ export default function SelectOrganizationPage() {
                   ) : (
                     <OrganizationSelect
                       value={selectedOrg}
-                      onChange={setSelectedOrg}
+                      onChange={onChangeOrg}
                       organizations={dataOrganization}
                     />
                   )}

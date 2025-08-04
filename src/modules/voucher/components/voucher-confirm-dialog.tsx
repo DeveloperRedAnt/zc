@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/dialog/dialog';
-import { toast } from '@/components/toast/toast';
 import React from 'react';
 
 interface VoucherConfirmDialogProps {
@@ -28,18 +27,12 @@ const VoucherConfirmDialog: React.FC<VoucherConfirmDialogProps> = ({
   onConfirm,
 }) => {
   const handleConfirm = () => {
-    toast.success(isEditMode ? 'Terupdate!' : 'Tersimpan!', {
-      description: isEditMode
-        ? 'Voucher Anda telah berhasil diupdate'
-        : 'Voucher Anda telah berhasil tersimpan',
-      className: 'bg-[#75BF85]',
-    });
     onConfirm();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent aria-describedby="voucher-dialog-description">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? 'Anda akan mengupdate Voucher' : 'Anda akan menyimpan Voucher'}

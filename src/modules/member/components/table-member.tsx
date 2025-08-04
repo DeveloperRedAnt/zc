@@ -10,6 +10,7 @@ import {
 } from '@/components/dropdown-menu/dropdown-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { Member } from '@/modules/member/types/member';
 import {
   Edit,
   FileDisplayOne,
@@ -26,25 +27,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useRouter } from 'next/navigation';
 import React from 'react';
-
-type Member = {
-  id: number;
-  name: string;
-  created_at: string;
-  phone: string;
-  is_active: boolean;
-  purchases_summary: {
-    montly: number;
-    yearly: number;
-    all_time: number;
-  };
-  monthly_formatted: string;
-  yearly_formatted: string;
-  all_time_formatted: string;
-  registered_formatted: string;
-};
 
 const getTextClass = (active: boolean) => (!active ? 'text-[#C2C7D0]' : 'text-black');
 
@@ -98,6 +81,7 @@ export type TableMemberProps = {
   status: string;
   setStatus: (status: string) => void;
   onEditMember?: (member: Member) => void;
+  onDetailMember?: (member: Member) => void;
 };
 
 export default function TableMember({
@@ -112,6 +96,7 @@ export default function TableMember({
   setSortOrder,
   status,
   onEditMember,
+  onDetailMember,
 }: TableMemberProps) {
   const setSort = (field: string, direction: string) => {
     switch (field) {
@@ -136,7 +121,6 @@ export default function TableMember({
 
   const sortDirection = React.useMemo(() => (sortOrder === 'asc' ? 'asc' : 'desc'), [sortOrder]);
 
-  const router = useRouter();
   const params = React.useMemo(
     () => ({
       'x-device-id': '1',
@@ -229,7 +213,11 @@ export default function TableMember({
               >
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => router.push(`/dashboard/members/${info.row.original.id}`)}
+                    onClick={() => {
+                      if (onDetailMember) {
+                        onDetailMember(info.row.original);
+                      }
+                    }}
                   >
                     <FileDisplayOne size="16" className="mr-2" /> Detail Member
                   </DropdownMenuItem>
@@ -238,7 +226,6 @@ export default function TableMember({
                       if (onEditMember) {
                         onEditMember(info.row.original);
                       }
-                      router.push(`/dashboard/members/${info.row.original.id}/edit`);
                     }}
                   >
                     <Edit size="16" className="mr-2" /> Edit Member
@@ -250,7 +237,7 @@ export default function TableMember({
         ),
       }),
     ],
-    [sortBy, sortDirection, setSort, router, onEditMember]
+    [sortBy, sortDirection, setSort, onEditMember, onDetailMember]
   );
 
   const table = useReactTable({

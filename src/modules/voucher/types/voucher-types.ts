@@ -1,29 +1,34 @@
 export type Voucher = {
-  id: string;
+  id: number;
   name: string;
-  type: string;
-  quantity: string;
-  period: string;
-  voucher_code: string;
-  status: string;
+  type: 'nominal' | 'percent';
+  amount: number;
+  start_at: string;
+  end_at: string;
+  code: string;
+  is_active: boolean;
+  store: {
+    id: number;
+    name: string;
+  };
 };
 
 export type VoucherFormData = {
   name: string;
-  type: string;
-  quantity: string;
+  amount: number;
   period: string;
-  voucher_code: string;
-  status: string;
+  type: string;
+  code: string;
+  store: number;
 };
 
 export const defaultVoucherData: VoucherFormData = {
   name: '',
   type: '',
-  quantity: '',
+  amount: 0,
   period: '',
-  voucher_code: '',
-  status: '',
+  code: '',
+  store: 0,
 };
 
 export type Range = {

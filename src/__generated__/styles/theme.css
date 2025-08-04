@@ -95,6 +95,17 @@
     /* ZYCAS specific colors */
     --btn-succes: #75BF85;
 
+    --chart-1: var(--color-blue-300);
+    --chart-2: var(--color-blue-500);
+    --chart-3: var(--color-blue-600);
+    --chart-4: var(--color-blue-700);
+    --chart-5: var(--color-blue-800);
+
+    --color-chrome: var(--chart-1);
+    --color-safari: var(--chart-2);
+    --color-firefox: var(--chart-3);
+    --color-edge: var(--chart-4);
+    --color-other: var(--chart-5);
 }
 
 .dark {

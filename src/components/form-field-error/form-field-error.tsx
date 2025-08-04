@@ -5,5 +5,5 @@ type FormFieldErrorProps = {
 export default function FormFieldError({ message }: FormFieldErrorProps) {
   if (!message) return null;
 
-  return <p className="text-sm text-[#F08181] mt-1">{message}</p>;
+  return <p className="text-xs text-red-500 mt-1">{message}</p>;
 }
