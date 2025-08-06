@@ -195,7 +195,7 @@ export default function TableProductList({
           <div className="relative group">
             <FileDisplayOne
               className="cursor-pointer"
-              onClick={() => router.push(`/dashboard/product/${info.row.original.id}`)}
+              onClick={() => router.push(`/dashboard/products/${info.row.original.id}`)}
             />
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex bg-gray-700 text-white text-xs px-2 py-1 rounded shadow z-10 whitespace-nowrap">
               Detail

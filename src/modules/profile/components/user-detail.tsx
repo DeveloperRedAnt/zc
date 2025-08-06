@@ -1,47 +1,9 @@
 import * as DTO from '@/__generated__/api/dto';
 import { Card, CardContent, CardHeader } from '@/components/card/card';
 import { useTranslation } from '@/libs/i18n';
+import { useMemo } from 'react';
 import DetailField from '../card-photo/detail-field';
 import PermissionList from './permission-detail';
-
-// const _sectionsData: PermissionSection[] = [
-//   {
-//     id: '#1123',
-//     title: '#1123 - Indosemar Juanda',
-//     permissionCount: 3,
-//     jabatan: 'Kasir',
-//     categories: [
-//       {
-//         title: 'Kasir',
-//         permissions: [
-//           'Buat Transaksi',
-//           'Tutup Kasir',
-//           'Tampilan Tabel',
-//           'Split Bill',
-//           'Buka Kasir',
-//           'Tampilan Grid',
-//           'Produk Cuma-Cuma',
-//         ],
-//       },
-//       {
-//         title: 'Produk',
-//         permissions: ['Lihat List Produk', 'Lihat Detail Produk'],
-//       },
-//     ],
-//   },
-//   {
-//     id: '#1124',
-//     title: '#1124 - Contoh Lain',
-//     permissionCount: 2,
-//     jabatan: 'Manager',
-//     categories: [
-//       {
-//         title: 'Manajemen',
-//         permissions: ['Kelola Staf', 'Lihat Laporan'],
-//       },
-//     ],
-//   },
-// ];
 
 export type UserDetailProps = {
   identityNumber: string;
@@ -63,24 +25,27 @@ export default function UserDetail({
   const { t } = useTranslation();
 
   // User configuration with translations
-  const userConfig = [
-    {
-      key: 'ktp',
-      label: t('profile.userProfile.userDetail.fields.ktp'),
-      value: identityNumber,
-      labelClassName: "font-semibold font-['Poppins:SemiBold']",
-    },
-    {
-      key: 'whatsapp',
-      label: t('profile.userProfile.userDetail.fields.whatsapp'),
-      value: phoneNumber,
-    },
-    {
-      key: 'email',
-      label: t('profile.userProfile.userDetail.fields.email'),
-      value: email,
-    },
-  ];
+  const userConfig = useMemo(
+    () => [
+      {
+        key: 'ktp',
+        label: t('profile.userProfile.userDetail.fields.ktp'),
+        value: identityNumber,
+        labelClassName: "font-semibold font-['Poppins:SemiBold']",
+      },
+      {
+        key: 'whatsapp',
+        label: t('profile.userProfile.userDetail.fields.whatsapp'),
+        value: phoneNumber,
+      },
+      {
+        key: 'email',
+        label: t('profile.userProfile.userDetail.fields.email'),
+        value: email,
+      },
+    ],
+    [t, identityNumber, phoneNumber, email]
+  );
 
   const permissions = stores.map((store) => {
     const categories = store.permission_groups.map((group) => {
@@ -89,11 +54,17 @@ export default function UserDetail({
         permissions: group.permissions.map((permission) => permission.name),
       };
     });
+
+    const permissionCount = store.permission_groups.reduce(
+      (total, group) => total + group.permissions.length,
+      0
+    );
+
     return {
       id: store.id.toString(),
       title: store.name,
-      permissionCount: 2,
-      jabatan: '',
+      permissionCount: permissionCount,
+      jabatan: store.position?.name || '-',
       categories: categories,
     };
   });
@@ -116,9 +87,12 @@ export default function UserDetail({
             />
           ))}
         </div>
-        <div className="w-full mt-3">
-          <h4 className="text-sm mb-6 mt-3">{t('profile.userProfile.userDetail.permission')}</h4>
-          <div className="font-normal text-sm mt-2 mb-2">
+        <div className="w-full mt-8 border-t border-[#F1F5F9]">
+          <h4 className="text-sm mb-6 mt-6">{t('profile.userProfile.userDetail.permission')}</h4>
+          <div
+            className="font-semibold font-[600] text-sm mt-2 mb-2"
+            style={{ fontFamily: 'var(--font-poppins)' }}
+          >
             {t('profile.userProfile.userDetail.organization')}{' '}
           </div>
           <div className="text-sm">{`${organization.id} - ${organization.name}`}</div>

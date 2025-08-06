@@ -16,6 +16,7 @@ import { DataTable } from '@/components/table/data-table';
 import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
 import { Delete, Edit, SettingConfig } from '@icon-park/react';
 import { useRouter } from 'next/navigation';
+import { memo, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -44,18 +45,28 @@ const baseColumns = [
   }),
 ];
 
-export default function Index() {
+const FormProductComposite = memo(function FormProductComposite() {
   const router = useRouter();
   const composite = useProductCompositeStore((state) => state.data);
 
-  const hasComposite = composite?.components?.length;
+  // Memoize computed values to prevent unnecessary re-calculations
+  const hasComposite = useMemo(() => {
+    return composite?.components?.length || 0;
+  }, [composite?.components?.length]);
 
+  // Memoize table data transformation
+  const tableData = useMemo(() => {
+    if (!composite?.components) return [];
+
+    return composite.components.map((c) => ({
+      product: c.product_name || '',
+      quantity: `${c.quantity} pcs`,
+    }));
+  }, [composite?.components]);
+
+  // Memoize table configuration
   const table = useReactTable({
-    data:
-      composite?.components?.map((c) => ({
-        product: c.product_name || '',
-        quantity: `${c.quantity} pcs`,
-      })) ?? [],
+    data: tableData,
     columns: baseColumns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -64,12 +75,26 @@ export default function Index() {
     state: {},
   });
 
+  // Memoize navigation handlers
+  const handleNavigateToComposite = useCallback(() => {
+    router.push('/dashboard/products/add/composite');
+  }, [router]);
+
+  const handleDeleteComposite = useCallback(() => {
+    toast.success('Terhapus!', {
+      description: 'Produk Paduan telah berhasil dihapus',
+      className: 'bg-[#16a34a]',
+    });
+    useProductCompositeStore.getState().resetComposite();
+    router.refresh();
+  }, [router]);
+
   return (
     <>
       <Card className="text-[#555555] px-2 my-[1rem]">
         {hasComposite === 0 && (
           <>
-            <CardHeader className="border-b border-[#C2C7D0]">
+            <CardHeader className="border-b-gray-200">
               <CardTitle className="text-[1rem]"> Produk Paduan </CardTitle>
             </CardHeader>
             <CardContent className="p-4 text-sm">
@@ -81,7 +106,7 @@ export default function Index() {
                 type="button"
                 variant="outline"
                 className="text-[#555555] mt-4"
-                onClick={() => router.push('/dashboard/products/add/composite')}
+                onClick={handleNavigateToComposite}
               >
                 <SettingConfig theme="filled" size="24" fill="#555555" />
                 Atur Produk Paduan
@@ -91,7 +116,7 @@ export default function Index() {
         )}
         {hasComposite > 0 && (
           <>
-            <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+            <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
               <CardTitle className="text-[1rem]">Produk Paduan</CardTitle>
               <div className="flex items-center gap-3">
                 <Dialog>
@@ -122,15 +147,7 @@ export default function Index() {
                       <Button
                         variant="ghost"
                         className="text-[#F08181]"
-                        onClick={() => {
-                          toast.success('Terhapus!', {
-                            description: 'Produk Paduan telah berhasil dihapus',
-                            className: 'bg-[#16a34a]',
-                          });
-                          // Tambahkan pengosongan store jika perlu
-                          useProductCompositeStore.getState().resetComposite();
-                          router.refresh();
-                        }}
+                        onClick={handleDeleteComposite}
                       >
                         Ya, Saya Yakin
                       </Button>
@@ -141,7 +158,7 @@ export default function Index() {
                   type="button"
                   variant="outline"
                   className="text-[#555555]"
-                  onClick={() => router.push('/dashboard/products/add/composite')}
+                  onClick={handleNavigateToComposite}
                 >
                   <Edit />
                   Edit Paduan
@@ -165,4 +182,6 @@ export default function Index() {
       </Card>
     </>
   );
-}
+});
+
+export default FormProductComposite;

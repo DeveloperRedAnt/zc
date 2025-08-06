@@ -15,7 +15,7 @@ export default function Index() {
           <form>
             <p> Silahkan isikan Stok untuk Produk yang akan Anda tambahkan </p>
             <p className="text-zycas-text-red"> Form bertanda (*) harus diisi </p>
-            <div className="mt-10 border-t pt-4">
+            <div className="mt-10 border-t-gray-200 pt-4">
               <div className="">
                 <p> Supplier dan Biaya Lain-Lain (Opsional) </p>
               </div>

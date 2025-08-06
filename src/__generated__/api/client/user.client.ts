@@ -1,3 +1,4 @@
+import { getDataFromApi } from '../../../utils/url';
 import * as DTO from '../dto';
 import { ValidationError, apiClientWithHeaders } from './base.client';
 import { apiClientWithHeadersWithoutContentType } from './base.client';
@@ -34,25 +35,16 @@ export const listEmployees = async (params: {
 /**
  * Detail employee
  */
-export const detailEmployee = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
-  id: number;
-}) => {
-  try {
-    let url = `/api/employees/${params.id}`;
-    const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
-    };
-    const response = await apiClientWithHeaders.get(url, { headers });
-    return response.data.data;
-  } catch (error) {
-    if (error instanceof ValidationError) throw error;
-    throw error;
-  }
+export const getEmployeeDetail = async (params: { id: number }) => {
+  return getDataFromApi<typeof params, DTO.EmployeeDetailDataSchema>({
+    type: 'get',
+    url: `/api/employees/${params.id}`,
+    injectHeaders: ['x-organization-id'],
+    params,
+    transformer: (data) => {
+      return data.data as DTO.EmployeeDetailDataSchema;
+    },
+  });
 };
 
 /**
@@ -232,3 +224,44 @@ export const assignPermissionEmployee = async (params: {
     throw error;
   }
 };
+
+/**
+ * Change employee password (by self)
+ */
+export const changeEmployeePassword = async (params: {
+  id: number;
+  body: {
+    old_password: string;
+    password: string;
+    password_confirmation: string;
+  };
+}) => {
+  return getDataFromApi<typeof params, unknown>({
+    type: 'put',
+    url: `/api/employees/${params.id}/change-password`,
+    injectHeaders: ['x-organization-id'],
+    params,
+    body: params.body,
+    transformer: (data) => {
+      return data;
+    },
+  });
+};
+
+export const changeEmployeePin = async (params: {
+  id: number;
+  body: {
+    old_pin: string;
+    pin: string;
+    pin_confirmation: string;
+  };
+}) => {
+  return getDataFromApi<typeof params, unknown>({
+    type: 'put',
+    url: `/api/employees/${params.id}/change-pin`,
+    injectHeaders: ['x-organization-id'],
+    body: params.body,
+    transformer: (data) => data,
+  });
+};
+

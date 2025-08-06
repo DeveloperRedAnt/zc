@@ -1,23 +1,16 @@
 'use client';
 
 import { Button } from '@/components/button/button';
-import Dropdown, { OptionType } from '@/components/dropdown/dropdown';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import { Input } from '@/components/input/input';
+import UnitPicker, { UnitOptionType } from '@/components/unit-picker/unit-picker';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
 import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
 import { Refresh } from '@icon-park/react';
 import { useRef, useState } from 'react';
 
-const optionsUnit: OptionType[] = [
-  { label: 'ml', value: 1 },
-  { label: 'kg', value: 2 },
-  { label: 'g', value: 3 },
-  { label: 'L', value: 4 },
-];
-
 export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean }) {
-  const [selectedUnit, setSelectedUnit] = useState<OptionType | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<UnitOptionType | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const productDetailStore = useProductDetailStore(); // ✅ Init store
@@ -70,10 +63,10 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
   };
 
   // ✅ Update store on dropdown change
-  const handleDropdownChange = (val: OptionType | null) => {
+  const handleDropdownChange = (val: UnitOptionType | null) => {
     setSelectedUnit(val);
     onUnitChange(); // for validation
-    productDetailStore.setProductDetail({ unit_id: val ? Number(val.value) : null });
+    productDetailStore.setProductDetail({ unit_id: val ? val.data.id : null });
   };
 
   return (
@@ -111,9 +104,8 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
         {/* Unit (Dropdown) */}
         <div className="flex flex-col items-start gap-4">
           <div className="w-full mt-4" ref={dropdownRef}>
-            <Dropdown
+            <UnitPicker
               label="Unit"
-              options={optionsUnit}
               value={selectedUnit}
               onChange={handleDropdownChange}
               placeholder="Pilih Unit"

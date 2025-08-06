@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { z } from 'zod';
+import { getDataFromApi } from '../../../utils/url';
 import * as DTO from '../dto/product.dto';
 import { ValidationError, apiClientWithHeaders } from './base.client';
 /**
@@ -38,6 +39,9 @@ export const listProductTags = async (params: {
   'x-device-id': string;
   'x-store-id': string;
   'x-organization-id': string;
+  page?: number;
+  per_page?: number;
+  search?: string;
 }) => {
   try {
     const headers = {
@@ -45,8 +49,15 @@ export const listProductTags = async (params: {
       'x-store-id': params['x-store-id'],
       'x-organization-id': params['x-organization-id'],
     };
-    const response = await apiClientWithHeaders.get('/api/tags', { headers });
-    return response.data.data as string[];
+    
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.per_page) queryParams.append('per_page', params.per_page.toString());
+    if (params.search) queryParams.append('search', params.search);
+    
+    const url = `/api/tags${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await apiClientWithHeaders.get(url, { headers });
+    return response.data;
   } catch (error) {
     if (error instanceof ValidationError) throw error;
     if (error instanceof z.ZodError) throw new ValidationError(error.issues);
@@ -174,49 +185,82 @@ export const createUnitProduct = async (params: {
   }
 };
 
-export const listProducts = async (params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body?: DTO.ProductSchema;
+// export const listProducts = async (params: {
+//     'x-device-id': string;
+//     'x-store-id': string;
+//     'x-organization-id': string;
+//     body?: DTO.ProductSchema;
+//   }) => {
+//     try {
+      
+//       let url = '/api/dashboard/products';
+      
+//       const headers = {
+//         'x-device-id': params['x-device-id'],
+//         'x-store-id': params['x-store-id'],
+//         'x-organization-id': params['x-organization-id'],
+//       };
+      
+//       // Convert body to query params if provided
+//       const queryParams = params.body ? {
+//         page: params.body.page,
+//         per_page: params.body.per_page,
+//         search: params.body.search,
+//         sort_by: params.body.sort_by,
+//         sort_direction: params.body.sort_direction,
+//         status: params.body.status,
+//       } : {};
+      
+//       const response = await apiClientWithHeaders.get(url, { 
+//         headers, 
+//         params: queryParams 
+//       });
+      
+//       return response.data as DTO.ApiResponse;
+//     } catch (error) {
+//       if (error instanceof ValidationError) throw error;
+//       if (error instanceof z.ZodError) throw new ValidationError(error.issues);
+//       if (axios.isAxiosError(error)) {
+//         if (error.response && error.response.status === 401) console.error('Authentication required');
+//         if (error.response && error.response.status === 403) console.error('Access denied');
+//         throw new Error('HTTP ' + (error.response && error.response.status || 'unknown') + ': ' + error.message);
+//       }
+//       throw error;
+//     }
+//   }
+
+  export const listProducts = async (params: DTO.ProductSchema) => getDataFromApi<typeof params, DTO.ApiResponse, DTO.ProductSchema>({
+    type: 'get',
+    url: '/api/dashboard/products',
+    injectHeaders: ['x-store-id', 'x-organization-id'],
+    params,
+    transformer: (data: Record<string, unknown>) => data as DTO.ApiResponse
+  });
+
+  export const listProductUnits = async (params: {
+    page?: number;
+    per_page?: number;
+    search?: string;
   }) => {
     try {
-      let url = '/api/products';
-      
       const headers = {
-        'x-device-id': params['x-device-id'],
-        'x-store-id': params['x-store-id'],
-        'x-organization-id': params['x-organization-id'],
+        'x-device-id': '1',
+        'x-organization-id': '1',
       };
       
-      // Convert body to query params if provided
-      const queryParams = params.body ? {
-        page: params.body.page,
-        per_page: params.body.per_page,
-        search: params.body.search,
-        sort_by: params.body.sort_by,
-        sort_direction: params.body.sort_direction,
-        status: params.body.status,
-      } : {};
+      const url = '/api/product-units';
       
-      const response = await apiClientWithHeaders.get(url, { 
-        headers, 
-        params: queryParams 
+      const response = await apiClientWithHeaders.get(url, {
+        headers,
+        params
       });
       
-      return response.data as DTO.ApiResponse;
+      return response.data;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
-      if (error instanceof z.ZodError) throw new ValidationError(error.issues);
-      if (axios.isAxiosError(error)) {
-        if (error.response && error.response.status === 401) console.error('Authentication required');
-        if (error.response && error.response.status === 403) console.error('Access denied');
-        throw new Error('HTTP ' + (error.response && error.response.status || 'unknown') + ': ' + error.message);
-      }
       throw error;
     }
-  }
-
+  };
 
   export const ListProductStockHistories = async (params: {
     'x-device-id': string;

@@ -122,6 +122,18 @@ export const InputFileWithPreview: Story = {
   ),
 };
 
+export const InputFileSecondWithPreview: Story = {
+  render: () => (
+    <InputFile
+      label="Unggah Thumbnail"
+      previewPosition="top-start"
+      accept="image/png, image/jpeg, image/jpg"
+      fileInfoExtension=".jpg, .jpeg, .png"
+      maxSize={2 * 1024 * 1024}
+    />
+  ),
+};
+
 export const WithPrependIcon: Story = {
   render: () => <CustomInput label="Search" prependIcon="Search" placeholder="Search..." />,
   parameters: {

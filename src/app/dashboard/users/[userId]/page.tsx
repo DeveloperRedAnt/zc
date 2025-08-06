@@ -13,12 +13,7 @@ export default function Page() {
   const params = useParams();
   const userId = typeof params.userId === 'string' ? parseInt(params.userId) : 1;
 
-  const { data, isLoading, error } = useGetEmployeeDetail({
-    'x-device-id': '1',
-    'x-organization-id': '1',
-    'x-store-id': '1', // Adding the required x-store-id parameter
-    id: userId,
-  });
+  const { data, isLoading, error } = useGetEmployeeDetail(userId);
 
   if (isLoading) return <div className="p-8">Loading...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error.message}</div>;

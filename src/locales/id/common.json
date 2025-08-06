@@ -123,7 +123,14 @@
       "oldPin": "PIN Lama",
       "newPin": "PIN Baru",
       "confirmPin": "Verifikasi PIN Baru",
-      "submit": "Ubah PIN"
+      "submit": "Ubah PIN",
+      "validation": {
+        "oldPinLength": "PIN lama harus terdiri dari 6 angka",
+        "newPinLength": "PIN baru harus terdiri dari 6 angka",
+        "confirmPinLength": "Verifikasi PIN harus terdiri dari 6 angka",
+        "onlyNumber": "PIN hanya boleh berisi angka",
+        "confirmMismatch": "Konfirmasi PIN tidak cocok"
+      }
     },
     "logout": {
       "title": "Anda akan logout",

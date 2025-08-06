@@ -115,7 +115,7 @@ const VariantManager = ({ onSave }: { onSave: (productVariants: ProductVariants)
   };
 
   const backToProduct = () => {
-    window.location.href = '/dashboard/product/add';
+    window.location.href = '/dashboard/products/add';
   };
 
   return (

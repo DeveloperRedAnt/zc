@@ -12,7 +12,7 @@ export type Product = {
 };
 
 //Info: The following data is used for the sidebar navigation and Cmd K bar.
-export const navItemsReal: NavItem[] = [
+export const navItems: NavItem[] = [
   {
     groupTitle: '',
     title: 'Dashboard',
@@ -133,17 +133,7 @@ export const navItemsReal: NavItem[] = [
         isActive: false,
         items: [], // No child items
       },
-      {
-        groupTitle: 'Penjualan Produk',
-        title: 'Penjualan Produk',
-        id: 'sales-product',
-        url: '/dashboard/reports/sales-product',
-        urlActive: 'sales-product',
-        icon: 'winkingfacewithopeneyes',
-        shortcut: ['m', 'm'],
-        isActive: false,
-        items: [], // No child items
-      },
+
       {
         groupTitle: 'Penjualan Varian',
         title: 'Penjualan Varian',
@@ -154,6 +144,17 @@ export const navItemsReal: NavItem[] = [
         shortcut: ['m', 'm'],
         isActive: false,
         items: [], // No child items
+      },
+      {
+        groupTitle: 'Penjualan Produk',
+        title: 'Penjualan Produk',
+        id: 'sales-product',
+        url: '/dashboard/reports/sales-product',
+        urlActive: 'sales-product',
+        icon: 'winkingfacewithopeneyes',
+        shortcut: ['m', 'm'],
+        isActive: false,
+        items: [],
       },
       {
         groupTitle: 'Penjualan per Kasir',
@@ -170,7 +171,7 @@ export const navItemsReal: NavItem[] = [
         groupTitle: 'Laporan Jenis Bayar',
         title: 'Laporan Jenis Bayar',
         id: 'sales-payment-type',
-        url: '/dashboard/reports/sales-payment-type',
+        url: '/dashboard/reports/sales-payment',
         urlActive: 'sales-payment-type',
         icon: 'winkingfacewithopeneyes',
         shortcut: ['m', 'm'],
@@ -225,10 +226,10 @@ export const navItemsReal: NavItem[] = [
   },
   {
     groupTitle: 'Stock',
-    title: 'Bulk Stock',
-    id: 'bulk-stock',
-    url: '/dashboard/bulk-stock',
-    urlActive: 'bulk-stock',
+    title: 'Stok Opname',
+    id: 'stock-opname',
+    url: '/dashboard/stock-opname',
+    urlActive: 'stock-opname',
     icon: 'adproduct',
     shortcut: ['m', 'm'],
     isActive: false,
@@ -326,74 +327,6 @@ export const navItemsReal: NavItem[] = [
   // },
 ];
 
-export const navItems: NavItem[] = [
-  {
-    groupTitle: '',
-    title: 'Dashboard',
-    id: 'dashboard',
-    url: '/dashboard',
-    urlActive: 'dashboard',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    items: [], // Empty array as there are no child items for Dashboard
-  },
-  {
-    groupTitle: 'Organisasi',
-    title: 'List Organisasi',
-    id: 'organization',
-    url: '/dashboard/organization',
-    urlActive: 'organization',
-    icon: 'buildingone',
-    shortcut: ['u', 'u'],
-    isActive: false,
-    items: [], // No child items
-  },
-  {
-    groupTitle: 'Toko',
-    title: 'List Toko',
-    id: 'store',
-    url: '/dashboard/store',
-    urlActive: 'store',
-    icon: 'shop',
-    shortcut: ['u', 'u'],
-    isActive: false,
-    items: [], // No child items
-  },
-  {
-    groupTitle: 'User',
-    title: 'List User',
-    id: 'users',
-    url: '/dashboard/users',
-    urlActive: 'users',
-    icon: 'user',
-    shortcut: ['u', 'u'],
-    isActive: false,
-    items: [], // No child item
-  },
-  {
-    groupTitle: '',
-    title: 'Vouchers',
-    url: '/dashboard/vouchers',
-    id: 'vouchers',
-    urlActive: 'vouchers',
-    icon: 'voucher',
-    shortcut: ['v', 'v'],
-    isActive: false,
-    items: [], // No child items
-  },
-  {
-    groupTitle: 'Produk',
-    title: 'List Produk',
-    id: 'product',
-    url: '/dashboard/product',
-    urlActive: 'product',
-    icon: 'system',
-    shortcut: ['p', 'p'],
-    isActive: false,
-    items: [], // No child items
-  },
-];
 export interface SaleUser {
   id: number;
   name: string;

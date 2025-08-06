@@ -57,23 +57,19 @@ export function useGetEmployee(
 }
 
 export function useGetEmployeeDetail(
-  params: DTO.GetEmployeeDetailSchema,
+  id: number | undefined,
   options?: UseQueryOptions<DTO.EmployeeDetailDataSchema>
 ) {
-  const { id, ...headers } = params;
-
   return useQuery({
     queryKey: ['getEmployeeDetail', id],
-    queryFn: () =>
-      api.detailEmployee({
-        ...headers,
-        id,
-      }),
+    queryFn: () => {
+      return api.getEmployeeDetail({ id: id! });
+    },
+    enabled: !!id,
     placeholderData: (prev) => prev,
     ...options,
   });
 }
-
 
 export function useCreateEmployee(
   options?: UseMutationOptions<
@@ -152,4 +148,45 @@ export function useAssignPermissionEmployee(
     ...options,
   });
 }
+
+export function useChangeEmployeePassword(
+  options?: UseMutationOptions<
+    unknown,
+    DTO.ErrorResponseSchema,
+    {
+      id: number;
+      body: {
+        old_password: string;
+        password: string;
+        password_confirmation: string;
+      };
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: (params) => api.changeEmployeePassword(params),
+    ...options,
+  });
+}
+
+export function useChangeEmployeePin(
+  options?: UseMutationOptions<
+    unknown,
+    DTO.ErrorResponseSchema,
+    {
+      id: number;
+      body: {
+        old_pin: string;
+        pin: string;
+        pin_confirmation: string;
+      };
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: (params) => api.changeEmployeePin(params),
+    ...options,
+  });
+}
+
 

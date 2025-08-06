@@ -8,6 +8,7 @@ import { useOrganization } from '@/modules/organization/context';
 import { useOrganizationStore } from '@/store/organization-store';
 import { Check } from '@icon-park/react';
 import Cookies from 'js-cookie';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useCallback, useState } from 'react';
 import OrganizationSelect from './components/organization-select';
@@ -25,15 +26,18 @@ export default function SelectOrganizationPage() {
   const [loadingLogin, setLoadingLogin] = useState<boolean>(false);
 
   const { currentId, isLoading: isLoadingSelectedOrg, switchOrganization } = useOrganization();
+  const { data: session } = useSession();
 
+  const userId = session?.user?.id;
   // Fetch organizations of user
   const { data: rawDataOrganizationOfUser, isLoading: isLoadingFetchOrganizations } =
     useGetOrganizationsOfUser(
       {
         'x-device-id': '1',
-        'user-id': '1',
+        'user-id': userId as string,
       } as const,
       {
+        enabled: !!userId,
         retry: false,
         queryKey: [],
       }

@@ -99,4 +99,19 @@
 
 html {
   font-size: var(--font-size);
+  p {
+    color: #555555
+  }
+}
+
+.border-b-gray-200 {
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.border-t-gray-200 {
+  border-top: 1px solid #F1F5F9;
+}
+
+.text-red-500 {
+  color: #F08181;
 }

@@ -31,7 +31,7 @@ export default function Index() {
 
   return (
     <Card className="text-[#555555] px-2 my-[1rem]">
-      <CardHeader className="border-b border-[#C2C7D0]">
+      <CardHeader className="border-b-gray-200">
         <CardTitle className="text-[1rem]"> Varian Produk </CardTitle>
       </CardHeader>
 
@@ -53,7 +53,7 @@ export default function Index() {
         </CardContent>
       ) : (
         <>
-          <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+          <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
             <CardTitle className="text-[1rem]"> Varian Produk </CardTitle>
             <div className="flex items-center gap-3">
               <Dialog>
@@ -103,7 +103,7 @@ export default function Index() {
                 type="button"
                 variant="outline"
                 className="text-[#555555]"
-                onClick={() => router.push('/dashboard/product/add/product-variant')}
+                onClick={() => router.push('/dashboard/products/add/product-variant')}
               >
                 Tambah Opsi Varian
               </Button>
@@ -115,7 +115,7 @@ export default function Index() {
             <div className="mt-4 space-y-4">
               {finalData.map((item, index) => (
                 <Card key={item.id} className="text-[#555555] px-2 my-[1rem]">
-                  <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+                  <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
                     <CardTitle className="text-[1rem]"> {item.name} </CardTitle>
                     <div className="flex items-center gap-3">
                       <Dialog>
@@ -161,7 +161,7 @@ export default function Index() {
                         type="button"
                         variant="outline"
                         className="text-[#555555]"
-                        onClick={() => router.push('/dashboard/product/add/product-variant')}
+                        onClick={() => router.push('/dashboard/products/add/product-variant')}
                       >
                         <Edit />
                         Edit Opsi Varian

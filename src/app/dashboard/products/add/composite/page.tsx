@@ -12,19 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/dialog/dialog';
-import Dropdown from '@/components/dropdown/dropdown';
-import type { OptionType } from '@/components/dropdown/dropdown';
 import { InformationText } from '@/components/information-text/information-text';
 import { Stepper as NumberStepper } from '@/components/number-stepper/number-stepper';
+import ProductPicker from '@/components/product-picker/product-picker';
 import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
 import { Check, Delete, Plus } from '@icon-park/react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-
-const optionsProducts: OptionType[] = [
-  { label: 'Kaos Combed 34 cm (Merah - Small)', value: 1 },
-  { label: 'Kopi Gato - 250ml', value: 2 },
-];
 
 export default function FormProductComposite() {
   const router = useRouter();
@@ -33,7 +27,7 @@ export default function FormProductComposite() {
 
   return (
     <Card className="my-[1rem] text-[#555555] px-2">
-      <CardHeader className="border-b border-[#C2C7D0]">
+      <CardHeader className="border-b-gray-200">
         <CardTitle className="text-[1rem]"> Produk Paduan </CardTitle>
       </CardHeader>
       <CardContent className="p-4 text-sm">
@@ -60,12 +54,26 @@ export default function FormProductComposite() {
                 <div className="flex mt-4 items-start gap-4">
                   <div className="flex flex-col items-start gap-4 w-[18.6rem]">
                     <div className="w-full mt-2">
-                      <Dropdown
-                        label="Pilih Produk"
-                        options={optionsProducts}
+                      <ProductPicker
                         value={
-                          item.product_id
-                            ? optionsProducts.find((opt) => opt.value === item.product_id) || null
+                          item.product_id && item.product_name
+                            ? {
+                                value: item.product_id,
+                                label: item.product_name,
+                                data: {
+                                  id: item.product_id,
+                                  name: item.product_name,
+                                  type: 'Unknown',
+                                  is_favorite: false,
+                                  thumbnail: null,
+                                  package: null,
+                                  content: null,
+                                  current_stock: '0',
+                                  maximum_retail_price: 'Rp 0',
+                                  is_active: true,
+                                  variants: [],
+                                },
+                              }
                             : null
                         }
                         onChange={(val) => {
@@ -119,7 +127,7 @@ export default function FormProductComposite() {
                 type="button"
                 variant="outline"
                 className="mt-2 ml-[1px] flex items-center"
-                onClick={() => router.push('/dashboard/product/add')}
+                onClick={() => router.push('/dashboard/products/add')}
               >
                 Kembali ke Tambah Produk
               </Button>

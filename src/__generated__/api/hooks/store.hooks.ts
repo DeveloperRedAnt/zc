@@ -100,7 +100,6 @@ export function useGetStore(
   return useQuery({
     queryKey: getQueryKey('listStore', params),
     queryFn: () => {
-      console.log("params", params)
       return api.listStore(params)
     },
     ...options,

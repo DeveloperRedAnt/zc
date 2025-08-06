@@ -17,7 +17,7 @@ export default function Index() {
   return (
     <>
       <Card className="my-[1rem] text-[#555555] px-2 text-[#555555] font-normal">
-        <CardHeader className="border-b border-[#C2C7D0]">
+        <CardHeader className="border-b-gray-200">
           <CardTitle className="text-[1rem]"> Edit Produk </CardTitle>
         </CardHeader>
         <CardContent className="p-4 text-sm">
@@ -35,7 +35,7 @@ export default function Index() {
             <FormProductDetail isEdit={true} />
             <FormPriceMultiPack isEdit={true} />
             <FormTrackStockProduct onTrackStockChange={setToggleStatusTrackingEnabled} />
-            <div className="mt-10 border-t pt-4">
+            <div className="mt-10 border-t-gray-200 pt-4">
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" className="mt-2 ml-[1px] flex items-center">
                   Batal

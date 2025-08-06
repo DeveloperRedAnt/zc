@@ -1,18 +1,16 @@
 // form-product-information.tsx
 'use client';
 
-import { useProductTags } from '@/__generated__/api/hooks';
-import Dropdown from '@/components/dropdown/dropdown';
-import type { OptionType } from '@/components/dropdown/dropdown';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import { InformationText } from '@/components/information-text/information-text';
 import { Input } from '@/components/input/input';
 import InputFile from '@/components/input/input-file';
 import { Label } from '@/components/label/label';
 import { Switch } from '@/components/switch/switch';
+import TagPicker, { TagOptionType } from '@/components/tag-picker/tag-picker';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
 import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 export default function FormProductInformation() {
   // Zustand store
@@ -20,7 +18,6 @@ export default function FormProductInformation() {
     productName,
     isActiveProduct,
     isFavorite,
-    selectedTags,
     // thumbnailFile,
     setProductName,
     setIsActiveProduct,
@@ -29,32 +26,8 @@ export default function FormProductInformation() {
     setThumbnailFile,
   } = useProductInformationStore();
 
-  const {
-    data: tags,
-    isLoading,
-    isError,
-    error,
-  } = useProductTags({
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
-  });
-
-  const optionsTag: OptionType[] = useMemo(() => {
-    if (!tags) return [];
-    return tags.map((tag: string | { name: string; id: string | number }, _index: number) => {
-      if (typeof tag === 'string') {
-        return { label: tag.charAt(0).toUpperCase() + tag.slice(1), value: tag };
-      }
-      if (tag && typeof tag === 'object' && 'name' in tag && 'id' in tag) {
-        return { label: tag.name.charAt(0).toUpperCase() + tag.name.slice(1), value: tag.id };
-      }
-      return { label: String(tag), value: tag };
-    });
-  }, [tags]);
-
-  // Local state untuk dropdown (karena tipe berbeda)
-  const [selectedTagOptions, setSelectedTagOptions] = useState<OptionType[]>([]);
+  // Local state untuk tag picker (karena tipe berbeda)
+  const [selectedTagOptions, setSelectedTagOptions] = useState<TagOptionType[]>([]);
 
   // Form validation
   const {
@@ -62,15 +35,6 @@ export default function FormProductInformation() {
     error: nameError,
     handleChange: onNameChange,
   } = useRegisterField('productInformation.productName');
-
-  // Sync selectedTags dengan selectedTagOptions
-  useEffect(() => {
-    const options = selectedTags.map((tag) => ({
-      label: tag.label,
-      value: tag.value,
-    }));
-    setSelectedTagOptions(options);
-  }, [selectedTags]);
 
   // Handle product name change
   const handleProductNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,12 +44,13 @@ export default function FormProductInformation() {
   };
 
   // Handle tag change
-  const handleTagChange = (options: OptionType[]) => {
-    setSelectedTagOptions(options);
+  const handleTagChange = (options: readonly TagOptionType[] | null) => {
+    const tagOptions = options ? Array.from(options) : [];
+    setSelectedTagOptions(tagOptions);
     // Convert ke format ProductTag, pastikan value adalah number
-    const tags = options.map((option) => ({
+    const tags = tagOptions.map((option) => ({
       label: option.label,
-      value: typeof option.value === 'number' ? option.value : Number(option.value),
+      value: option.data.id,
     }));
     setSelectedTags(tags);
   };
@@ -96,7 +61,7 @@ export default function FormProductInformation() {
   };
 
   return (
-    <div className="border-b border-[#C2C7D0]">
+    <div className="border-b-gray-200">
       <div className="pt-6">
         <p> Informasi Produk </p>
       </div>
@@ -146,21 +111,12 @@ export default function FormProductInformation() {
           <div>
             <label className="text-sm flex items-center gap-1 mb-2"> Tag Produk </label>
             <InformationText text="Pengelompokan produk berdasarkan kata kunci (Opsional)" />
-            <Dropdown
-              isLoading={isLoading}
-              label=""
-              options={optionsTag}
-              isMulti
+            <TagPicker
               value={selectedTagOptions}
               onChange={handleTagChange}
               placeholder="Pilih tag"
               className="mt-2 w-[70%]"
             />
-            {isError && (
-              <p className="text-xs text-red-500 italic mt-1">
-                {error?.message || 'Gagal memuat tags'}
-              </p>
-            )}
             {selectedTagOptions.length === 0 && (
               <p className="text-xs text-[#D8D8D8] italic"> Tidak ada tags </p>
             )}

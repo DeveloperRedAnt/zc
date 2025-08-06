@@ -64,8 +64,8 @@ export default function Index({ handleEditButton }: TableUnitListProps) {
   });
   return (
     <>
-      <div className="container mx-auto py-2">
-        <DataTable table={table} isLoading={false} width={'50%'} />
+      <div className="container py-2 w-[50%]">
+        <DataTable table={table} isLoading={false} />
         <DataTablePagination table={table} isLoading={false} />
       </div>
     </>

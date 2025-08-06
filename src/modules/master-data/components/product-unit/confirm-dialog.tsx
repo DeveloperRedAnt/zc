@@ -28,7 +28,7 @@ const ProductUnitConfirmDialog: React.FC<ProductUnitConfirmDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby="voucher-dialog-description">
+      <DialogContent aria-describedby="unit-dialog-description">
         <DialogHeader>
           <DialogTitle>Anda akan menyimpan Unit Produk</DialogTitle>
           <DialogDescription>

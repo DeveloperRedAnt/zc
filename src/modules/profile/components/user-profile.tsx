@@ -1,24 +1,25 @@
 'use client';
 
 import { useGetEmployeeDetail } from '@/__generated__/api/hooks';
+import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import { CropperDialog } from '@/components/cropper/cropper-modal';
 import { getCroppedImg } from '@/components/cropper/getCroppedImg';
 import { useTranslation } from '@/libs/i18n';
-import AlertDialogAddOn from '@/modules/packages/components/alert-dialog-add-on';
+import { useSession } from 'next-auth/react';
 import { useRef, useState } from 'react';
 import TeamCard from '../card-photo/card-team';
 import UserDetail from './user-detail';
 
 function DashboardLayout() {
-  const { data, isLoading } = useGetEmployeeDetail({
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
-    id: 1,
-  });
+  const { data: session } = useSession();
+
+  const userId = Number(session?.user?.id);
+  const { data, isLoading } = useGetEmployeeDetail(userId, { enabled: !!userId } as Parameters<
+    typeof useGetEmployeeDetail
+  >[1]);
 
   const { t } = useTranslation();
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const translationsReady = !!t && typeof t === 'function';
   const [isOpenCropper, setIsOpenCropper] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string>('');
@@ -31,9 +32,7 @@ function DashboardLayout() {
 
   const onLogoutDialog = () => {};
 
-  const onPasswordDialog = () => {
-    setIsAlertOpen(true);
-  };
+  const onPasswordDialog = () => {};
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,73 +58,54 @@ function DashboardLayout() {
     setIsOpenCropper(false);
   }
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || !translationsReady || !data) {
+    return <SkeletonCardContent className="w-full" />;
   }
 
   return (
-    <div className="flex flex-row gap-6 items-start w-full">
-      {/* Input file tersembunyi */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-      <div className="w-[258px] flex-shrink-0">
-        <TeamCard
-          image={data?.image || profileImage} // image source
-          name={data?.name || ''}
-          onPasswordChange={onPasswordDialog}
-          onLogout={onLogoutDialog}
-          onUploadClick={handleUploadClick}
+    <>
+      <div className="flex flex-row gap-6 items-start w-full">
+        {/* Input file tersembunyi */}
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
+        <div className="w-[258px] flex-shrink-0">
+          <TeamCard
+            image={data?.image || profileImage} // image source
+            name={data?.name || ''}
+            onPasswordChange={onPasswordDialog}
+            onLogout={onLogoutDialog}
+            onUploadClick={handleUploadClick}
+          />
+        </div>
+        {/* UserDetail Container - Constrained width */}
+        <div className="flex-1">
+          <UserDetail
+            identityNumber={data?.id_number || '-'}
+            phoneNumber={data?.phone || '-'}
+            email={data?.email || '-'}
+            organization={{ id: 0, name: '-' }}
+            stores={data?.stores || []}
+          />
+        </div>
+
+        <CropperDialog
+          isOpen={isOpenCropper}
+          onClose={() => {
+            setIsOpenCropper(false);
+            setUploadedImage(null);
+          }}
+          image={uploadedImage ?? profileImage}
+          onCropConfirm={handleCropConfirm}
+          textModal={t('profile.userProfile.cropper.title')}
+          textButton={t('profile.userProfile.cropper.save')}
         />
       </div>
-      {/* UserDetail Container - Constrained width */}
-      <div className="flex-1">
-        <UserDetail
-          identityNumber={data?.id_number || ''}
-          phoneNumber={data?.phone || ''}
-          email={data?.email || ''}
-          organization={{ id: 0, name: '' }}
-          stores={data?.stores || []}
-        />
-      </div>
-      <AlertDialogAddOn
-        open={isAlertOpen}
-        onOpenChange={setIsAlertOpen}
-        title={
-          <span className="text-[18px] font-semibold" style={{ color: 'var(--dark-bg)' }}>
-            {' '}
-            {t('profile.userProfile.changePassword.title')}
-          </span>
-        }
-        description={
-          <div className="space-y-1 text-xs">
-            {t('profile.userProfile.changePassword.description')}
-          </div>
-        }
-        onAction={() => {}}
-        cancelLabel={t('profile.userProfile.changePassword.cancel')}
-        actionLabel={t('profile.userProfile.changePassword.confirm')}
-        cancelButtonVariant="ghost"
-        cancelButtonType="button"
-        actionButtonType="submit"
-        actionButtonClassName="text-white hover:text-gray-500 font-normal bg-primary"
-      />
-      <CropperDialog
-        isOpen={isOpenCropper}
-        onClose={() => {
-          setIsOpenCropper(false);
-          setUploadedImage(null);
-        }}
-        image={uploadedImage ?? profileImage}
-        onCropConfirm={handleCropConfirm}
-        textModal={t('profile.userProfile.cropper.title')}
-        textButton={t('profile.userProfile.cropper.save')}
-      />
-    </div>
+    </>
   );
 }
 

@@ -18,7 +18,7 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
   } = usePriceMultiPackStore();
 
   return (
-    <div className="pb-6 border-b border-[#C2C7D0] border-t">
+    <div className="pb-6 border-b-gray-200 border-t">
       <div className="pt-6 mb-4 flex justify-between items-center">
         <p>Harga Multi Satuan</p>
         {isEdit && (

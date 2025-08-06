@@ -11,7 +11,7 @@ import {
 import CustomInput from '@/components/input/custom-input';
 import { Check, Refresh } from '@icon-park/react';
 
-interface VoucherDialogProps {
+interface UnitDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditMode: boolean;
@@ -21,7 +21,7 @@ interface VoucherDialogProps {
   setNameUnit: (value: string) => void;
 }
 
-const ProductUnitFormDialog: React.FC<VoucherDialogProps> = ({
+const ProductUnitFormDialog: React.FC<UnitDialogProps> = ({
   isOpen,
   onOpenChange,
   isEditMode,
@@ -32,7 +32,7 @@ const ProductUnitFormDialog: React.FC<VoucherDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby="voucher-dialog-description">
+      <DialogContent aria-describedby="unit-dialog-description">
         <DialogHeader className="mb-2">
           <DialogTitle> Unit Produk </DialogTitle>
         </DialogHeader>

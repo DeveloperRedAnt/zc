@@ -152,7 +152,7 @@ export default function Index() {
           <p>Silahkan isikan Stok untuk Produk yang akan Anda tambahkan</p>
           <p className="text-[#F08181]">Form bertanda (*) harus diisi</p>
           <div className="mt-6">
-            <div className="border-b border-[#C2C7D0] pb-4">
+            <div className="border-b-gray-200 pb-4">
               <p>Supplier dan Biaya Lain-Lain (Opsional)</p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 py-6">
                 <div className="flex flex-col gap-6" style={{ marginTop: '-4px' }}>
@@ -204,7 +204,7 @@ export default function Index() {
                 </div>
               </div>
             </div>
-            <div className="border-b border-[#C2C7D0] py-8">
+            <div className="border-b-gray-200 py-8">
               <p>Tujuan Pengisian Stok</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
                 <div className="flex flex-col mt-2">
@@ -228,7 +228,7 @@ export default function Index() {
                 </div>
               </div>
             </div>
-            <div className="border-b border-[#C2C7D0] py-8">
+            <div className="border-b-gray-200 py-8">
               <p>Stok Awal Produk</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4">
                 <div className="flex flex-col">

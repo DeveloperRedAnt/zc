@@ -11,6 +11,7 @@ interface PageLayoutProps {
   children: React.ReactNode;
   className?: string;
   isLoading?: boolean;
+  withoutPadding?: boolean;
 }
 
 export const PageLayout: React.FC<PageLayoutProps> = ({
@@ -21,10 +22,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   children,
   className = '',
   isLoading = false,
+  withoutPadding = false,
 }) => {
   return (
     <Card className={cn(className, 'my-2')}>
-      <CardHeader className="p-6 border-b border-[#F1F5F9]">
+      <CardHeader className="p-6 border-b-gray-200">
         <div className="flex justify-between items-center">
           {isLoading ? (
             <>
@@ -50,7 +52,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           {requiredText && <p className="text-sm text-[#F08181] mt-2">{requiredText}</p>}
         </div>
       )}
-      <CardContent className="pt-6">{children}</CardContent>
+      <CardContent className={cn('pt-6 ', withoutPadding && 'px-0')}>{children}</CardContent>
     </Card>
   );
 };

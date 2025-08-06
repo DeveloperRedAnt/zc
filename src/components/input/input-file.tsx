@@ -13,7 +13,7 @@ type InputFileProps = {
   maxSize?: number;
   previewUrl?: string | null;
   onReset?: () => void;
-  previewPosition?: 'left' | 'top';
+  previewPosition?: 'left' | 'top' | 'top-start';
   defaultImageUrl?: string;
 };
 
@@ -68,7 +68,11 @@ export default function InputFile({
   return (
     <div
       className={`gap-4 text-[#555555] text-[0.9rem] ${
-        previewPosition === 'top' ? 'flex flex-col items-center' : 'flex flex-row items-start'
+        previewPosition === 'top'
+          ? 'flex flex-col items-center'
+          : previewPosition === 'top-start'
+            ? 'flex flex-col items-start'
+            : 'flex flex-row items-start'
       }`}
     >
       {/* Preview */}

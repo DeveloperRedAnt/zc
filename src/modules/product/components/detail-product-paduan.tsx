@@ -51,7 +51,7 @@ export default function Index({ data }: { data: CompositeData }) {
   return (
     <>
       <Card className="text-[#555555] px-2 my-[1rem]">
-        <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+        <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
           <CardTitle className="text-[1rem]">Produk Paduan</CardTitle>
         </CardHeader>
         <CardContent className="p-4 text-sm">

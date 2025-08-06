@@ -4,6 +4,8 @@ import type { NextAuthOptions } from 'next-auth';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
+// Menggunakan API URL dari environment variable atau fallback ke default URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-zycas.eling.my.id';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -23,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           if (!whatsapp || !password) return null;
 
           const response = await axios.post(
-            `https://api-zycas.eling.my.id/api/employee/token`,
+            `${API_URL}/api/employee/token`,
             {
               phone: whatsapp,
               password: password,
@@ -41,8 +43,11 @@ export const authOptions: NextAuthOptions = {
           const data = response.data;
           if (data?.token) {
             return {
-              id: whatsapp,
+              id: data.user.id,
+              employee_id: data.employee.id,
               whatsapp: whatsapp,
+              name: data.employee.name,
+              email: data.employee.email,
               token: data.token,
               role: data.role || 'admin',
               organizations: data.organizations,
@@ -68,12 +73,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         const customUser = user as {
           id: string;
+          employee_id?: string;
           role?: string;
           name?: string;
           token?: string;
           organizations: Organizations;
         };
         token.id = customUser.id;
+        if (customUser.employee_id) token.employee_id = customUser.employee_id;
         if (customUser.role) token.role = customUser.role;
         if (customUser.name) token.name = customUser.name;
         if (customUser.token) token.token = customUser.token;
@@ -88,6 +95,7 @@ export const authOptions: NextAuthOptions = {
         type UserWithCustomProps = typeof session.user & {
           organizations?: Organizations;
           id?: string;
+          employee_id?: string;
           role?: string;
           name?: string;
         };
@@ -98,6 +106,7 @@ export const authOptions: NextAuthOptions = {
         // Assign properties
         user.organizations = token.organizations as Organizations;
         user.id = token.id as string;
+        user.employee_id = token.employee_id as string;
         user.role = (token as { role?: string }).role as string;
         user.name = (token as { name?: string }).name as string;
 

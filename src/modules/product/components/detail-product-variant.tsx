@@ -35,7 +35,7 @@ export default function Index({
   return (
     <>
       <Card className="text-[#555555] px-2 my-[1rem]">
-        <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+        <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
           <CardTitle className="text-[1rem]">Varian Produk</CardTitle>
           {isEdit && (
             <div className="flex">
@@ -43,7 +43,7 @@ export default function Index({
                 type="button"
                 variant="outline"
                 className="text-[#555555]"
-                onClick={() => router.push('/dashboard/product/add/product-variant')}
+                onClick={() => router.push('/dashboard/products/add/product-variant')}
               >
                 <Plus />
                 Tambah Opsi Varian
@@ -60,7 +60,7 @@ export default function Index({
           <div className="mt-4">
             {data?.map((variant, idx) => (
               <Card className="text-[#555555] px-2 my-[1rem]">
-                <CardHeader className="border-b border-[#C2C7D0] flex-row flex justify-between items-center">
+                <CardHeader className="border-b-gray-200 flex-row flex justify-between items-center">
                   <CardTitle className="text-[1rem]">
                     {Array.isArray(variant.attributes) && variant.attributes.length > 0
                       ? variant.attributes.map((a) => `${a.value}`).join(' - ')
@@ -72,7 +72,7 @@ export default function Index({
                         type="button"
                         variant="outline"
                         className="text-[#555555]"
-                        onClick={() => router.push('/dashboard/product/add/product-variant')}
+                        onClick={() => router.push('/dashboard/products/add/product-variant')}
                       >
                         <Edit />
                         Edit Opsi Varian
@@ -143,7 +143,7 @@ export default function Index({
 
                   {open === variant.id && (
                     <>
-                      <div className="mt-4 pl-[5rem] py-4 space-y-2 border-b border-[#C2C7D0]">
+                      <div className="mt-4 pl-[5rem] py-4 space-y-2 border-b-gray-200">
                         <p className="mb-1"> Harga Multi Satuan </p>
                         <div className="flex-1 space-y-10">
                           <div className="flex flex-wrap w-full">
@@ -163,7 +163,7 @@ export default function Index({
                           </div>
                         </div>
                       </div>
-                      <div className="mt-2 pl-[5rem] py-4 space-y-2 border-b border-[#C2C7D0]">
+                      <div className="mt-2 pl-[5rem] py-4 space-y-2 border-b-gray-200">
                         <p className="mb-1">Stok Produk</p>
                         <div className="flex-1 space-y-10">
                           <div className="flex flex-wrap w-full">
@@ -174,7 +174,7 @@ export default function Index({
                           </div>
                         </div>
                       </div>
-                      <div className="pl-[5rem] pb-4 space-y-2 border-b border-[#C2C7D0]">
+                      <div className="pl-[5rem] pb-4 space-y-2 border-b-gray-200">
                         <div className="flex-1 space-y-10">
                           <div className="flex flex-wrap w-full">
                             <div className="text-[14px] w-1/2 mt-6">

@@ -38,6 +38,7 @@ import { useOrganizationStore } from '@/store/organization-store';
 import { BankCard, HistoryQuery, LinkTwo, MoreOne, Power, Remind } from '@icon-park/react';
 import { IconChevronRight, IconPhotoUp } from '@tabler/icons-react';
 import Cookies from 'js-cookie';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as React from 'react';
@@ -74,6 +75,8 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
     Cookies.remove('flex');
     logout();
   }, [clearOrganization, logout]);
+
+  const { data: session } = useSession();
 
   return (
     <Sidebar collapsible="icon">
@@ -198,10 +201,10 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                       className="h-8 w-8 rounded-lg"
                       showInfo
                       user={{
-                        fullName: 'Ridho',
+                        fullName: session?.user?.name,
                         emailAddresses: [
                           {
-                            emailAddress: 'ridho@ridho.com',
+                            emailAddress: session?.user?.email as string,
                           },
                         ],
                       }}
@@ -225,10 +228,10 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                           className="h-8 w-8 rounded-lg"
                           showInfo
                           user={{
-                            fullName: 'Ridho',
+                            fullName: session?.user?.name,
                             emailAddresses: [
                               {
-                                emailAddress: 'ridho@ridho.com',
+                                emailAddress: session?.user?.email as string,
                               },
                             ],
                           }}

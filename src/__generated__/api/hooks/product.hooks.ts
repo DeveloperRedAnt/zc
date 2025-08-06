@@ -3,20 +3,16 @@
 import { UseMutationOptions, UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import * as api from '../client';
 import * as DTO from '../dto';
-import { getQueryKey } from './base.hooks';
 
 export function useListProducts(
   params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body?: DTO.ProductSchema;
+    body: DTO.ProductSchema;
   },
   options?: UseQueryOptions<DTO.ApiResponse>
 ) {
   return useQuery({
-    queryKey: getQueryKey('listProducts', params),
-    queryFn: () => api.listProducts(params),
+    queryKey: ['listProducts', params.body],
+    queryFn: () => api.listProducts(params.body),
     ...options,
   });
 }
@@ -81,7 +77,7 @@ export function useStockDetail(
     options?: UseQueryOptions<DTO.ReturnDetailTempProductResponseSchema>
 ) {
   return useQuery({
-    queryKey: getQueryKey('InitializeStockDetails', params),
+    queryKey: ['InitializeStockDetails', params],
     queryFn: () => 
       api.InitializeStockDetails(params),
     ...options,

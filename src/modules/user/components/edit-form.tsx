@@ -157,7 +157,7 @@ export default function EditForm() {
         </div>
       </div>
 
-      <div className="mt-10 border-t pt-4 border-[#F1F5F9]">
+      <div className="mt-10 border-t-gray-200 pt-4 border-[#F1F5F9]">
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" className="mt-2 ml-[1px]">
             Batal

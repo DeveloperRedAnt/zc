@@ -15,6 +15,12 @@ const Select = dynamic(() => import('react-select'), {
   loading: () => <div className="h-[38px] border border-gray-300 rounded-[8px] px-2" />,
 });
 
+// Import react-select/creatable untuk fitur menambah opsi baru
+const CreatableSelect = dynamic(() => import('react-select/creatable'), {
+  ssr: false,
+  loading: () => <div className="h-[38px] border border-gray-300 rounded-[8px] px-2" />,
+});
+
 // Props untuk Dropdown component dengan generic untuk isMulti
 type DropdownProps<Multi extends boolean = false> = {
   id?: string;
@@ -29,9 +35,11 @@ type DropdownProps<Multi extends boolean = false> = {
   isDisabled?: boolean;
   isLoading?: boolean;
   isClearable?: boolean;
+  isCreatable?: boolean; // Fitur untuk menambah opsi baru
   value: Multi extends true ? OptionType[] : OptionType | null;
   required?: boolean;
   onChange: (value: Multi extends true ? OptionType[] : OptionType | null) => void;
+  onCreateOption?: (inputValue: string) => void; // Callback saat opsi baru dibuat
   // Kita tidak menggunakan Omit<ReactSelectProps> karena dynamic import
 };
 
@@ -48,9 +56,11 @@ function Dropdown<Multi extends boolean = false>({
   isDisabled,
   isLoading,
   isClearable = false,
+  isCreatable = false,
   value,
   required = false,
   onChange,
+  onCreateOption,
   ...rest
 }: DropdownProps<Multi>): React.ReactElement | null {
   // Untuk mengatasi hydration error, pastikan komponen mount hanya di client side
@@ -68,6 +78,16 @@ function Dropdown<Multi extends boolean = false>({
   const handleChange = (newValue: unknown): void => {
     onChange(newValue as Multi extends true ? OptionType[] : OptionType | null);
   };
+
+  // Handler untuk membuat opsi baru
+  const handleCreateOption = (inputValue: string): void => {
+    if (onCreateOption) {
+      onCreateOption(inputValue);
+    }
+  };
+
+  // Pilih komponen yang tepat berdasarkan isCreatable
+  const SelectComponent = isCreatable ? CreatableSelect : Select;
 
   // Tampilkan skeleton loader saat pertama kali mount
   if (!isMounted) {
@@ -91,7 +111,7 @@ function Dropdown<Multi extends boolean = false>({
           {label} {required && <span className="text-red-600">*</span>}
         </label>
       )}
-      <Select
+      <SelectComponent
         {...rest}
         instanceId={instanceId}
         inputId={inputId}
@@ -105,6 +125,8 @@ function Dropdown<Multi extends boolean = false>({
         isLoading={isLoading}
         isClearable={isClearable}
         onChange={handleChange}
+        onCreateOption={isCreatable ? handleCreateOption : undefined}
+        formatCreateLabel={(inputValue: string) => `Tambah "${inputValue}"`}
         classNamePrefix="react-select"
         components={{
           IndicatorSeparator: () => null,

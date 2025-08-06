@@ -62,17 +62,10 @@ export function usePermissionData({ isEdit = false }: { isEdit?: boolean }) {
 
   // Get employee detail jika isEdit
   const employeeDetailQuery = useGetEmployeeDetail(
-    {
-      'x-device-id': '1',
-      'x-organization-id': '1',
-      'x-store-id': '1', // Add missing required parameter
-      id: employeeId ?? 0, // Ensure it's not null
-    },
+    employeeId ?? 0, // Just pass the ID, headers are handled by injectHeaders
     {
       enabled: isEdit && !!employeeId,
-      // Add required queryKey to fix type error
-      queryKey: ['getEmployeeDetail', employeeId],
-    }
+    } as Parameters<typeof useGetEmployeeDetail>[1]
   );
 
   // Unused variable commented out

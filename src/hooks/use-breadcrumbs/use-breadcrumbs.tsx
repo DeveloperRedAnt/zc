@@ -14,9 +14,9 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
     { title: 'Dashboard', link: '/dashboard' },
     { title: 'Employee', link: '/dashboard/employee' },
   ],
-  '/dashboard/product': [
+  '/dashboard/products': [
     // { title: 'Dashboard', link: '/dashboard' },
-    { title: 'List Produk', link: '/dashboard/product' },
+    { title: 'List Produk', link: '/dashboard/products' },
   ],
   '/dashboard/users': [{ title: 'List User', link: '/dashboard/users' }],
   '/dashboard/vouchers': [{ title: 'List Voucher', link: '/dashboard/vouchers' }],
@@ -25,32 +25,32 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
     { title: 'List User', link: '/dashboard/users' },
     { title: 'Tambah User', link: '/dashboard/users/form' },
   ],
-  '/dashboard/product/add': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Tambah Produk', link: '/dashboard/product/add' },
+  '/dashboard/products/add': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Tambah Produk', link: '/dashboard/products/add' },
   ],
-  '/dashboard/product/{id}': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Detail Produk', link: '/dashboard/product/{id}' },
+  '/dashboard/products/{id}': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Detail Produk', link: '/dashboard/products/{id}' },
   ],
-  '/dashboard/product/{id}/edit': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Edit Produk', link: '/dashboard/product/{id}/edit' },
+  '/dashboard/products/{id}/edit': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Edit Produk', link: '/dashboard/products/{id}/edit' },
   ],
-  '/dashboard/product/add/composite': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Tambah Produk', link: '/dashboard/product/add' },
-    { title: 'Produk Paduan', link: '/dashboard/product/add/composite' },
+  '/dashboard/products/add/composite': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Tambah Produk', link: '/dashboard/products/add' },
+    { title: 'Produk Paduan', link: '/dashboard/products/add/composite' },
   ],
-  '/dashboard/product/add/variant': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Tambah Produk', link: '/dashboard/product/add' },
-    { title: 'Wizard Varian', link: '/dashboard/product/add/variant' },
+  '/dashboard/products/add/variant': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Tambah Produk', link: '/dashboard/products/add' },
+    { title: 'Wizard Varian', link: '/dashboard/products/add/variant' },
   ],
-  '/dashboard/product/add/set-first-stock': [
-    { title: 'List Produk', link: '/dashboard/product' },
-    { title: 'Tambah Produk', link: '/dashboard/product/add' },
-    { title: 'Atur Stok Awal', link: '/dashboard/product/add/set-first-stock' },
+  '/dashboard/products/add/set-first-stock': [
+    { title: 'List Produk', link: '/dashboard/products' },
+    { title: 'Tambah Produk', link: '/dashboard/products/add' },
+    { title: 'Atur Stok Awal', link: '/dashboard/products/add/set-first-stock' },
   ],
 };
 

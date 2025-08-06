@@ -1,8 +1,8 @@
+'use client';
 import { Button } from '@/components/button/button';
 import { useLogout } from '@/hooks/use-logout';
 import { useTranslation } from '@/libs/i18n';
 import { AsteriskKey, KeyTwo, Logout } from '@icon-park/react';
-import imgImage from '../assets/mock-profile.png';
 import ChangePasswordDialog from '../components/change-password-dialog';
 import ChangePinDialog from '../components/change-pin-dialog';
 import LogoutDialog from '../components/logout-dialog';
@@ -20,7 +20,7 @@ interface TeamCardProps {
 
 // Constants
 const CARD_STYLES = {
-  container: 'bg-white rounded-2xl w-[258px]',
+  container: 'bg-white rounded-2xl w-[16rem]',
   content: 'p-6',
   nameContainer: 'flex flex-col items-center gap-1 w-full',
   nameText: 'font-semibold text-[#555555] text-center text-base leading-7',
@@ -60,7 +60,7 @@ export default function TeamCard({
   const logout = useLogout();
   const { t } = useTranslation();
   // Derived values
-  const profileSrc = image || imgImage.src;
+  const profileSrc = image || '/assets/zycas/default-image-user-2.png';
 
   // Use the same NOOP reference instead of creating new functions
   const handlePasswordChange = onPasswordChange || NOOP;

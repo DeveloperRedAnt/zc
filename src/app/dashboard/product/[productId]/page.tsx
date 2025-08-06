@@ -90,7 +90,7 @@ export default function Index() {
 
   return (
     <Card className="my-[1rem] text-[#555555] px-2 text-[#555555] font-normal">
-      <CardHeader className="border-b border-[#C2C7D0]">
+      <CardHeader className="border-b-gray-200">
         <CardTitle className="text-[1rem]"> Detail Produk </CardTitle>
       </CardHeader>
       <CardContent className="p-4 text-sm">
@@ -98,7 +98,7 @@ export default function Index() {
           <SkeletonCardContent className="w-full" />
         ) : (
           <>
-            <div className="relative flex items-center justify-center border-b border-[#C2C7D0] py-4">
+            <div className="relative flex items-center justify-center border-b-gray-200 py-4">
               <div className="absolute top-2 right-4">
                 <Button variant="outline" size="sm" className="flex items-center gap-1">
                   <Edit className="w-4 h-4" />
@@ -130,7 +130,7 @@ export default function Index() {
               </div>
             </div>
 
-            <div className="border-b border-[#C2C7D0] py-6">
+            <div className="border-b-gray-200 py-6">
               <div className="mb-4">
                 <p> Tags </p>
               </div>
@@ -157,7 +157,7 @@ export default function Index() {
               <DetailProductVariant data={data?.variants || []} />
             )}
 
-            <div className="border-b border-[#C2C7D0] py-6">
+            <div className="border-b-gray-200 py-6">
               <div className="mb-2">
                 <p> Detail Produk </p>
               </div>
@@ -188,7 +188,7 @@ export default function Index() {
             </div>
 
             {data?.type?.toLowerCase() !== 'variant' && (
-              <div className="border-b border-[#C2C7D0] py-6">
+              <div className="border-b-gray-200 py-6">
                 <div className="mb-2">
                   <p> Harga Multi Satuan </p>
                 </div>
@@ -219,7 +219,7 @@ export default function Index() {
               </div>
             )}
 
-            <div className="border-b border-[#C2C7D0] py-6">
+            <div className="border-b-gray-200 py-6">
               <div className="mb-2">
                 <p> Stok Produk </p>
               </div>
@@ -281,7 +281,7 @@ export default function Index() {
               </CardContent>
             </Card>
 
-            <div className="mt-10 border-t pt-4">
+            <div className="mt-10 border-t-gray-200 pt-4">
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"

@@ -27,7 +27,7 @@ export type TypeToZod<T> = Required<{
     headers: {
       'accept': 'application/json',
       'x-device-id': '1',
-      'x-organization-id': '1',
+      'x-organization-id': '2',
       'Content-Type': 'application/json',
     },
   });
@@ -79,7 +79,7 @@ export type TypeToZod<T> = Required<{
   }, error => Promise.reject(error));
   
   export const apiClientWithHeadersWithoutContentType = axios.create({
-    baseURL: "https://api-zycas.eling.my.id",
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     headers: {
       'x-device-id': '1',
       'x-store-id': '1',

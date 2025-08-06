@@ -35,9 +35,6 @@ export default function Index() {
     isLoading: isLoadingProducts,
     error: productsError,
   } = useListProducts({
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
     body: filters,
   });
 
@@ -47,6 +44,15 @@ export default function Index() {
       setLoading(false);
     }, 2000);
   }, [setLoading]);
+
+  // Set required headers in localStorage for development
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('x-device-id', '1');
+      localStorage.setItem('x-store-id', '1');
+      localStorage.setItem('x-organization-id', '1');
+    }
+  }, []);
 
   // Handle filter changes - Fixed function name
   const handleFilterChange = (newFilters: Partial<ProductSchema>) => {

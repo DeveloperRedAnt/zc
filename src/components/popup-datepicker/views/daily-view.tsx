@@ -20,6 +20,7 @@ export function DailyView({ state, actions }: ViewProps) {
 
   const currentMonth = calendarMonth.getMonth();
   const currentYear = calendarMonth.getFullYear();
+
   const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: i,

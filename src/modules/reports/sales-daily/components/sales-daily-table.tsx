@@ -1,7 +1,30 @@
 'use client';
 
-import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/table/core/table';
+import {
+  SortingState,
+  createColumnHelper,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from 'lucide-react';
 import React from 'react';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select/select';
 
 type SalesDaily = {
   tgl_transaksi: string;
@@ -73,14 +96,44 @@ const mockData: SalesDaily[] = [
 ];
 
 export default function SalesDailyTable() {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
   const columns = React.useMemo(
     () => [
       columnHelper.accessor('tgl_transaksi', {
-        header: () => <div className="font-bold text-black">Tgl Transaksi</div>,
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => column.toggleSorting()}
+          >
+            Tgl Transaksi
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="h-4 w-4" />
+            )}
+          </div>
+        ),
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor('jumlah_transaksi', {
-        header: () => <div className="font-bold text-black">Jumlah Transaksi</div>,
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => column.toggleSorting()}
+          >
+            Jumlah Transaksi
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="h-4 w-4" />
+            )}
+          </div>
+        ),
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor('pertumbuhan_transaksi', {
@@ -109,7 +162,21 @@ export default function SalesDailyTable() {
         },
       }),
       columnHelper.accessor('jumlah_pendapatan', {
-        header: () => <div className="font-bold text-black">Jumlah Pendapatan</div>,
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => column.toggleSorting()}
+          >
+            Jumlah Pendapatan
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="h-4 w-4" />
+            )}
+          </div>
+        ),
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor('pertumbuhan_pendapatan', {
@@ -144,48 +211,74 @@ export default function SalesDailyTable() {
   const table = useReactTable({
     data: mockData,
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
-    <div className="container mx-auto py-2">
-      {/* Replace with your DataTable component */}
-      {/* <DataTable table={table} /> */}
-      {/* <DataTablePagination table={table} isLoading={false} /> */}
-      <table className="min-w-full bg-white">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : typeof header.column.columnDef.header === 'function'
-                      ? header.column.columnDef.header(header.getContext())
-                      : header.column.columnDef.header}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                  {typeof cell.column.columnDef.cell === 'function'
-                    ? cell.column.columnDef.cell(cell.getContext())
-                    : cell.getValue()}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : typeof header.column.columnDef.header === 'function'
+                        ? header.column.columnDef.header(header.getContext())
+                        : header.column.columnDef.header}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {typeof cell.column.columnDef.cell === 'function'
+                      ? cell.column.columnDef.cell(cell.getContext())
+                      : cell.getValue()}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="px-6 py-4 border-t">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Rows per page:</span>
+            <Select defaultValue="10">
+              <SelectTrigger className="w-[70px]" icon={<ChevronDown className="h-4 w-4" />}>
+                <SelectValue placeholder="10" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-4">
+            <button type="button" className="px-2 py-1 text-sm text-gray-600 disabled:opacity-50">
+              Previous
+            </button>
+            <span className="text-sm text-gray-600">1</span>
+            <button type="button" className="px-2 py-1 text-sm text-gray-600">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
-// Removed erroneous duplicate summary table mock data and columns. File ends cleanly after SalesDailyTable export.

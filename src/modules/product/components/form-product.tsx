@@ -13,13 +13,13 @@ import { ArrowRight, Check } from '@icon-park/react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
-import { useProductVariantStore } from '@/modules/product-variant/store';
-import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
-import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
-import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
-import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
-import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
-import { useMemo } from 'react';
+// import { useProductVariantStore } from '@/modules/product-variant/store';
+// import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
+// import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
+// import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
+// import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
+// import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
+// import { useMemo } from 'react';
 
 type FormProductFormProps = {
   toggleStatusTrackingEnabled: boolean;
@@ -34,27 +34,27 @@ export default function FormProductForm({
   validateFields,
   router,
 }: FormProductFormProps) {
-  const productInfo = useProductInformationStore((state) => state);
-  const productDetail = useProductDetailStore((state) => state);
-  const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
-  const trackStock = useTrackStockProductStore((state) => state.data);
-  const composite = useProductCompositeStore((state) => state.data);
-  const variant = useProductVariantStore((state) => state.finalData);
+  // const productInfo = useProductInformationStore((state) => state);
+  // const productDetail = useProductDetailStore((state) => state);
+  // const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
+  // const trackStock = useTrackStockProductStore((state) => state.data);
+  // const composite = useProductCompositeStore((state) => state.data);
+  // const variant = useProductVariantStore((state) => state.finalData);
 
   const { getRegisteredFields, setErrors } = useFormValidationContext();
 
-  // Gabungkan semua store
-  //@ts-ignore
-  const _finalPayload = useMemo(() => {
-    return {
-      ...productInfo,
-      ...productDetail,
-      ...trackStock,
-      default_prices: multiPack,
-      composite,
-      variant,
-    };
-  }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
+  // // Gabungkan semua store
+  // //@ts-ignore
+  // const _finalPayload = useMemo(() => {
+  //   return {
+  //     ...productInfo,
+  //     ...productDetail,
+  //     ...trackStock,
+  //     default_prices: multiPack,
+  //     composite,
+  //     variant,
+  //   };
+  // }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -62,13 +62,12 @@ export default function FormProductForm({
     setErrors(errors);
 
     if (!isValid) return;
-
     router.push('/dashboard/products/1/create/set-first-stock');
   };
 
   return (
     <Card className="my-[1rem] text-[#555555] px-2 text-[#555555] font-normal">
-      <CardHeader className="border-b border-[#C2C7D0]">
+      <CardHeader className="border-b-gray-200">
         <CardTitle className="text-[1rem]"> Tambah Produk </CardTitle>
       </CardHeader>
       <CardContent className="p-4 text-sm">
@@ -85,7 +84,7 @@ export default function FormProductForm({
           <FormTrackStockProduct onTrackStockChange={onTrackStockChange} />
 
           {/* Footer */}
-          <div className="mt-10 border-t pt-4">
+          <div className="mt-10 border-t-gray-200 pt-4">
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" className="mt-2 ml-[1px] flex items-center">
                 Batal
@@ -93,7 +92,7 @@ export default function FormProductForm({
               {toggleStatusTrackingEnabled ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="primary"
                   className="mt-2 ml-[1px] flex items-center"
                   onClick={handleSubmit}
                 >
