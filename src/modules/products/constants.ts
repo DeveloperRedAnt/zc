@@ -5,6 +5,7 @@ export const firstStockSchema = z.object({
   buyPrice: z.number().min(1, 'Harga beli harus diisi dan lebih dari 0'),
   expiredDate: z.date({ required_error: 'Tanggal kadaluwarsa wajib diisi' }),
   purchaseDate: z.date({ required_error: 'Tanggal pembelian wajib diisi' }),
+  store: z.number().min(0, 'Toko wajib dipilih'),
 });
 
 export type FirstStockForm = z.infer<typeof firstStockSchema>;

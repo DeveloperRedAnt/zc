@@ -15,6 +15,7 @@ export const buttonStyles = tv({
       primary: 'bg-primary text-white shadow-sm hover:bg-primary/90',
       success: 'bg-[#75BF85] text-white shadow-sm hover:bg-[#75BF85]/90',
       info: 'bg-[#0FA6C1] text-white shadow-sm hover:bg-[#0FA6C1]/90',
+      loading: 'bg-[##D8D8D8] text-white shadow-sm hover:bg-[##D8D8D8]/90',
       delete: 'hover:bg-accent text-[#F08181] hover:text-[#F08181]/90',
       secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
       destructive: 'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90',

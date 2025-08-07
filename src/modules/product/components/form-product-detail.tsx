@@ -109,9 +109,7 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
               value={selectedUnit}
               onChange={handleDropdownChange}
               placeholder="Pilih Unit"
-              className={`h-[40px] pb-1 w-full border ${
-                unitError ? '!border-[#F08181]' : 'border-[#C2C7D0]'
-              }`}
+              className={'h-[40px] pb-1 w-full'}
               required
             />
             <FormFieldError message={unitError} />

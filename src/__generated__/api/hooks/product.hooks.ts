@@ -19,16 +19,13 @@ export function useListProducts(
 
 export function useGetProductDetail(
   params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body: { id: number };
+     id: number 
   },
   options?
 ) {
   return useQuery<DTO.ApiProduct>({
-    queryKey: ['getProductDetail', params.body.id],
-    queryFn: () => api.ProductDetail(params),
+    queryKey: ['getProductDetail', params.id],
+    queryFn: () => api.ProductDetail({id: params.id}),
     placeholderData: (prev) => prev,
     ...options,
   });
@@ -36,17 +33,13 @@ export function useGetProductDetail(
 
 export function useGetProductStockHistories(
   params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body: { id: number };
+    id: number;
   },
   options?: UseQueryOptions<DTO.ProductStockHistoriesResponse[]>
 ) {
-  const { body } = params;
   return useQuery({
-    queryKey: ['getProductStockHistories', body],
-    queryFn: () => api.ListProductStockHistories(params),
+    queryKey: ['getProductStockHistories', params.id],
+    queryFn: () => api.ListProductStockHistories({id: params.id}),
     placeholderData: (prev) => prev,
     ...options,
   });
@@ -97,6 +90,27 @@ export function useProductTags(
     queryFn: () => api.listProductTags(params),
     refetchOnWindowFocus: false,
     staleTime: Infinity,
+    ...options,
+  });
+}
+
+/**
+ * Create product mutation hook
+ */
+export function useCreateProduct(
+  options?: UseMutationOptions<
+    DTO.CreateProductResponseSchema,
+    Error,
+    {
+      'x-device-id': string;
+      'x-store-id': string;
+      'x-organization-id': string;
+      body: DTO.CreateProductRequestSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: async (params) => api.createProduct(params),
     ...options,
   });
 }

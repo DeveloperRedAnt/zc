@@ -1,40 +1,143 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-
 import * as DTO from '@/__generated__/api/dto';
-import { useSetFirstStock, useStockDetail } from '@/__generated__/api/hooks/product.hooks';
+import { useSetFirstStock } from '@/__generated__/api/hooks/product.hooks';
+import { useStore, useSuppliers } from '@/__generated__/api/hooks/supplier.hooks';
 import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
 import { DatePicker } from '@/components/datepicker/date-picker';
-import { OptionType } from '@/components/dropdown/dropdown';
-import Dropdown from '@/components/dropdown/dropdown';
 import CustomInput from '@/components/input/custom-input';
 import { DialogFirstStock } from '@/modules/products/components/dialog-first-stock';
-import { SetFirstStockSkeleton } from '@/modules/products/components/skeleton-first-stock';
+import SupplierPicker, { SupplierOptionType } from '@/modules/products/components/supplier-picker';
 import { firstStockSchema } from '@/modules/products/constants';
 import type { FirstStockForm } from '@/modules/products/constants';
-import { optionsStore, optionsSupplier } from '@/modules/products/types';
+import { useOrganizationStore } from '@/store/organization-store';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Check } from '@icon-park/react';
 import { Loader2Icon } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 export default function Index() {
   const params = useParams();
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
 
-  // State untuk dropdown, input, dan dialog
-  const [selectedSupplier, setSelectedSupplier] = useState<OptionType | null>(null);
+  // State
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierOptionType | null>(null);
   const [otherCost, setOtherCost] = useState<number>(0);
   const [noteNumber, setNoteNumber] = useState('');
-  const [selectedStore, setSelectedStore] = useState<OptionType | null>(null);
+  const [selectedStore, setSelectedStore] = useState<SupplierOptionType | null>(null);
   const [isLoadingButton, setIsLoadingButton] = useState(false);
   const [formData, setFormData] = useState<FirstStockForm | null>(null);
   const [openSaveDialogFirstStock, setOpenSaveDialogFirstStock] = useState(false);
+
+  const organization = useOrganizationStore.getState().organization;
+
+  // Supplier search & pagination state
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [supplierPage, setSupplierPage] = useState(1);
+
+  // Store search & pagination state
+  const [storeSearch, setStoreSearch] = useState('');
+  const [storePage, setStorePage] = useState(1);
+
+  // Tanstack query
+  const { data: suppliersData, isLoading: isSuppliersLoading } = useSuppliers(
+    supplierPage,
+    supplierSearch
+  );
+  const { data: storesData, isLoading: isStoresLoading } = useStore(
+    Number(storePage),
+    10,
+    'name',
+    'asc',
+    storeSearch
+  );
+
+  const TokoLoadOption = async (
+    search: string,
+    _prev: readonly SupplierOptionType[],
+    additional: { page?: number } | undefined
+  ) => {
+    setStoreSearch(search);
+    const page = additional?.page ?? 1;
+    setStorePage(page);
+    const allSuppliers = storesData?.data ?? [];
+
+    const options: SupplierOptionType[] = allSuppliers.map(
+      (supplier: {
+        id: number;
+        name: string;
+        pic?: string;
+        phone?: string;
+        created_at?: string;
+      }) => ({
+        value: supplier.id,
+        label: supplier.name,
+        data: {
+          id: supplier.id,
+          name: supplier.name,
+          pic: supplier.pic ?? '',
+          phone: supplier.phone ?? '',
+          created_at: supplier.created_at ?? '',
+        },
+      })
+    );
+
+    const hasMore =
+      !!suppliersData?.pagination &&
+      suppliersData.pagination.current_page < suppliersData.pagination.last_page;
+    return {
+      options,
+      hasMore,
+      additional: { page: page + 1 },
+    };
+  };
+
+  // Supplier loadOptions for AsyncPaginate
+  const supplierLoadOptions = async (
+    search: string,
+    _prev: readonly SupplierOptionType[],
+    additional: { page?: number } | undefined
+  ) => {
+    setSupplierSearch(search);
+    const page = additional?.page ?? 1;
+    setSupplierPage(page);
+
+    const allSuppliers = suppliersData?.data ?? [];
+
+    const options: SupplierOptionType[] = allSuppliers.map(
+      (supplier: {
+        id: number;
+        name: string;
+        pic?: string;
+        phone?: string;
+        created_at?: string;
+      }) => ({
+        value: supplier.id,
+        label: supplier.name,
+        data: {
+          id: supplier.id,
+          name: supplier.name,
+          pic: supplier.pic ?? '',
+          phone: supplier.phone ?? '',
+          created_at: supplier.created_at ?? '',
+        },
+      })
+    );
+    const hasMore =
+      !!suppliersData?.pagination &&
+      suppliersData.pagination.current_page < suppliersData.pagination.last_page;
+
+    return {
+      options,
+      hasMore,
+      additional: { page: page + 1 },
+    };
+  };
 
   // React Hook Form
   const {
@@ -43,7 +146,6 @@ export default function Index() {
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<FirstStockForm>({
     resolver: zodResolver(firstStockSchema),
     defaultValues: {
@@ -51,10 +153,10 @@ export default function Index() {
       buyPrice: 0,
       expiredDate: undefined,
       purchaseDate: undefined,
+      store: 0,
     },
   });
 
-  // Ambil value tanggal dari form
   const purchaseDate = watch('purchaseDate');
   const expiredDate = watch('expiredDate');
 
@@ -65,24 +167,18 @@ export default function Index() {
 
   const handleCancel = () => setOpenSaveDialogFirstStock(false);
 
-  // API
-  const { data: stockDetail, isLoading } = useStockDetail({
-    product_id: Number(productId),
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
-  });
-
   const { mutate: mutationForStockFirstProduct } = useSetFirstStock({
     onSuccess: () => {
       toast.success('Tersimpan!', {
         description: 'Produk Anda telah berhasil disimpan',
         className: 'bg-[#16a34a]',
       });
+      setTimeout(() => router.push('/dashboard/product'), 2000);
       setOpenSaveDialogFirstStock(false);
-      setTimeout(() => router.push('/dashboard/product/add'), 2000);
+      setIsLoadingButton(true);
     },
     onError: () => {
+      setOpenSaveDialogFirstStock(false);
       toast.error('Gagal menyimpan produk');
     },
     onSettled: () => {
@@ -90,35 +186,13 @@ export default function Index() {
     },
   });
 
-  // Reset form saat edit (data dari API)
-  useEffect(() => {
-    if (stockDetail) {
-      reset({
-        firstStock: stockDetail.firstStock ?? 0,
-        buyPrice: stockDetail.buyPrice ?? 0,
-        expiredDate: stockDetail.expiredDate ? new Date(stockDetail.expiredDate) : undefined,
-        purchaseDate: stockDetail.purchaseDate ? new Date(stockDetail.purchaseDate) : undefined,
-      });
-      setSelectedSupplier(
-        stockDetail.supplier
-          ? { label: stockDetail.supplier.name, value: stockDetail.supplier.id }
-          : null
-      );
-      setOtherCost(stockDetail.otherCost ?? 0);
-      setNoteNumber(stockDetail.noteNumber ?? '');
-      setSelectedStore(
-        stockDetail.store ? { label: stockDetail.store.name, value: stockDetail.store.id } : null
-      );
-    }
-  }, [stockDetail, reset]);
-
-  if (isLoading) return <SetFirstStockSkeleton />;
-
   const saveFirstStock = async () => {
     if (!formData) return;
+    setOpenSaveDialogFirstStock(false);
     setIsLoadingButton(true);
 
     const payload: DTO.InitializeStockRequestSchema = {
+      store_id: Number(selectedStore?.value ?? 1),
       supplier_id: Number(selectedSupplier?.value ?? 0),
       other_cost: Number(otherCost),
       note: noteNumber,
@@ -136,9 +210,9 @@ export default function Index() {
     };
     mutationForStockFirstProduct({
       body: payload,
-      'x-device-id': '1', // Replace with actual device id if available
-      'x-store-id': String(selectedStore?.value ?? 1), // Use store id from selection
-      'x-organization-id': '1', // Replace with actual organization id if available
+      'x-device-id': localStorage.getItem('x-device-id') || '',
+      'x-store-id': localStorage.getItem('x-store-id') || '',
+      'x-organization-id': localStorage.getItem('x-store-id') || '',
     });
   };
 
@@ -150,7 +224,7 @@ export default function Index() {
       <CardContent className="p-4 text-sm">
         <form onSubmit={handleSubmit(onSubmit)}>
           <p>Silahkan isikan Stok untuk Produk yang akan Anda tambahkan</p>
-          <p className="text-[#F08181]">Form bertanda (*) harus diisi</p>
+          <p className="text-red mt-1 mb-1">Form bertanda (*) harus diisi</p>
           <div className="mt-6">
             <div className="border-b-gray-200 pb-4">
               <p>Supplier dan Biaya Lain-Lain (Opsional)</p>
@@ -158,22 +232,25 @@ export default function Index() {
                 <div className="flex flex-col gap-6" style={{ marginTop: '-4px' }}>
                   <DatePicker
                     mode="single"
-                    label="Tanggal Pembelian *"
+                    label="Tanggal Pembelian"
                     className="border-[#C2C7D0] h-10"
                     value={purchaseDate}
                     placeholder="dd/mm/yyyy"
                     onChange={(date) => setValue('purchaseDate', date as Date)}
-                    mandatory="true"
+                    mandatory="false"
                     closeOnSelect={true}
                   />
                 </div>
                 <div className="flex flex-col gap-6">
-                  <Dropdown
+                  <SupplierPicker
                     label="Supplier"
-                    options={optionsSupplier}
+                    loadOptions={supplierLoadOptions}
                     value={selectedSupplier}
                     onChange={setSelectedSupplier}
-                    placeholder="Pilih supplier"
+                    placeholder="Pilih Supplier"
+                    isLoading={isSuppliersLoading}
+                    className="border-[#C2C7D0] h-10"
+                    isClearable
                   />
                 </div>
                 <div className="flex flex-col gap-6">
@@ -209,22 +286,26 @@ export default function Index() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2">
                 <div className="flex flex-col mt-2">
                   <p className="font-[600] mb-2">Organisasi:</p>
-                  <p>
-                    {stockDetail?.organization
-                      ? `#${stockDetail.organization.id} - ${stockDetail.organization.name}`
-                      : '-'}
-                  </p>
+                  <p>{organization ? `#${organization.id} - ${organization.name}` : '-'}</p>
                 </div>
                 <div className="flex flex-col mt-2">
-                  <Dropdown
+                  <SupplierPicker
                     label="Toko"
-                    options={optionsStore}
+                    loadOptions={TokoLoadOption}
                     value={selectedStore}
-                    onChange={setSelectedStore}
+                    onChange={(val) => {
+                      setSelectedStore(val);
+                      setValue('store', val?.value ? Number(val.value) : 0);
+                    }}
                     placeholder="Pilih Toko"
-                    className="mt-2 h-10"
+                    isLoading={isStoresLoading}
                     required
+                    className="border-[#C2C7D0] h-10"
+                    isClearable
                   />
+                  {errors.store && (
+                    <span className="text-red-500 text-xs mt-1">{errors.store.message}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -248,13 +329,15 @@ export default function Index() {
                 <div className="flex flex-col gap-6">
                   <CustomInput
                     {...register('buyPrice', {
+                      required: 'Harga Beli wajib diisi',
                       setValueAs: (v) => {
                         if (typeof v === 'string') {
                           const cleaned = v.replace(/,/g, '');
                           const num = Number(cleaned);
                           return Number.isNaN(num) ? undefined : num;
                         }
-                        return v;
+                        if (typeof v === 'number') return v;
+                        return undefined;
                       },
                     })}
                     currency
@@ -275,7 +358,7 @@ export default function Index() {
                 <div className="flex flex-col gap-6">
                   <DatePicker
                     mode="single"
-                    className="h-10"
+                    className="h-12"
                     label="Tanggal Kedaluwarsa"
                     value={expiredDate ?? null}
                     placeholder="dd/mm/yyyy"

@@ -2,6 +2,7 @@
 
 import type { StoreItem } from '@/__generated__/api/dto';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 // Update OptionType to match the store filter component
 export type StoreOptionType = {
@@ -32,40 +33,50 @@ type StoreFilterState = {
   setSearchTerm: (term: string) => void;
 };
 
-export const useStoreFilter = create<StoreFilterState>((set, get) => ({
-  selectedStore: null,
-  loadedOptions: [],
-  paginationState: null,
-  searchTerm: '',
-  setSelectedStore: (store) => set({ selectedStore: store }),
-  addLoadedOptions: (options, pagination, search) => {
-    const currentState = get();
-
-    // If it's a new search, replace options; otherwise append
-    if (search !== currentState.searchTerm || pagination.current_page === 1) {
-      set({
-        loadedOptions: options,
-        paginationState: pagination,
-        searchTerm: search,
-      });
-    } else {
-      set({
-        loadedOptions: [...currentState.loadedOptions, ...options],
-        paginationState: pagination,
-        searchTerm: search,
-      });
-    }
-  },
-  clearLoadedOptions: () =>
-    set({
+export const useStoreFilter = create<StoreFilterState>()(
+  persist(
+    (set, get) => ({
+      selectedStore: null,
       loadedOptions: [],
       paginationState: null,
       searchTerm: '',
+      setSelectedStore: (store) => set({ selectedStore: store }),
+      addLoadedOptions: (options, pagination, search) => {
+        const currentState = get();
+
+        // If it's a new search, replace options; otherwise append
+        if (search !== currentState.searchTerm || pagination.current_page === 1) {
+          set({
+            loadedOptions: options,
+            paginationState: pagination,
+            searchTerm: search,
+          });
+        } else {
+          set({
+            loadedOptions: [...currentState.loadedOptions, ...options],
+            paginationState: pagination,
+            searchTerm: search,
+          });
+        }
+      },
+      clearLoadedOptions: () =>
+        set({
+          loadedOptions: [],
+          paginationState: null,
+          searchTerm: '',
+        }),
+      setSearchTerm: (term) => {
+        const currentState = get();
+        if (term !== currentState.searchTerm) {
+          set({ searchTerm: term, loadedOptions: [], paginationState: null });
+        }
+      },
     }),
-  setSearchTerm: (term) => {
-    const currentState = get();
-    if (term !== currentState.searchTerm) {
-      set({ searchTerm: term, loadedOptions: [], paginationState: null });
+    {
+      name: 'store-filter-storage',
+      storage: createJSONStorage(() => localStorage),
+      // Only persist the selected store, not the loaded options and pagination
+      partialize: (state) => ({ selectedStore: state.selectedStore }),
     }
-  },
-}));
+  )
+);

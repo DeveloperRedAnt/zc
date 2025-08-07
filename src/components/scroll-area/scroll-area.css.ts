@@ -3,7 +3,7 @@ import { tv } from 'tailwind-variants';
 
 export const scrollAreaStyles = tv({
   slots: {
-    root: 'relative  overflow-y-scroll h-[100vh]',
+    root: 'relative h-[100v]',
     viewport: 'size-full rounded-[inherit]',
     scrollbar: 'flex touch-none select-none transition-colors',
     thumb: 'relative flex-1 rounded-full bg-border',

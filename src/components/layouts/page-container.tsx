@@ -1,5 +1,6 @@
 import { ScrollArea } from '@/components/scroll-area/scroll-area';
 import React from 'react';
+import AppFooter from './app-footer';
 import Header from './header';
 
 export default function PageContainer({
@@ -12,15 +13,20 @@ export default function PageContainer({
   isLoading?: boolean;
 }) {
   return (
-    <>
+    <div className="flex h-full flex-col">
       {scrollable ? (
-        <ScrollArea className="h-[calc(100dvh-52px)]">
-          <Header isLoading={isLoading} />
-          <div className="flex flex-col p-4">{children}</div>
-        </ScrollArea>
+        <>
+          <ScrollArea className="h-[100vh]">
+            <Header isLoading={isLoading} />
+            <div className="flex flex-col p-4">{children}</div>
+            <AppFooter />
+          </ScrollArea>
+        </>
       ) : (
-        <div className="flex flex-1 p-4 md:px-6">{children}</div>
+        <>
+          <div className="flex flex-1 flex-col p-4 md:px-6">{children}</div>
+        </>
       )}
-    </>
+    </div>
   );
 }

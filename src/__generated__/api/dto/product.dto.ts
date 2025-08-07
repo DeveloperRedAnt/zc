@@ -44,6 +44,67 @@ export type TagSchema = {
   updated_at: string;
 }
 
+// Create Product DTOs
+export type ProductVariantUnit = {
+  id: string;
+  unit_name: string;
+  conversion_value: string;
+  price: string;
+}
+
+export type ProductVariant = {
+  id: string;
+  thumbnail?: string;
+  sku_code: string;
+  barcode: string;
+  is_active: boolean;
+  attributes: any[];
+  is_wholesale: boolean;
+  variant_units: ProductVariantUnit[];
+}
+
+export type ProductCompositeComponent = {
+  id: string;
+  product_variant_id: number;
+  quantity: number;
+}
+
+export type CreateProductComposite = {
+  production_per_batch: number;
+  components: ProductCompositeComponent[];
+}
+
+export type CreateProductRequestSchema = {
+  id: string;
+  name: string;
+  type: 'single' | 'variant' | 'composite';
+  package?: string;
+  thumbnail?: string;
+  is_active: boolean;
+  is_favorite: boolean;
+  is_non_tax: boolean;
+  content?: string;
+  unit_id: number;
+  tag_ids: number[];
+  is_stock_tracking: boolean;
+  minimum_stock?: number;
+  is_enable_expired_reminder: boolean;
+  expired_reminder_in_days?: number;
+  expired_reminder_in_date?: string;
+  variants: ProductVariant[];
+  composites?: CreateProductComposite;
+}
+
+export type CreateProductResponseSchema = {
+  code: number;
+  status: string;
+  name: string;
+  message: string;
+  data: {
+    product: string;
+  };
+}
+
 export type ProductsFirstStockSchema = {
   product_id: number;
   product_variant_id: number;
@@ -212,6 +273,7 @@ export type ProductStockPayload = {
 
 
 export type InitializeStockRequestSchema = {
+  store_id: number;
   supplier_id: number;
   other_cost: number;
   note: string;

@@ -102,6 +102,7 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
               />
             )}
           </SidebarGroupLabel>
+          <div className="mt-8" />
           <SidebarMenu>
             {isLoading
               ? Array.from({ length: totalNavItems }, (_, index) => ({
@@ -122,68 +123,98 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))
-              : navItems.map((item) => {
-                  const IconComponent = item.icon
-                    ? (IconsPark[item.icon] as React.ComponentType<{
-                        theme?: string;
-                        size?: string | number;
-                        style?: React.CSSProperties;
-                        fill?: string;
-                      }>)
-                    : undefined;
-                  return item?.items && item?.items?.length > 0 ? (
-                    <Collapsible
-                      key={item.title}
-                      asChild
-                      defaultOpen={item.isActive}
-                      className="group/collapsible"
-                    >
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton
-                            tooltip={item.title}
-                            isActive={segment === item.urlActive}
-                          >
-                            {item.title}
-                            <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={segment === subItem.urlActive}
-                                >
-                                  <Link href={subItem.url}>{subItem.title}</Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </SidebarMenuItem>
-                    </Collapsible>
-                  ) : (
-                    <SidebarMenuItem key={item.title}>
-                      <div className="py-3 font-medium text-sm leading-[20px] group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:-mt-6 pl-4 pt-4">
-                        {item.groupTitle}
-                      </div>
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={item.title}
-                        isActive={segment === item.urlActive}
-                      >
-                        <MenuLink
-                          url={item.url}
-                          title={item.title}
-                          isActive={segment === item.urlActive}
-                          IconComponent={IconComponent ?? undefined}
-                        />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+              : (() => {
+                  const groupedItems = navItems.reduce(
+                    (acc, item) => {
+                      const groupTitle = item.groupTitle || 'default';
+                      if (!acc[groupTitle]) {
+                        acc[groupTitle] = [];
+                      }
+                      acc[groupTitle].push(item);
+                      return acc;
+                    },
+                    {} as Record<string, typeof navItems>
                   );
-                })}
+
+                  return Object.entries(groupedItems).map(([groupTitle, items]) => (
+                    <React.Fragment key={groupTitle}>
+                      {groupTitle !== 'default' && groupTitle !== '' && (
+                        <div className="py-3 font-medium text-sm leading-[20px] group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:-mt-6 pl-4 pt-4">
+                          {groupTitle}
+                        </div>
+                      )}
+                      {items.map((item) => {
+                        const IconComponent = item.icon
+                          ? (IconsPark[item.icon] as React.ComponentType<{
+                              theme?: string;
+                              size?: string | number;
+                              style?: React.CSSProperties;
+                              fill?: string;
+                            }>)
+                          : undefined;
+                        return item?.items && item?.items?.length > 0 ? (
+                          <Collapsible
+                            key={item.title}
+                            asChild
+                            defaultOpen={item.isActive}
+                            className="group/collapsible"
+                          >
+                            <SidebarMenuItem>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton
+                                  tooltip={item.title}
+                                  isActive={segment === item.urlActive}
+                                >
+                                  <div className="flex items-center gap-4">
+                                    {IconComponent && (
+                                      <IconComponent
+                                        theme="outline"
+                                        size="16"
+                                        style={{ width: '16.34px', height: '16px' }}
+                                        fill="currentColor"
+                                      />
+                                    )}
+                                    <span>{item.title}</span>
+                                  </div>
+                                  <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.items?.map((subItem) => (
+                                    <SidebarMenuSubItem key={subItem.title}>
+                                      <SidebarMenuSubButton
+                                        asChild
+                                        isActive={segment === subItem.urlActive}
+                                      >
+                                        <Link href={subItem.url}>{subItem.title}</Link>
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </SidebarMenuItem>
+                          </Collapsible>
+                        ) : (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              tooltip={item.title}
+                              isActive={segment === item.urlActive}
+                            >
+                              <MenuLink
+                                url={item.url}
+                                title={item.title}
+                                isActive={segment === item.urlActive}
+                                IconComponent={IconComponent ?? undefined}
+                              />
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </React.Fragment>
+                  ));
+                })()}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

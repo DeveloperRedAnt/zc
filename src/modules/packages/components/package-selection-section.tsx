@@ -3,8 +3,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { CheckCorrect } from '@icon-park/react';
 import { Check, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import enterprisePacket from './../../../../public/assets/images/enterprise-packet.svg';
 import ZycasPlusLogo from './../../../../public/assets/images/zycas-plus-logo.svg';
+import { FeatureComparisonModal } from './popup-feature-comparison';
 
 const freePackageFeatures = [
   'Laporan Standard',
@@ -19,7 +22,7 @@ const businessPackageFeatures = [
   '5 Akun (include Owner)',
   'Promosi / CRM',
   'Varian Produk & Expired Produk',
-  'Produk Multisatuan dan masih banyak lagi!',
+  'Produk Multisatuan',
 ];
 
 const enterprisePackageFeatures = [
@@ -27,10 +30,16 @@ const enterprisePackageFeatures = [
   'Laporan Lengkap',
   '10 akun (include Owner)',
   'Assembly Produk',
-  'dan masih banyak lagi!',
 ];
 
 export default function PackageSelectionSection() {
+  const [isPopUpOpen, setIsPopUpOpen] = useState(false);
+  const router = useRouter();
+
+  const handleChoosePackage = () => {
+    router.push('/dashboard/packages/payment-confirmation?mode=package&type=null');
+  };
+
   return (
     <div className="w-full px-4 md:px-6 mb-8">
       {/* Header */}
@@ -38,7 +47,11 @@ export default function PackageSelectionSection() {
         <h2 className="text-base font-semibold text-gray-800 ml-[23px]">
           Pilihan Paket yang Kami Sediakan
         </h2>
-        <Button variant="outline" className="gap-2 text-gray-600 border-gray-300 text-sm">
+        <Button
+          variant="outline"
+          className="gap-2 text-gray-600 border-gray-300 text-sm"
+          onClick={() => setIsPopUpOpen(true)}
+        >
           Cek Perbandingan Fitur
           <ExternalLink className="w-4 h-4" />
         </Button>
@@ -57,7 +70,7 @@ export default function PackageSelectionSection() {
             {/* Divider */}
             <div className="border-t border-gray-300 mb-6" />
 
-            <p className="text-base text-gray-600 mb-4">Hanya mendapatkan:</p>
+            <p className="text-base text-gray-600 mb-2">Hanya mendapatkan:</p>
           </CardHeader>
 
           <CardContent className="space-y-3 flex-grow">
@@ -99,21 +112,26 @@ export default function PackageSelectionSection() {
             {/* Divider */}
             <div className="border-t border-gray-300 mb-6" />
 
-            <p className="text-base text-gray-600 mb-4">Fitur yang Didapatkan:</p>
+            <p className="text-base text-gray-600 mb-2">Fitur yang Didapatkan:</p>
           </CardHeader>
 
           <CardContent className="space-y-3 flex-grow">
             {businessPackageFeatures.map((feature) => (
               <div key={feature} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-white" />
+                <div className="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-base text-gray-700">{feature}</span>
               </div>
             ))}
+            <span className="text-base text-gray-700">dan masih banyak lagi!</span>
           </CardContent>
           <CardFooter className="pt-6 mt-auto">
-            <Button variant="outline" className="w-full text-gray-700 border-gray-300">
+            <Button
+              variant="outline"
+              className="w-full text-gray-700 border-gray-300"
+              onClick={handleChoosePackage}
+            >
               Pilih Paket
             </Button>
           </CardFooter>
@@ -150,24 +168,35 @@ export default function PackageSelectionSection() {
             {/* Divider */}
             <div className="border-t border-gray-300 mb-6" />
 
-            <p className="text-base text-gray-600 mb-4">Fitur yang Didapatkan:</p>
+            <p className="text-base text-gray-600 mb-2">Fitur yang Didapatkan:</p>
           </CardHeader>
           <CardContent className="space-y-3 flex-grow">
             {enterprisePackageFeatures.map((feature) => (
               <div key={feature} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-white" />
+                <div className="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-base text-gray-700">{feature}</span>
               </div>
             ))}
+            <span className="text-base text-gray-700">dan masih banyak lagi!</span>
           </CardContent>
           <CardFooter className="pt-6 mt-auto">
-            <Button variant="outline" className="w-full text-gray-700 border-gray-300">
+            <Button
+              variant="outline"
+              className="w-full text-gray-700 border-gray-300"
+              onClick={handleChoosePackage}
+            >
               Pilih Paket
             </Button>
           </CardFooter>
         </Card>
+
+        <FeatureComparisonModal
+          title="Perbandingan Fitur"
+          open={isPopUpOpen}
+          onOpenChange={setIsPopUpOpen}
+        />
       </div>
     </div>
   );

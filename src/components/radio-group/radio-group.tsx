@@ -1,5 +1,4 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
-import * as Lucide from 'lucide-react';
 import * as React from 'react';
 import type { RadioGroupVariants } from './radio-group.css';
 import { radioGroupStyles } from './radio-group.css';
@@ -30,7 +29,7 @@ const RadioGroupItem = ({
   return (
     <RadioGroupPrimitive.Item ref={ref} className={styles.item({ className })} {...props}>
       <RadioGroupPrimitive.Indicator className={styles.indicator()}>
-        <Lucide.Check className={styles.icon()} strokeWidth={2} />
+        <div className="w-2 h-2 rounded-full bg-primary" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );

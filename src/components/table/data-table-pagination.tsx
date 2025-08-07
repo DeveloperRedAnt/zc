@@ -18,6 +18,7 @@ interface DataTablePaginationProps<TData> {
   page?: number;
   pageSize?: number;
   totalPages?: number;
+  hidePageSize?: boolean;
 }
 
 export function DataTablePagination<TData>({
@@ -28,6 +29,7 @@ export function DataTablePagination<TData>({
   page,
   pageSize,
   totalPages,
+  hidePageSize,
 }: DataTablePaginationProps<TData>) {
   const pageIndex = page ?? table.getState().pagination.pageIndex;
   const pageCount = totalPages ?? table.getPageCount();
@@ -57,7 +59,7 @@ export function DataTablePagination<TData>({
   return (
     <div className="flex items-center justify-between py-4 gap-4 flex-wrap">
       <div className="flex items-center space-x-2 text-sm whitespace-nowrap">
-        {isLoading ? (
+        {hidePageSize ? null : isLoading ? (
           <>
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-16 rounded" />
@@ -69,6 +71,7 @@ export function DataTablePagination<TData>({
           </>
         )}
       </div>
+
       <div className="flex items-center space-x-1">
         {isLoading ? (
           <>

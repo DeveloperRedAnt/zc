@@ -14,7 +14,7 @@ import {
 } from '@/components/dialog/dialog';
 import { InformationText } from '@/components/information-text/information-text';
 import { Stepper as NumberStepper } from '@/components/number-stepper/number-stepper';
-import ProductPicker from '@/components/product-picker/product-picker';
+import ProductVariantPicker from '@/components/product-variant-picker/product-variant-picker';
 import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
 import { Check, Delete, Plus } from '@icon-park/react';
 import { useRouter } from 'next/navigation';
@@ -54,7 +54,7 @@ export default function FormProductComposite() {
                 <div className="flex mt-4 items-start gap-4">
                   <div className="flex flex-col items-start gap-4 w-[18.6rem]">
                     <div className="w-full mt-2">
-                      <ProductPicker
+                      <ProductVariantPicker
                         value={
                           item.product_id && item.product_name
                             ? {

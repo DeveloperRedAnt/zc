@@ -8,9 +8,9 @@ import PrintQueueContent from '@/modules/master-data/components/print-queue-cont
 import ProductTagsContent from '@/modules/master-data/components/product-tags/product-tags-content';
 import ProductUnitContent from '@/modules/master-data/components/product-unit/product-unit-content';
 import ProductVariantContent from '@/modules/master-data/components/product-variant/product-variant-content';
-import QueueCounterContent from '@/modules/master-data/components/queue-counter-content';
+import QueueCounterContent from '@/modules/master-data/components/queue-counter/queue-counter-content';
 import ServiceChargeContent from '@/modules/master-data/components/service-charge-content';
-import TaxMasterContent from '@/modules/master-data/components/tax-master-content';
+import TaxMasterContent from '@/modules/master-data/components/tax-master/tax-master-content';
 
 // Define tab contents
 const tabContents = [

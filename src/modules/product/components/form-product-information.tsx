@@ -68,7 +68,7 @@ export default function FormProductInformation() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
         {/* KIRI */}
-        <div className="flex flex-col items-start gap-4 border-r border-[#C2C7D0]">
+        <div className="flex flex-col items-start gap-4 border-r-gray-200">
           <div className="w-[95%]">
             <InputFile
               label="Unggah Thumbnail"

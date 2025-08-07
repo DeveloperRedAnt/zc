@@ -31,4 +31,50 @@ const Toaster = (props: ToastProps) => {
   );
 };
 
+export const useToast = () => {
+  return {
+    showSuccess: (message: string, description?: string) => {
+      toast.success(message, {
+        description,
+        style: {
+          '--normal-bg': 'light-dark(var(--color-green-600), var(--color-green-400))',
+          '--normal-text': 'var(--color-white)',
+          '--normal-border': 'light-dark(var(--color-green-600), var(--color-green-400))',
+        } as React.CSSProperties,
+      });
+    },
+    showError: (message: string, description?: string) => {
+      toast.error(message, {
+        description,
+        style: {
+          '--normal-bg':
+            'light-dark(var(--destructive), color-mix(in oklab, var(--destructive) 60%, var(--background)))',
+          '--normal-text': 'var(--color-white)',
+          '--normal-border': 'transparent',
+        } as React.CSSProperties,
+      });
+    },
+    showWarning: (message: string, description?: string) => {
+      toast.warning(message, {
+        description,
+        style: {
+          '--normal-bg': 'light-dark(var(--color-amber-600), var(--color-amber-400))',
+          '--normal-text': 'var(--color-white)',
+          '--normal-border': 'light-dark(var(--color-amber-600), var(--color-amber-400))',
+        } as React.CSSProperties,
+      });
+    },
+    showInfo: (message: string, description?: string) => {
+      toast.info(message, {
+        description,
+        style: {
+          '--normal-bg': 'light-dark(var(--color-sky-600), var(--color-sky-400))',
+          '--normal-text': 'var(--color-white)',
+          '--normal-border': 'light-dark(var(--color-sky-600), var(--color-sky-400))',
+        } as React.CSSProperties,
+      });
+    },
+  };
+};
+
 export { toast, Toaster };

@@ -12,14 +12,18 @@ import FormTrackStockProduct from '@/modules/product/components/form-track-stock
 import { ArrowRight, Check } from '@icon-park/react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
+import * as DTO from '@/__generated__/api/dto';
+import { useCreateProduct } from '@/__generated__/api/hooks/product.hooks';
+import { useToast } from '@/components/toast/toast';
 import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
-// import { useProductVariantStore } from '@/modules/product-variant/store';
-// import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
-// import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
-// import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
-// import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
-// import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
-// import { useMemo } from 'react';
+import { useProductVariantStore } from '@/modules/product-variant/store';
+import { mapFormDataToApiPayload } from '@/modules/product/utils/apiHelper';
+import { useProductCompositeStore } from '@/modules/products/storing-data/product-composite/stores';
+import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
+import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
+import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
+import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
+import { useMemo } from 'react';
 
 type FormProductFormProps = {
   toggleStatusTrackingEnabled: boolean;
@@ -34,27 +38,31 @@ export default function FormProductForm({
   validateFields,
   router,
 }: FormProductFormProps) {
-  // const productInfo = useProductInformationStore((state) => state);
-  // const productDetail = useProductDetailStore((state) => state);
-  // const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
-  // const trackStock = useTrackStockProductStore((state) => state.data);
-  // const composite = useProductCompositeStore((state) => state.data);
-  // const variant = useProductVariantStore((state) => state.finalData);
+  const productInfo = useProductInformationStore((state) => state);
+  const productDetail = useProductDetailStore((state) => state);
+  const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
+  const trackStock = useTrackStockProductStore((state) => state.data);
+  const composite = useProductCompositeStore((state) => state.data);
+  const variant = useProductVariantStore((state) => state.finalData);
+
+  const toast = useToast();
 
   const { getRegisteredFields, setErrors } = useFormValidationContext();
 
-  // // Gabungkan semua store
-  // //@ts-ignore
-  // const _finalPayload = useMemo(() => {
-  //   return {
-  //     ...productInfo,
-  //     ...productDetail,
-  //     ...trackStock,
-  //     default_prices: multiPack,
-  //     composite,
-  //     variant,
-  //   };
-  // }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
+  const { mutate: createProduct, isPending } = useCreateProduct();
+
+  // Gabungkan semua store
+  //@ts-ignore
+  const finalPayload = useMemo(() => {
+    return {
+      ...productInfo,
+      ...productDetail,
+      ...trackStock,
+      default_prices: multiPack,
+      composite,
+      variant,
+    };
+  }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -62,7 +70,28 @@ export default function FormProductForm({
     setErrors(errors);
 
     if (!isValid) return;
-    router.push('/dashboard/products/1/create/set-first-stock');
+
+    const mappedData = mapFormDataToApiPayload(finalPayload);
+
+    createProduct(
+      {
+        'x-device-id': '1',
+        'x-store-id': '2',
+        'x-organization-id': '1',
+        body: mappedData,
+      },
+      {
+        onSuccess: (res: DTO.CreateProductResponseSchema) => {
+          toast.showSuccess('Tersimpan', 'Produk Paduan Anda telah berhasil disimpan');
+          router.push(`/dashboard/products/${res.data.product}/create/set-first-stock`);
+        },
+        onError: (error) => {
+          toast.showError('Gagal', `Produk Anda gagal disimpan karena ${error.message}`);
+        },
+      }
+    );
+
+    //
   };
 
   return (
@@ -95,6 +124,7 @@ export default function FormProductForm({
                   variant="primary"
                   className="mt-2 ml-[1px] flex items-center"
                   onClick={handleSubmit}
+                  isLoading={isPending}
                 >
                   Simpan dan Input Stok Awal
                   <ArrowRight />

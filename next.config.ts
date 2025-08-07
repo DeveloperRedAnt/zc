@@ -1,10 +1,29 @@
+import { execSync } from 'child_process';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
 
 import './src/libs/Env';
 
+// Get commit hash and version info
+let commitHash = 'dev';
+let appVersion = '0.1.2';
+
+try {
+  // Get the short commit hash
+  commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+  // Get version from package.json
+  const packageJson = require('./package.json');
+  appVersion = packageJson.version;
+} catch (_error) {
+  console.warn('Could not retrieve git info, using fallback values');
+}
+
 // Define the base Next.js configuration
 const baseConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: appVersion,
+    NEXT_PUBLIC_COMMIT_HASH: commitHash,
+  },
   async redirects() {
     return [
       {

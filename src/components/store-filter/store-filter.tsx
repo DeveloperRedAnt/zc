@@ -146,8 +146,8 @@ export default function StoreFilter() {
 
   return (
     <>
-      <div className="flex">
-        <span className="font-semibold my-auto mr-2 text-[14px]"> Tampilan Data untuk: </span>
+      <div className="flex items-center">
+        <p className="font-semibold mr-2 text-sm flex basis-[380px]"> Tampilan Data untuk: </p>
         <AsyncPaginate
           defaultOptions
           value={isClient ? value : null}

@@ -20,14 +20,7 @@ export const useProductCompositeStore = create<ProductCompositeState>()(
     (set) => ({
       data: {
         production_per_batch: 0,
-        components: [
-          {
-            id: crypto.randomUUID(),
-            product_id: null,
-            product_name: null,
-            quantity: 0,
-          },
-        ],
+        components: [],
       },
 
       setProductionPerBatch: (value) =>
@@ -76,14 +69,7 @@ export const useProductCompositeStore = create<ProductCompositeState>()(
         set({
           data: {
             production_per_batch: 0,
-            components: [
-              {
-                id: crypto.randomUUID(),
-                product_id: null,
-                product_name: null,
-                quantity: 0,
-              },
-            ],
+            components: [],
           },
         }),
     }),

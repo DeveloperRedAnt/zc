@@ -61,21 +61,15 @@ const headerChangeStockHistory = [
 export default function Index() {
   const router = useRouter();
   const params = useParams();
-  const productId = Number(params?.productId);
+  const productId = Number(params?.id);
 
   const { data, isLoading } = useGetProductDetail({
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
-    body: { id: productId },
+    id: productId,
   });
 
   const { data: changeStockHistoryData = [], isLoading: isLoadingStockHistoryData } =
     useGetProductStockHistories({
-      'x-device-id': '1',
-      'x-store-id': '1',
-      'x-organization-id': '1',
-      body: { id: productId },
+      id: productId,
     });
 
   const tableChangeStockHistory = useReactTable({

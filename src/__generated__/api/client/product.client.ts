@@ -237,6 +237,15 @@ export const createUnitProduct = async (params: {
     transformer: (data: Record<string, unknown>) => data as DTO.ApiResponse
   });
 
+  export const listProductVariants = async (params: DTO.ProductSchema) => getDataFromApi<typeof params, DTO.ApiResponse, DTO.ProductSchema>({
+    type: 'get',
+    url: '/api/products/selection/composite',
+    injectHeaders: ['x-store-id', 'x-organization-id'],
+    params,
+    transformer: (data: Record<string, unknown>) => data as DTO.ApiResponse
+  });
+
+
   export const listProductUnits = async (params: {
     page?: number;
     per_page?: number;
@@ -263,55 +272,30 @@ export const createUnitProduct = async (params: {
   };
 
   export const ListProductStockHistories = async (params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body: {
+      id: number,
+    }) =>
+    getDataFromApi<typeof params, DTO.ProductStockHistoriesResponse[]>({
+      type: 'get',
+      url: `/api/products/${params.id}/stock-histories`,
+      injectHeaders: ['x-device-id', 'x-organization-id'],
+      params,
+      transformer: (data: Record<string, unknown>) => (data as any).data as DTO.ProductStockHistoriesResponse[]
+    });
+    
+
+
+  export const ProductDetail = async (
+      params: {
       'id': number,
     }
-  }) => {
-    try {
-      let url = `/api/products/${params.body.id}/stock-histories`;
-      const headers = {
-        'x-device-id': params['x-device-id'],
-        'x-store-id': params['x-store-id'],
-        'x-organization-id': params['x-organization-id'],
-      };
-      
-      const response = await apiClientWithHeaders.get(url, { headers, params: params.body });
-
-      return response.data.data;
-    } catch (error) {
-        if (error instanceof ValidationError) throw error;
-        throw error;
-    }
-  }
-
-
-  export const ProductDetail = async (params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body: {
-      'id': number,
-    }
-  }) => {
-    try {
-      let url = `/api/products/${params.body.id}`;
-      const headers = {
-        'x-device-id': params['x-device-id'],
-        'x-store-id': params['x-store-id'],
-        'x-organization-id': params['x-organization-id'],
-      };
-      
-      const response = await apiClientWithHeaders.get(url, { headers, params: params.body });
-
-      return response.data.data;
-    } catch (error) {
-        if (error instanceof ValidationError) throw error;
-        throw error;
-    }
-  }
+  ) =>
+    getDataFromApi<typeof params, DTO.ApiProduct>({
+      type: 'get',
+      url: `/api/dashboard/products/${params.id}`,
+      injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
+      params,
+      transformer: (data: Record<string, unknown>) => data as DTO.ApiProduct
+    });
 
   export const InitializeStock = async (params: {
     "x-device-id": string;
@@ -319,19 +303,26 @@ export const createUnitProduct = async (params: {
     "x-organization-id": string;
     body: DTO.InitializeStockRequestSchema;
   }) => {
-    let url = "/api/products";
-    try {
+    let url = "/api/stocks/batches";
+    const query = { store_id: params["x-store-id"] };
+    try 
+    {
+
       const headers = {
         "x-device-id": params["x-device-id"],
         "x-store-id": params["x-store-id"],
         "x-organization-id": params["x-organization-id"],
         "Content-Type": "multipart/form-data",
       };
-      const response = await axios.post(url, params.body, { headers });
+
+      const response = await apiClientWithHeaders.post(url, params.body, { 
+        headers, 
+        params: query
+      });
       return response.data;
-    } catch (error) {
-      if (error instanceof ValidationError) throw error;
-      throw error;
+    } 
+    catch (error) {
+        throw error;
     }
   }
 
@@ -363,7 +354,36 @@ export const createUnitProduct = async (params: {
         { 
           if (error instanceof ValidationError) throw error;
           throw error;
-        }
+        }  
   }
 
-
+/**
+ * Create product
+ */
+export const createProduct = async (params: {
+  'x-device-id': string;
+  'x-store-id': string;
+  'x-organization-id': string;
+  body: DTO.CreateProductRequestSchema;
+}) => {
+  try {
+    let url = '/api/dashboard/products';
+    const headers = {
+      'x-device-id': params['x-device-id'],
+      'x-store-id': params['x-store-id'],
+      'x-organization-id': params['x-organization-id'],
+    };
+    const response = await apiClientWithHeaders.post(url, params.body, { headers });
+    return response.data;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    if (error instanceof z.ZodError) throw new ValidationError(error.issues);
+    if ((error as any).isAxiosError) {
+      const axiosError = error as any;
+      if (axiosError.response && axiosError.response.status === 401) console.error('Authentication required');
+      if (axiosError.response && axiosError.response.status === 403) console.error('Access denied');
+      throw new Error('HTTP ' + (axiosError.response && axiosError.response.status || 'unknown') + ': ' + axiosError.message);
+    }
+    throw error;
+  }
+};

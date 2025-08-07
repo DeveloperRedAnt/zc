@@ -5,34 +5,39 @@ import Zycasmaxlogo from './../../../../public/assets/images/zycasmax-logo.svg';
 const historyData = [
   {
     date: '14 September 2025',
-    description: ['10 Kasir', 'Produk Paduan', 'Akan berakhir pada 14 Oktober 2025'],
+    data_dot: ['10 Kasir', 'Produk Paduan'],
+    description: 'Berakhir pada 14 Oktober 2025',
     package: 'Add On',
     packageType: 'addon',
     amount: 'Rp 100.000',
   },
   {
     date: '12 September 2025',
-    description: 'Akan berakhir pada 11 Oktober 2025',
+    data_dot: [],
+    description: 'Berakhir pada 11 Oktober 2025',
     package: 'ZYCAS MAX',
     packageType: 'max',
     amount: 'Rp 280.000',
   },
   {
     date: '12 Agustus 2025',
-    description: 'Akan berakhir pada 11 September 2025',
+    data_dot: [],
+    description: 'Berakhir pada 11 September 2025',
     package: 'ZYCAS MAX',
     packageType: 'max',
     amount: 'Rp 280.000',
   },
   {
     date: '1 Februari 2025',
-    description: 'Akan berakhir pada 28 Februari 2025',
+    data_dot: [],
+    description: 'Berakhir pada 28 Februari 2025',
     package: 'ZYCAS +',
     packageType: 'plus',
     amount: 'Rp 150.000',
   },
   {
     date: '1 Januari 2025',
+    data_dot: [],
     description: 'Akan berakhir pada 31 Januari 2025',
     package: 'ZYCAS +',
     packageType: 'plus',
@@ -52,12 +57,12 @@ export default function () {
           <table className="w-full">
             <thead className="bg-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-600">
                   Tanggal Langganan
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Deskripsi</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Paket</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-600">Nominal</th>
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-600">Deskripsi</th>
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-600">Paket</th>
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-600">Nominal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -65,19 +70,31 @@ export default function () {
                 <tr key={item.date} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-900">{item.date}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {Array.isArray(item.description) ? (
+                    {Array.isArray(item.data_dot) && item.data_dot.length > 0 ? (
+                      <div className="mb-2">
+                        {item.data_dot.map((desc) => (
+                          <div key={desc} className="flex items-center gap-2">
+                            <span className="text-gray-600">•</span>
+                            <span>{desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {item.description && item.description.length > 0 && (
+                      <div className="text-gray-600">{item.description}</div>
+                    )}
+                    {/* {Array.isArray(item.data_dot) ? (
                       <div>
-                        {item.description.map((desc) => (
+                        {item.data_dot.map((desc) => (
                           <div key={desc}>• {desc}</div>
                         ))}
                       </div>
-                    ) : (
-                      item.description
-                    )}
+                    ) : ()}
+                    {item.description} */}
                   </td>
                   <td className="px-6 py-4">
                     {item.packageType === 'addon' && (
-                      <span className="text-sm text-gray-700">Add On</span>
+                      <span className="text-sm font-medium text-gray-700">Add On</span>
                     )}
                     {item.packageType === 'max' && (
                       <div className="w-[110px] h-[32px] flex items-start justify-start">
@@ -98,7 +115,7 @@ export default function () {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.amount}</td>
+                  <td className="px-6 py-4 text-sm font-normal text-gray-900">{item.amount}</td>
                 </tr>
               ))}
             </tbody>
