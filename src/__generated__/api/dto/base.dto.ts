@@ -33,6 +33,13 @@ export type SearchSchema = {
   search: string;
 };
 
+export interface BaseRequestPagination {
+    page: number;
+    per_page: number;
+    sort_by: string;
+    sort_direction: string;
+}
+
 export interface Pagination {
   current_page: number;
   last_page: number;

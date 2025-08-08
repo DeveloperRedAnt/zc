@@ -1,9 +1,9 @@
 'use client';
 
 import { Card, CardContent } from '@/components/card/card';
+import PackageSubsSelection from '@/modules/packages/components/package-subs-selection';
 import { Link, Shop, User } from '@icon-park/react';
 import React from 'react';
-
 // Define the data structure for dashboard cards
 interface DashboardCardData {
   id: string;
@@ -59,6 +59,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
+      <PackageSubsSelection />
       {/* Dashboard Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {dashboardCards.map((cardData) => (

@@ -1,6 +1,10 @@
+import type { VariantAttributeOptionType } from '@/modules/master-data/components/product-variant/variant-select';
+
 export type ProductVariant = {
   id: string;
-  type?: ProductVariantType;
+  type?: string;
+  variantAttribute?: VariantAttributeOptionType | null;
+  selected_id?: string;
   options?: ProductVariantOption[];
 };
 
@@ -10,6 +14,7 @@ export type ProductVariantOption = {
   id: string;
   name: string;
   type: string;
+  selected_id?: string;
   prices?: PricesVariantOption[];
 };
 export type ProductVariantOptions = Array<ProductVariantOption>;
@@ -30,6 +35,15 @@ export type ProductVariantStore = {
   formattedData: FormattedDatas;
   finalData: FormattedDatas;
 
+  // Variant Attributes Caching
+  variantAttributes: VariantAttributeOptionType[];
+  variantAttributesLoading: boolean;
+  variantAttributesPagination: {
+    currentPage: number;
+    lastPage: number;
+    hasMore: boolean;
+  };
+
   // Actions
   addProductVariant: (productVariant: ProductVariant) => void;
   removeProductVariant: (id: string) => void;
@@ -41,7 +55,20 @@ export type ProductVariantStore = {
     data: ProductVariantOption
   ) => void;
   deleteOptionByProductIDandOptionID: (productVariantID: string, optionID: string) => void;
-  changeProductVariantTypeByID: (id: string, type: ProductVariantType) => void;
+  changeProductVariantTypeByID: (id: string, type: ProductVariantType, selectedID: string) => void;
+  setProductVariantAttributeByID: (
+    id: string,
+    variantAttribute: VariantAttributeOptionType | null
+  ) => void;
+
+  // Variant Attributes Caching Methods
+  loadVariantAttributes: (page?: number, search?: string) => Promise<VariantAttributeOptionType[]>;
+  setVariantAttributesLoading: (loading: boolean) => void;
+  addVariantAttributes: (
+    attributes: VariantAttributeOptionType[],
+    pagination: { currentPage: number; lastPage: number; hasMore: boolean }
+  ) => void;
+  clearVariantAttributes: () => void;
   addPricesVariantOption: (
     productVariantID: string,
     optionID: string,
@@ -85,5 +112,12 @@ export type FormattedData = {
   minStock: number;
   prices?: PricesVariantOption[];
   typeprice: string;
+  isActive: boolean;
+  options?: {
+    id: string;
+    type: string;
+    name: string;
+    selected_id: string;
+  }[];
 };
 export type FormattedDatas = Array<FormattedData>;

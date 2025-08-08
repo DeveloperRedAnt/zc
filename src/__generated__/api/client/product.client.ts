@@ -74,30 +74,13 @@ export const listProductTags = async (params: {
 /**
  * List variant attributes
  */
-export const listVariantAttributes = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-}) => {
-  try {
-    let url = '/api/variant-attributes';
-    const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-    };
-    const response = await apiClientWithHeaders.get(url, { headers });
-    return response.data;
-  } catch (error) {
-    if (error instanceof ValidationError) throw error;
-    if (error instanceof z.ZodError) throw new ValidationError(error.issues);
-    if ((error as any).isAxiosError) {
-      const axiosError = error as any;
-      if (axiosError.response && axiosError.response.status === 401) console.error('Authentication required');
-      if (axiosError.response && axiosError.response.status === 403) console.error('Access denied');
-      throw new Error('HTTP ' + (axiosError.response && axiosError.response.status || 'unknown') + ': ' + axiosError.message);
-    }
-    throw error;
-  }
-};
+export const listVariantAttributes = async (params: DTO.VariantAttributeSchema): Promise<DTO.VariantAttributeListResponse> => 
+  getDataFromApi<typeof params, DTO.VariantAttributeListResponse, DTO.VariantAttributeSchema>({
+    type: 'get',
+    url: '/api/variant-attributes',
+    params,
+    injectHeaders: ['x-device-id', 'x-store-id', 'x-organization-id'],
+  });
 
 /**
  * Create variant attribute
@@ -361,29 +344,21 @@ export const createUnitProduct = async (params: {
  * Create product
  */
 export const createProduct = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: DTO.CreateProductRequestSchema;
-}) => {
-  try {
-    let url = '/api/dashboard/products';
-    const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
-    };
-    const response = await apiClientWithHeaders.post(url, params.body, { headers });
-    return response.data;
-  } catch (error) {
-    if (error instanceof ValidationError) throw error;
-    if (error instanceof z.ZodError) throw new ValidationError(error.issues);
-    if ((error as any).isAxiosError) {
-      const axiosError = error as any;
-      if (axiosError.response && axiosError.response.status === 401) console.error('Authentication required');
-      if (axiosError.response && axiosError.response.status === 403) console.error('Access denied');
-      throw new Error('HTTP ' + (axiosError.response && axiosError.response.status || 'unknown') + ': ' + axiosError.message);
-    }
-    throw error;
-  }
-};
+}) => getDataFromApi<typeof params, DTO.CreateProductResponseSchema>({
+  type: 'post',
+  url: '/api/dashboard/products',
+  injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
+  params,
+  body: params.body,
+  transformer: (data: Record<string, unknown>) => data as DTO.CreateProductResponseSchema
+});
+
+export const getListProductStockOpnames = async (params: DTO.ProductStockOpnameRequest): Promise<DTO.ProductStockOpnameResponse> => getDataFromApi<typeof params, DTO.ProductStockOpnameResponse>({
+  type: 'get',
+  url: `/api/dashboard/stock-takings`,
+  injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
+  params,
+  body: params,
+  transformer: (data: any) => data as DTO.ProductStockOpnameResponse
+})

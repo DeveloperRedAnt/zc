@@ -1,5 +1,6 @@
 import axios from 'axios';
 import z from 'zod';
+import { getDataFromApi } from '../../../utils/url';
 import * as DTO from '../dto';
 import { ValidationError, apiClientWithHeaders } from './base.client';
 
@@ -122,36 +123,16 @@ export const onStoreStockFirstVariant = async (params: {
   };
 
   export const listStore = async (params: {
-    'x-device-id': string;
-    'x-store-id': string;
-    'x-organization-id': string;
-    body?: {
       page?: number;
       per_page?: number;
       search?: string;
       sort_by?: string;
       sort_direction?: 'asc' | 'desc';
-    };
-  }): Promise<DTO.StoreListResponse> => {
-    try {
-      const headers = {
-        'x-device-id': params['x-device-id'],
-        'x-store-id': params['x-store-id'],
-        'x-organization-id': params['x-organization-id'],
-      };
-      
-      const url = `/api/stores`;
-      const queryParams = params.body || {};
-      
-      const response = await apiClientWithHeaders.get(url, {
-        headers,
-        params: queryParams
-      });
-      
-      return response.data;
-    } catch (error) {
-      if (error instanceof ValidationError) throw error;
-      throw error;
-    }
-  }
+    }): Promise<DTO.StoreListResponse> => getDataFromApi<typeof params, DTO.StoreListResponse>({
+      type: 'get',
+      url: `/api/stores`,
+      injectHeaders: ['x-device-id', 'x-organization-id'],
+      params,
+      transformer: (data: Record<string, unknown>) => data as unknown as DTO.StoreListResponse
+    })
 

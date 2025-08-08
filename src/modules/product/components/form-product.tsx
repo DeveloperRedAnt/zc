@@ -41,9 +41,10 @@ export default function FormProductForm({
   const productInfo = useProductInformationStore((state) => state);
   const productDetail = useProductDetailStore((state) => state);
   const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
+  const isWholesale = usePriceMultiPackStore((state) => state.isWholesale);
   const trackStock = useTrackStockProductStore((state) => state.data);
   const composite = useProductCompositeStore((state) => state.data);
-  const variant = useProductVariantStore((state) => state.finalData);
+  const variants = useProductVariantStore((state) => state.finalData);
 
   const toast = useToast();
 
@@ -60,9 +61,10 @@ export default function FormProductForm({
       ...trackStock,
       default_prices: multiPack,
       composite,
-      variant,
+      variants: variants,
+      is_wholesale: isWholesale,
     };
-  }, [productInfo, productDetail, multiPack, composite, variant, trackStock]);
+  }, [productInfo, productDetail, multiPack, composite, variants, trackStock, isWholesale]);
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -75,9 +77,6 @@ export default function FormProductForm({
 
     createProduct(
       {
-        'x-device-id': '1',
-        'x-store-id': '2',
-        'x-organization-id': '1',
         body: mappedData,
       },
       {

@@ -20,6 +20,8 @@ type DatePickerProps = {
   value?: Date | DateRange;
   onChange?: (date: Date | DateRange | undefined) => void;
   closeOnSelect?: boolean;
+  disabled?: (date: Date) => boolean; // Tambahkan prop disabled
+  disabledDates?: (date: Date) => boolean; // Tambahkan alias untuk backward compatibility
 };
 
 export function DatePicker({
@@ -31,6 +33,8 @@ export function DatePicker({
   value,
   onChange,
   closeOnSelect = false,
+  disabled,
+  disabledDates, // Support both disabled and disabledDate
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<Date | DateRange | undefined>(undefined);
@@ -110,6 +114,7 @@ export function DatePicker({
 
     return placeholder || 'Pick a date';
   };
+  const disabledFunc = disabledDates || disabled;
 
   return (
     <div className="space-y-2">
@@ -161,6 +166,7 @@ export function DatePicker({
                 onChange?.(date);
                 setOpen(false);
               }}
+              disabled={disabledFunc}
               numberOfMonths={1}
               initialFocus
             />

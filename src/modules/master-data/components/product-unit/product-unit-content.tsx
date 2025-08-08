@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  useCreateUnitProductMasterData,
+  useUpdateUnitProductMasterData,
+} from '@/__generated__/api/hooks/master-data/unit-product.hooks';
 import { Button } from '@/components/button/button';
 import { InformationText } from '@/components/information-text/information-text';
 import { toast } from '@/components/toast/toast';
@@ -8,6 +12,8 @@ import ProductUnitFormDialog from '@/modules/master-data/components/product-unit
 import TableList from '@/modules/master-data/components/product-unit/table-list';
 import { Unit } from '@/modules/master-data/types/unit';
 import { Plus } from '@icon-park/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 
 export default function Index() {
@@ -17,12 +23,18 @@ export default function Index() {
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
 
   const [nameUnit, setNameUnit] = useState('');
+  const [nameUnitError, setNameUnitError] = useState('');
+
+  const { mutate: createUnit } = useCreateUnitProductMasterData();
+  const { mutate: updateUnit } = useUpdateUnitProductMasterData();
+  const queryClient = useQueryClient();
 
   const handleEditButton = useCallback((unit: Unit) => {
     setIsEditMode(true);
     setSelectedUnit(unit);
-    setNameUnit(unit.name);
+    setNameUnit(unit.unit_name);
     setDialogFormOpen(true);
+    setNameUnitError('');
   }, []);
 
   const handleAddButton = useCallback(() => {
@@ -30,21 +42,57 @@ export default function Index() {
     setSelectedUnit(null);
     setNameUnit('');
     setDialogFormOpen(true);
+    setNameUnitError('');
   }, []);
 
   const handleConfirmSubmit = useCallback(async () => {
-    toast.success('Tersimpan!', {
-      description: 'Unit Produk Anda telah berhasil tersimpan',
-    });
+    const payload = { unit_name: nameUnit };
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  }, []);
+    const onSuccess = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['getUnitProductList'],
+      });
+
+      setDialogConfirmOpen(false);
+      setDialogFormOpen(false);
+      setSelectedUnit(null);
+      setIsEditMode(false);
+
+      toast.success('Tersimpan!', {
+        description: 'Unit Produk Anda telah berhasil tersimpan',
+      });
+    };
+
+    if (isEditMode && selectedUnit) {
+      updateUnit(
+        {
+          id: selectedUnit.id,
+          unit_name: nameUnit,
+        },
+        { onSuccess }
+      );
+    } else {
+      createUnit(payload, {
+        onSuccess,
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.status === 422) {
+            const message = error.response.data?.errors?.unit_name?.[0];
+            if (message === 'The unit name has already been taken.') {
+              setNameUnitError('Unit sudah digunakan');
+            } else {
+              setNameUnitError(message);
+            }
+            setDialogConfirmOpen(false);
+            setDialogFormOpen(true);
+          }
+        },
+      });
+    }
+  }, [isEditMode, nameUnit, selectedUnit, createUnit, updateUnit, queryClient]);
 
   const handleResetForm = useCallback(() => {
     if (isEditMode && selectedUnit) {
-      setNameUnit(selectedUnit.name);
+      setNameUnit(selectedUnit.unit_name);
     } else {
       setNameUnit('');
     }
@@ -82,6 +130,8 @@ export default function Index() {
             handleResetForm={handleResetForm}
             nameUnit={nameUnit}
             setNameUnit={setNameUnit}
+            nameUnitError={nameUnitError}
+            setNameUnitError={setNameUnitError}
           />
 
           <ProductUnitConfirmDialog

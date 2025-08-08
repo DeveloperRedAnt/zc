@@ -1,4 +1,5 @@
 // DTOs for product domain
+import { BaseRequestPagination, BaseResponseSchemaPagination } from "./base.dto";
 
 export type UnitSchema = {
   data: Record<string, string>[];
@@ -19,7 +20,7 @@ export type CreateTaxRequestSchema = {
 }
 
 export type CreateUnitRequestSchema = {
-  display_name: string;
+  unit_name: string;
 }
 
 export type VariantRequestSchema = {
@@ -28,7 +29,7 @@ export type VariantRequestSchema = {
 
 export type VariantSchema = {
   id: number;
-  name: string;
+  variant_attribute_name: string;
 }
 
 export type TagRequestSchema = {
@@ -243,6 +244,50 @@ export type ApiResponse = {
   };
 }
 
+// Variant Attributes API Types
+export type VariantAttributeSchema = {
+  per_page?: number;
+  page?: number;
+};
+
+export type VariantAttributeItem = {
+  id: number;
+  variant_attribute_name: string;
+};
+
+export type VariantAttributeListResponse = {
+  status: string;
+  message: string;
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  data: VariantAttributeItem[];
+};
+
+export type ProductStockOpname = {
+    id: number;
+    note: string;
+    store_name: string;
+    reference_number: string;
+    date_inspection: string;
+    total_items: number;
+    person_in_charge: string;
+}
+
+export type ProductStockOpnameRequest = BaseRequestPagination & {
+  start_date : string;
+  end_date   : string;
+  search     : string;
+  [key: string]: unknown;
+}
+
+export type ProductStockOpnames = Array<ProductStockOpname>
+
+export type ProductStockOpnameResponse = BaseResponseSchemaPagination<ProductStockOpnames>
+    
 export type ProductComposite = {
     components: {
       id: string; // UUID untuk UI tracking

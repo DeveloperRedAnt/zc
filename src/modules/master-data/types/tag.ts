@@ -1,5 +1,5 @@
 export type Tag = {
-  id: string | number;
+  id: number;
   name: string;
   is_active?: boolean;
   created_at?: string;

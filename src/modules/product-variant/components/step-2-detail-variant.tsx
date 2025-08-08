@@ -48,6 +48,12 @@ const AddDetailVariant: React.FC<AddDetailVariantProps> = ({ onBack, onSaveDetai
   // Callback untuk menerima data dari DetailVariantList
   const handleDetailVariantChange = (id: string, values: ProductCardValue) => {
     detailVariantRefs.current[id] = values;
+    updateFormattedData(id, {
+      thumbnail: values.file,
+      barcode: values.barcode,
+      sku: values.sku,
+      minStock: values.minStock,
+    });
   };
 
   const handleSave = () => {

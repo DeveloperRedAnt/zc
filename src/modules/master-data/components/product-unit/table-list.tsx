@@ -1,40 +1,32 @@
+import { useGetUnitProductList } from '@/__generated__/api/hooks/master-data/unit-product.hooks';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { Unit } from '@/modules/master-data/types/unit';
 import { Edit } from '@icon-park/react';
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import React from 'react';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import React, { useState } from 'react';
 
 type TableUnitListProps = {
   handleEditButton?: (unit: Unit) => void;
 };
 
-const data: Unit[] = [
-  {
-    id: '1',
-    name: 'ml',
-  },
-  {
-    id: '2',
-    name: 'pcs',
-  },
-  {
-    id: '3',
-    name: 'box',
-  },
-];
-
 export default function Index({ handleEditButton }: TableUnitListProps) {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0, // zero-based for React Table
+    pageSize: 10,
+  });
+
+  const page = pagination.pageIndex + 1;
+  const perPage = pagination.pageSize;
+
+  const { data, isLoading } = useGetUnitProductList({
+    page,
+    per_page: perPage,
+  });
+
   const columnHelper = createColumnHelper<Unit>();
   const baseColumns = [
-    columnHelper.accessor('name', {
+    columnHelper.accessor('unit_name', {
       header: () => <div className="font-semibold text-black text-center"> Nama </div>,
       cell: (info) => info.getValue(),
     }),
@@ -53,20 +45,21 @@ export default function Index({ handleEditButton }: TableUnitListProps) {
   ];
 
   const table = useReactTable({
-    data: data,
+    data: data?.data ?? [],
     columns: baseColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    pageCount: Math.ceil((data?.pagination?.total ?? 0) / pagination.pageSize),
+    state: {
+      pagination,
+    },
     manualPagination: true,
-    manualSorting: false,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
   });
   return (
     <>
-      <div className="container py-2 w-[50%]">
-        <DataTable table={table} isLoading={false} />
-        <DataTablePagination table={table} isLoading={false} />
+      <div className="container py-2 w-[60%]">
+        <DataTable table={table} isLoading={isLoading} />
+        <DataTablePagination table={table} isLoading={isLoading} />
       </div>
     </>
   );

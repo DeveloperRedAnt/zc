@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  useCreatePositionMasterData,
+  useUpdatePositionMasterData,
+} from '@/__generated__/api/hooks/master-data/position.hooks';
 import { Button } from '@/components/button/button';
 import { InformationText } from '@/components/information-text/information-text';
 import { toast } from '@/components/toast/toast';
@@ -8,6 +12,8 @@ import PositionFormDialog from '@/modules/master-data/components/position/form-d
 import TableList from '@/modules/master-data/components/position/table-list';
 import { Position } from '@/modules/master-data/types/position';
 import { Plus } from '@icon-park/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 
 export default function Index() {
@@ -17,12 +23,18 @@ export default function Index() {
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
 
   const [namePosition, setNamePosition] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  const { mutate: createPosition } = useCreatePositionMasterData();
+  const { mutate: updatePosition } = useUpdatePositionMasterData();
+  const queryClient = useQueryClient();
 
   const handleEditButton = useCallback((position: Position) => {
     setIsEditMode(true);
     setSelectedPosition(position);
     setNamePosition(position.name);
     setDialogFormOpen(true);
+    setNameError('');
   }, []);
 
   const handleAddButton = useCallback(() => {
@@ -30,17 +42,53 @@ export default function Index() {
     setSelectedPosition(null);
     setNamePosition('');
     setDialogFormOpen(true);
+    setNameError('');
   }, []);
 
   const handleConfirmSubmit = useCallback(async () => {
-    toast.success('Tersimpan!', {
-      description: 'Jabatan Anda telah berhasil tersimpan',
-    });
+    const payload = { name: namePosition };
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  }, []);
+    const onSuccess = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['getPositionList'],
+      });
+
+      setDialogConfirmOpen(false);
+      setDialogFormOpen(false);
+      setSelectedPosition(null);
+      setIsEditMode(false);
+
+      toast.success('Tersimpan!', {
+        description: 'Jabatan Anda telah berhasil tersimpan',
+      });
+    };
+
+    if (isEditMode && selectedPosition) {
+      updatePosition(
+        {
+          id: selectedPosition.id,
+          name: namePosition,
+        },
+        { onSuccess }
+      );
+    } else {
+      createPosition(payload, {
+        onSuccess,
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.status === 422) {
+            const message = error.response.data?.errors?.name?.[0];
+            if (message === 'The name already used in the organization') {
+              setNameError('Jabatan sudah digunakan');
+            } else {
+              setNameError(message);
+            }
+            setDialogConfirmOpen(false);
+            setDialogFormOpen(true);
+          }
+        },
+      });
+    }
+  }, [isEditMode, namePosition, selectedPosition, createPosition, updatePosition, queryClient]);
 
   const handleResetForm = useCallback(() => {
     if (isEditMode && selectedPosition) {
@@ -82,6 +130,8 @@ export default function Index() {
             handleResetForm={handleResetForm}
             namePosition={namePosition}
             setNamePosition={setNamePosition}
+            nameError={nameError}
+            setNameError={setNameError}
           />
 
           <PositionConfirmDialog

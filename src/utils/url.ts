@@ -220,7 +220,7 @@ export function createApiErrorHandler(options: ApiErrorHandlerOptions = {}) {
         }
       }
 
-      throw new Error(`HTTP ${axiosError.response?.status || 'unknown'}: ${axiosError.message}`);
+      throw axiosError;
     }
 
     // If it's not an axios error, just throw it as is
@@ -289,8 +289,8 @@ export async function getDataFromApi<
 
     // Process response data
     const responseData = withPagination
-      ? (response.data as { data: ApiResponse }).data
-      : response.data;
+      ? response.data
+      : (response.data as { data: ApiResponse }).data;
 
     // Apply transformer if provided
     if (transformer) {

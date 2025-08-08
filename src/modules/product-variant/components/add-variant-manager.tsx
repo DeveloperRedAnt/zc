@@ -6,18 +6,22 @@ import { ArrowRight, Plus } from '@icon-park/react';
 import cryptoRandomString from 'crypto-random-string';
 import React, { useEffect, useRef } from 'react';
 import { useProductVariantStore } from '../store';
-import { FormattedDatas, PricesVariantOption, ProductVariant, ProductVariants } from '../types';
+import {
+  FormattedDatas,
+  PricesVariantOption,
+  ProductVariant,
+  ProductVariantOption as BaseProductVariantOption,
+  ProductVariants,
+} from '../types';
 import ProductVariantOptions from './add-variant-options';
 
-// Define the expected option type for variant options
-interface ProductVariantOption {
-  name: string;
+// Extended type that includes both base properties and additional properties needed for variant combinations
+type ProductVariantOption = BaseProductVariantOption & {
   barcode?: string;
   sku?: string;
   minStock?: number;
   thumbnail?: string;
-  prices?: PricesVariantOption[];
-}
+};
 
 const cartesianProduct = (arrays: ProductVariantOption[][]): ProductVariantOption[][] => {
   if (arrays.length === 0) return [[]];
@@ -54,6 +58,13 @@ const createVariantCombinations = (
       thumbnail: baseOption.thumbnail || '',
       prices: (baseOption.prices as PricesVariantOption[]) || [],
       typeprice: '',
+      isActive: true,
+      options: combination.map((option: ProductVariantOption) => ({
+        id: option.id,
+        type: option.type,
+        name: option.name,
+        selected_id: option.selected_id || option.id,
+      })),
     };
   });
 };
@@ -101,10 +112,18 @@ const VariantManager = ({ onSave }: { onSave: (productVariants: ProductVariants)
     }
 
     // Create formatted data here before moving to step 2
-    const variantsData = productVariants.map((variant) => ({
-      type: variant.type ?? '',
-      options: variant.options || [],
-    }));
+    const variantsData = productVariants.map((variant) => {
+      const mappedOptions = variant?.options?.map((option) => {
+        return {
+          ...option,
+          selected_id: variant.selected_id,
+        };
+      });
+      return {
+        type: variant.type ?? '',
+        options: mappedOptions || [],
+      };
+    });
 
     if (variantsData.length > 0 && variantsData.some((v) => v.options.length > 0)) {
       const formatted = createVariantCombinations(variantsData);

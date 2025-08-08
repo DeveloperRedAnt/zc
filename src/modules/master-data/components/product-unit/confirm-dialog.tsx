@@ -28,7 +28,7 @@ const ProductUnitConfirmDialog: React.FC<ProductUnitConfirmDialogProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby="unit-dialog-description">
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Anda akan menyimpan Unit Produk</DialogTitle>
           <DialogDescription>

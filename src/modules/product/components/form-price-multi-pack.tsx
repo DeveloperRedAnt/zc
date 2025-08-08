@@ -15,7 +15,12 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
     updateMultiPackItem,
     removeMultiPackItem,
     resetMultiPack,
+    toggleWholesale,
   } = usePriceMultiPackStore();
+
+  const handleRadioChange = (value: string) => {
+    toggleWholesale(value === 'wholesale');
+  };
 
   return (
     <div className="pb-6 border-b-gray-200 border-t">
@@ -43,13 +48,17 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
         </li>
       </ul>
 
-      <RadioGroup defaultValue="option-1" className="flex space-x-2 mb-6 mt-8">
+      <RadioGroup
+        defaultValue="multi-pack"
+        className="flex space-x-2 mb-6 mt-8"
+        onValueChange={handleRadioChange}
+      >
         <div className="flex items-center space-x-2">
-          <RadioGroupItem id="option-1" value="option-1" />
+          <RadioGroupItem id="option-1" value="multi-pack" />
           <Label htmlFor="option-1 font-semibold">Multi Kemasan</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem id="option-2" value="option-2" />
+          <RadioGroupItem id="option-2" value="wholesale" />
           <Label htmlFor="option-2 font-semibold">Grosir</Label>
         </div>
       </RadioGroup>

@@ -7,6 +7,7 @@ import {
   type StoreOptionType,
   useStoreFilter,
 } from '@/hooks/use-store-filter/use-store-filter';
+import { zeroPad } from '@/utils/pad-start';
 import { useEffect, useState } from 'react';
 import type { GroupBase, OptionsOrGroups } from 'react-select';
 import { AsyncPaginate } from 'react-select-async-paginate';
@@ -46,16 +47,11 @@ const createLoadOptions = (
       const currentPage = Math.floor(prevOptions.length / 10) + 1;
 
       const params = {
-        'x-device-id': '1',
-        'x-store-id': '1',
-        'x-organization-id': '1',
-        body: {
-          page: currentPage,
-          per_page: 10,
-          search: search || undefined,
-          sort_by: 'name',
-          sort_direction: 'asc' as const,
-        },
+        page: currentPage,
+        per_page: 10,
+        search: search || undefined,
+        sort_by: 'name',
+        sort_direction: 'asc' as const,
       };
 
       const response = (await listStore(params)) as unknown as ActualStoreListResponse;
@@ -71,7 +67,7 @@ const createLoadOptions = (
 
       const options: StoreOptionType[] = response.data.map((store: StoreItem) => {
         return {
-          label: `#${store.id} - ${store.name}`,
+          label: `#${zeroPad(store.id, 4)} - ${store.name}`,
           value: store.id,
           data: store,
         };
@@ -98,27 +94,15 @@ const createLoadOptions = (
 };
 
 export default function StoreFilter() {
-  const { selectedStore, setSelectedStore, addLoadedOptions } = useStoreFilter();
+  const { setSelectedStore, addLoadedOptions } = useStoreFilter();
 
   const [value, onChange] = useState<StoreOptionType | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Set required headers in localStorage for API calls and handle client-side hydration
   useEffect(() => {
-    setIsClient(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('x-device-id', '1');
-      localStorage.setItem('x-store-id', '1');
-      localStorage.setItem('x-organization-id', '1');
-    }
+    setIsMounted(true);
   }, []);
-
-  // Sync local state with Zustand store after client hydration
-  useEffect(() => {
-    if (isClient) {
-      onChange(selectedStore);
-    }
-  }, [selectedStore, isClient]);
 
   // Create loadOptions function with Zustand integration
   const loadOptions = createLoadOptions(addLoadedOptions);
@@ -129,7 +113,7 @@ export default function StoreFilter() {
     setSelectedStore(option);
 
     // Set x-store-id in both localStorage and cookies when store is selected
-    if (isClient && option) {
+    if (isMounted && option) {
       const storeId = option.value.toString();
 
       // Set in localStorage
@@ -137,7 +121,7 @@ export default function StoreFilter() {
 
       // Set in cookies
       document.cookie = `x-store-id=${storeId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days;
-    } else if (isClient && !option) {
+    } else if (isMounted && !option) {
       // Clear x-store-id when no store is selected
       localStorage.setItem('x-store-id', '1'); // Default value
       document.cookie = `x-store-id=1; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days;
@@ -150,7 +134,7 @@ export default function StoreFilter() {
         <p className="font-semibold mr-2 text-sm flex basis-[380px]"> Tampilan Data untuk: </p>
         <AsyncPaginate
           defaultOptions
-          value={isClient ? value : null}
+          value={isMounted ? value : null}
           loadOptions={loadOptions}
           onChange={handleChange}
           placeholder="Pilih Toko"

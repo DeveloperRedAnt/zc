@@ -13,13 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/dialog/dialog';
 import CustomInput from '@/components/input/custom-input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select/select';
+// Removed unused Select imports
 import { Text } from '@/components/text/text';
 import { Toaster } from '@/components/toast/toast';
 import { Delete, Plus } from '@icon-park/react';
@@ -28,11 +22,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ProductVariantOption as TProductVariantOption,
   ProductVariantOptions as TProductVariantOptions,
-  ProductVariantType,
   ProductVariants as TProductVariants,
 } from '../types';
 
+import VariantSelect from '@/modules/master-data/components/product-variant/variant-select';
+import type { VariantAttributeOptionType } from '@/modules/master-data/components/product-variant/variant-select';
 import { useProductVariantStore } from '../store';
+// import CachedVariantSelect from './cached-variant-select';
 
 type TProductVariantOptionsProps = {
   variantId: string;
@@ -53,6 +49,7 @@ const ProductVariantOptions = ({
     removeProductVariant,
     productVariants,
     changeProductVariantTypeByID,
+    setProductVariantAttributeByID,
   } = useProductVariantStore() as {
     productVariants: TProductVariants;
     updateProductVariantOptionByProductIDandOptionID: (
@@ -62,16 +59,31 @@ const ProductVariantOptions = ({
     ) => void;
     deleteOptionByProductIDandOptionID: (productVariantID: string, optionID: string) => void;
 
-    changeProductVariantTypeByID: (id: string, type: ProductVariantType) => void;
+    changeProductVariantTypeByID: (id: string, type: string, selectedID: string) => void;
+    setProductVariantAttributeByID: (
+      id: string,
+      variantAttribute: VariantAttributeOptionType | null
+    ) => void;
     addProductVariantOption: (productVariantID: string, option: TProductVariantOption) => void;
     removeProductVariant: (id: string) => void;
   };
-  const productVariantType =
-    productVariants.find((variant) => variant.id === variantId)?.type || 'Warna';
+  const currentVariant = productVariants.find((variant) => variant.id === variantId);
+  const productVariantType = currentVariant?.type || 'Warna';
+  const currentVariantAttribute = currentVariant?.variantAttribute || null;
 
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const initializedRef = useRef(false);
+
+  // Set required headers for API calls (similar to product page solution)
+  useEffect(() => {
+    // Set headers in localStorage for development purposes
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('x-device-id', 'dev-device-123');
+      localStorage.setItem('x-store-id', '1');
+      localStorage.setItem('x-organization-id', '1');
+    }
+  }, []);
 
   // handle to render 1 options when start load page
   useEffect(() => {
@@ -141,22 +153,18 @@ const ProductVariantOptions = ({
       </CardHeader>
       <CardContent className="space-y-4 pt-3">
         <div className="w-[450.5px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nama Varian</label>
-          <Select
-            value={productVariantType}
-            onValueChange={(value) => {
-              changeProductVariantTypeByID(variantId, value as ProductVariantType);
+          <VariantSelect
+            label="Nama Varian"
+            value={currentVariantAttribute}
+            onChange={(value) => {
+              if (value) {
+                setProductVariantAttributeByID(variantId, value);
+                changeProductVariantTypeByID(variantId, value.label, String(value.data.id));
+              } else {
+                setProductVariantAttributeByID(variantId, null);
+              }
             }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih Varian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Warna">Warna</SelectItem>
-              <SelectItem value="Ukuran">Ukuran</SelectItem>
-              <SelectItem value="Lainnya">Lainnya</SelectItem>
-            </SelectContent>
-          </Select>
+          />
         </div>
         <div className="space-y-3 mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-6">Opsi Variasi</label>

@@ -34,8 +34,8 @@ export const authOptions: NextAuthOptions = {
               headers: {
                 accept: 'application/json',
                 'x-device-id': '1',
-                'x-store-id': '1',
-                'x-organization-id': '1',
+                'x-store-id': '56',
+                'x-organization-id': '51',
                 'Content-Type': 'application/json',
               },
             }

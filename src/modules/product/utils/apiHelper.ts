@@ -1,6 +1,28 @@
 // TypeScript interfaces for the API payload
 interface FormDataInput {
-  variant?: unknown[];
+  thumbnail?: string;
+  variants?: {
+    id: string;
+    name: string;
+    barcode: string;
+    sku: string;
+    minStock: number;
+    thumbnail: string;
+    prices?: {
+      id: string;
+      namePcs: string;
+      quantity: number;
+      price: number;
+    }[];
+    typeprice: string;
+    options?: {
+      id: string;
+      type: string;
+      name: string;
+      selected_id: string;
+    }[];
+    isActive: boolean;
+  }[];
   composite?: {
     components?: {
       quantity?: number;
@@ -26,6 +48,7 @@ interface FormDataInput {
   is_enable_expired_reminder?: boolean;
   expired_reminder_in_days?: number | null;
   expired_reminder_in_date?: string | null;
+  is_wholesale?: boolean;
   // Allow additional properties for flexibility
   [key: string]: unknown;
 }
@@ -42,9 +65,10 @@ interface Variant {
   sku_code: string;
   barcode: string;
   is_active: boolean;
-  attributes: unknown[];
+  attributes: unknown[]; // Using unknown[] for type safety
   is_wholesale: boolean;
   variant_units: VariantUnit[];
+  minimum_stock: number;
 }
 
 interface CompositeComponent {
@@ -85,7 +109,14 @@ export function mapFormDataToApiPayload(formData: FormDataInput): ProductPayload
 
   // Determine product type
   const getProductType = () => {
-    if (formData.variant && formData.variant.length > 0) return 'variant';
+    if (
+      formData.variants &&
+      formData.variants.length > 0 &&
+      formData.variants[0] &&
+      formData.variants[0].options &&
+      formData.variants[0].options.length > 0
+    )
+      return 'variant';
     if (formData.composite?.components && formData.composite.components.length > 0)
       return 'composite';
     return 'single';
@@ -99,30 +130,62 @@ export function mapFormDataToApiPayload(formData: FormDataInput): ProductPayload
         conversion_value: price.quantity ? price.quantity.toString() : '1',
         price: price.price ? price.price.toString() : '0',
       }))
-    : [
-        {
-          id: `vu_${Date.now()}_0`,
-          unit_name: 'Eceran',
-          conversion_value: '1',
-          price: '10000',
-        },
-      ];
+    : [];
+  // Create variant structure based on product type
+  const productType = getProductType();
+  let variants: Variant[] = [];
 
-  // Create variant structure
-  const variants = [
-    {
-      id: variantId,
-      sku_code: formData.sku || `ZYCAS-${Date.now().toString().slice(-5)}`,
-      barcode: formData.barcode || `${Date.now().toString().slice(-12)}`,
-      is_active: formData.isActiveProduct !== undefined ? formData.isActiveProduct : true,
-      attributes: [], // Empty for single/composite
-      is_wholesale: variantUnits.length > 1,
-      variant_units: variantUnits,
-    },
-  ];
+  if (productType === 'variant' && formData.variants && formData.variants.length > 0) {
+    // For variant products, use the provided variants
+    variants = formData.variants.map((variant) => {
+      // Map prices to variant_units (with fallback to default prices if variant.prices is empty)
+      const mappedVariantUnits =
+        variant.prices && variant.prices.length > 0
+          ? variant.prices.map((price) => ({
+              id: `vu_${price.id}`,
+              unit_name: price.namePcs,
+              conversion_value: price.quantity.toString(),
+              price: price.price.toString(),
+            }))
+          : variantUnits; // Use the default variantUnits from above
+
+      // Map options to attributes
+      const attributes =
+        variant.options && variant.options.length > 0
+          ? variant.options.map((option) => ({
+              attribute_id: parseInt(option.selected_id),
+              value: option.name,
+            }))
+          : [];
+
+      return {
+        id: variant.id,
+        sku_code: variant.sku,
+        barcode: variant.barcode,
+        is_active: variant.isActive,
+        attributes: attributes,
+        is_wholesale: formData.is_wholesale || false,
+        variant_units: mappedVariantUnits,
+        minimum_stock: variant.minStock,
+      };
+    });
+  } else {
+    // For single/composite products, create a single default variant
+    variants = [
+      {
+        id: variantId,
+        sku_code: formData.sku || `ZYCAS-${Date.now().toString().slice(-5)}`,
+        barcode: formData.barcode || `${Date.now().toString().slice(-12)}`,
+        is_active: formData.isActiveProduct !== undefined ? formData.isActiveProduct : true,
+        attributes: [], // Empty for single/composite
+        is_wholesale: formData.is_wholesale || false,
+        variant_units: variantUnits,
+        minimum_stock: formData.minimum_stock || 0,
+      },
+    ];
+  }
 
   // Map composites - only for composite type
-  const productType = getProductType();
   const composites =
     productType === 'composite' && formData.composite && formData.composite.components
       ? {
@@ -141,13 +204,13 @@ export function mapFormDataToApiPayload(formData: FormDataInput): ProductPayload
 
   const payload: ProductPayload = {
     id: productId,
-    name: formData.productName || 'Produk Baru',
+    name: formData.productName || '',
     type: productType as 'single' | 'variant' | 'composite',
     package: formData.package || 'Plastik',
     is_active: formData.isActiveProduct !== undefined ? formData.isActiveProduct : true,
     is_favorite: formData.isFavorite !== undefined ? formData.isFavorite : false,
     is_non_tax: false,
-    content: formData.content || 'Deskripsi produk',
+    content: formData.content || '',
     unit_id: formData.unit_id || 1,
     tag_ids: [1], // Default tag for now
     is_stock_tracking: formData.is_track_stock !== undefined ? formData.is_track_stock : true,

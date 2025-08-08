@@ -1,45 +1,29 @@
+import { useGetTagsProductList } from '@/__generated__/api/hooks/master-data/tags-product.hooks';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { Tag } from '@/modules/master-data/types/tag';
 import { Edit } from '@icon-park/react';
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import React from 'react';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import React, { useState } from 'react';
 
 type TableTagListProps = {
   handleEditButton?: (tag: Tag) => void;
 };
 
-const data: Tag[] = [
-  {
-    id: '1',
-    name: 'promo',
-  },
-  {
-    id: '2',
-    name: 'flash sale',
-  },
-  {
-    id: '3',
-    name: 'panas',
-  },
-  {
-    id: '4',
-    name: 'minuman',
-  },
-  {
-    id: 5,
-    name: 'makanan',
-  },
-];
-
 export default function Index({ handleEditButton }: TableTagListProps) {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const page = pagination.pageIndex + 1;
+  const perPage = pagination.pageSize;
+
+  const { data, isLoading } = useGetTagsProductList({
+    page,
+    per_page: perPage,
+  });
+
   const columnHelper = createColumnHelper<Tag>();
   const baseColumns = [
     columnHelper.accessor('name', {
@@ -61,20 +45,21 @@ export default function Index({ handleEditButton }: TableTagListProps) {
   ];
 
   const table = useReactTable({
-    data: data,
+    data: data?.data ?? [],
     columns: baseColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    pageCount: Math.ceil((data?.pagination?.total ?? 0) / pagination.pageSize),
+    state: {
+      pagination,
+    },
     manualPagination: true,
-    manualSorting: false,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
   });
   return (
     <>
-      <div className="container py-2 w-[50%]">
-        <DataTable table={table} isLoading={false} />
-        <DataTablePagination table={table} isLoading={false} />
+      <div className="container py-2 w-[60%]">
+        <DataTable table={table} isLoading={isLoading} />
+        <DataTablePagination table={table} isLoading={isLoading} />
       </div>
     </>
   );

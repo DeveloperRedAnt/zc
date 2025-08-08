@@ -1,5 +1,6 @@
 'use client';
 
+import { useListProductStockOpnames } from '@/__generated__/api/hooks/product.hooks';
 import { Button } from '@/components/button/button';
 import { PageLayout } from '@/components/page-layout/page-layout';
 import FilterStockOpname from '@/modules/stock-opname/components/filter-stock-opname';
@@ -26,6 +27,25 @@ export default function StockOpnamePage() {
     setTo,
   } = useSearchParams();
 
+  const { data, isLoading } = useListProductStockOpnames({
+    start_date: from,
+    end_date: to,
+    search: '',
+    page: page,
+    per_page: perPage,
+    sort_by: sortBy,
+    sort_direction: sortOrder,
+  });
+
+  const mappedStockOpnames = data?.data?.map((item) => ({
+    id: String(item.id),
+    opname_date: item.date_inspection,
+    opname_purpose: item.note,
+    store_name: item.store_name,
+    product_count: String(item.total_items),
+    responsible_person: item.person_in_charge,
+  }));
+
   return (
     <>
       <PageLayout
@@ -45,14 +65,17 @@ export default function StockOpnamePage() {
           setFrom={setFrom}
         />
         <TableStockOpname
-          page={page}
+          stockOpnames={mappedStockOpnames ?? []}
           limit={perPage}
           setLimit={setPerPage}
           sortBy={sortBy}
           sortOrder={sortOrder}
-          setPage={setPage}
+          page={page}
+          setPage={(page) => setPage(page)}
           setSortBy={setSortBy}
           setSortOrder={setSortOrder}
+          isLoading={isLoading}
+          totalPages={data?.pagination.last_page ?? 1}
         />
       </PageLayout>
     </>

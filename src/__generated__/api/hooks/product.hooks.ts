@@ -17,6 +17,19 @@ export function useListProducts(
   });
 }
 
+
+export function useListProductStockOpnames(
+  params: DTO.ProductStockOpnameRequest,
+  options?: UseQueryOptions<DTO.ProductStockOpnameResponse>
+) {
+  return useQuery({
+    queryKey: ['listProductStockOpnames', params],
+    queryFn: () => api.getListProductStockOpnames(params),
+    ...options,
+  });
+}
+
+
 export function useGetProductDetail(
   params: {
      id: number 
@@ -102,9 +115,6 @@ export function useCreateProduct(
     DTO.CreateProductResponseSchema,
     Error,
     {
-      'x-device-id': string;
-      'x-store-id': string;
-      'x-organization-id': string;
       body: DTO.CreateProductRequestSchema;
     }
   >

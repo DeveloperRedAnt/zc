@@ -20,6 +20,7 @@ interface TaxMasterDialogProps {
   taxPercent: string;
   setTaxPercent: (value: string) => void;
   store: string;
+  isUpdating?: boolean;
 }
 
 const TaxMasterFormDialog: React.FC<TaxMasterDialogProps> = ({
@@ -31,17 +32,18 @@ const TaxMasterFormDialog: React.FC<TaxMasterDialogProps> = ({
   taxPercent,
   setTaxPercent,
   store,
+  isUpdating = false,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="tax-master-dialog-description">
         <DialogHeader>
-          <DialogTitle> Master Pajak </DialogTitle>
+          <DialogTitle>Master Pajak</DialogTitle>
         </DialogHeader>
         <div className="w-full gap-4 py-4">
           <div className="mb-4">
-            <p className="font-semibold font-[600]"> Untuk Toko: </p>
-            <p> {store} </p>
+            <p className="font-semibold font-[600]">Untuk Toko:</p>
+            <p>{store}</p>
           </div>
           <CustomInput
             required
@@ -55,17 +57,23 @@ const TaxMasterFormDialog: React.FC<TaxMasterDialogProps> = ({
             appendIcon="Percentage"
             value={taxPercent}
             onChange={(e) => setTaxPercent(e.target.value)}
+            disabled={isUpdating}
           />
         </div>
         <DialogFooter>
-          <Button variant="ghost" className={isEditMode ? '' : 'hidden'} onClick={handleResetForm}>
+          <Button
+            variant="ghost"
+            className={isEditMode ? '' : 'hidden'}
+            onClick={handleResetForm}
+            disabled={isUpdating}
+          >
             <Refresh size={14} />
             Reset
           </Button>
           <Button
             type="button"
             variant="success"
-            disabled={taxPercent.trim() === ''}
+            disabled={taxPercent.trim() === '' || isUpdating}
             onClick={onConfirm}
           >
             Simpan Pajak

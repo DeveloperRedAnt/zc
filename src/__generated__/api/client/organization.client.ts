@@ -124,5 +124,3 @@ export const UpdateOrganization = async (params: {
     // Transformer memastikan tipe data yang dikembalikan sesuai dengan yang diharapkan hook
     transformer: (data: Record<string, unknown>) => data as DTO.ApiResponseOrganizationByEmployee
   })
-
-

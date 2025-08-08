@@ -19,6 +19,8 @@ interface PositionDialogProps {
   handleResetForm: () => void;
   namePosition: string;
   setNamePosition: (value: string) => void;
+  nameError: string;
+  setNameError: (value: string) => void;
 }
 
 const PositionFormDialog: React.FC<PositionDialogProps> = ({
@@ -29,6 +31,8 @@ const PositionFormDialog: React.FC<PositionDialogProps> = ({
   handleResetForm,
   namePosition,
   setNamePosition,
+  nameError,
+  setNameError,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -41,11 +45,15 @@ const PositionFormDialog: React.FC<PositionDialogProps> = ({
           isWidthFull
           label="Nama Jabatan"
           placeholder="cth: Kasir"
-          className="mb-2"
+          className={`${nameError ? 'border !border-red-500' : ''}`}
           value={namePosition}
-          onChange={(e) => setNamePosition(e.target.value)}
+          onChange={(e) => {
+            setNamePosition(e.target.value);
+            if (nameError) setNameError('');
+          }}
         />
-        <DialogFooter>
+        {nameError && <p className="text-sm text-red">{nameError}</p>}
+        <DialogFooter className="mt-2">
           <Button variant="ghost" className={isEditMode ? '' : 'hidden'} onClick={handleResetForm}>
             <Refresh size={14} />
             Reset

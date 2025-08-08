@@ -28,12 +28,20 @@ const DetailVariantList = ({ formattedData, onChange }: ProductCardListProps) =>
     minStock: formattedData.minStock ?? 0,
   });
 
+  // Sync cardValue with formattedData changes (without triggering onChange)
   useEffect(() => {
-    onChange?.(cardValue);
-  }, [cardValue, onChange]);
+    setCardValue({
+      file: formattedData.thumbnail || '',
+      barcode: formattedData.barcode || '',
+      sku: formattedData.sku || '',
+      minStock: formattedData.minStock ?? 0,
+    });
+  }, [formattedData.thumbnail, formattedData.barcode, formattedData.sku, formattedData.minStock]);
 
   const handleCardChange = (value: ProductCardValue) => {
     setCardValue(value);
+    // Only call onChange when user actually changes values
+    onChange?.(value);
   };
 
   return (

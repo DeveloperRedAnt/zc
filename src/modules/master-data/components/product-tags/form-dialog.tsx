@@ -19,6 +19,8 @@ interface TagDialogProps {
   handleResetForm: () => void;
   nameTag: string;
   setNameTag: (value: string) => void;
+  nameTagError: string;
+  setNameTagError: (value: string) => void;
 }
 
 const ProductTagFormDialog: React.FC<TagDialogProps> = ({
@@ -29,6 +31,8 @@ const ProductTagFormDialog: React.FC<TagDialogProps> = ({
   handleResetForm,
   nameTag,
   setNameTag,
+  nameTagError,
+  setNameTagError,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -41,11 +45,15 @@ const ProductTagFormDialog: React.FC<TagDialogProps> = ({
           isWidthFull
           label="Nama Tag"
           placeholder="cth: makanan"
-          className="mb-2"
+          className={`${nameTagError ? 'border !border-red-500' : ''}`}
           value={nameTag}
-          onChange={(e) => setNameTag(e.target.value)}
+          onChange={(e) => {
+            setNameTag(e.target.value);
+            if (nameTagError) setNameTagError('');
+          }}
         />
-        <DialogFooter>
+        {nameTagError && <p className="text-sm text-red">{nameTagError}</p>}
+        <DialogFooter className="mt-2">
           <Button variant="ghost" className={isEditMode ? '' : 'hidden'} onClick={handleResetForm}>
             <Refresh size={14} />
             Reset

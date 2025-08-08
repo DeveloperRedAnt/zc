@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  useCreateTagsProductMasterData,
+  useUpdateTagsProductMasterData,
+} from '@/__generated__/api/hooks/master-data/tags-product.hooks';
 import { Button } from '@/components/button/button';
 import { InformationText } from '@/components/information-text/information-text';
 import { toast } from '@/components/toast/toast';
@@ -8,6 +12,8 @@ import ProductTagFormDialog from '@/modules/master-data/components/product-tags/
 import TableList from '@/modules/master-data/components/product-tags/table-list';
 import { Tag } from '@/modules/master-data/types/tag';
 import { Plus } from '@icon-park/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 
 export default function Index() {
@@ -17,12 +23,18 @@ export default function Index() {
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
 
   const [nameTag, setNameTag] = useState('');
+  const [nameTagError, setNameTagError] = useState('');
+
+  const { mutate: createTag } = useCreateTagsProductMasterData();
+  const { mutate: updateTag } = useUpdateTagsProductMasterData();
+  const queryClient = useQueryClient();
 
   const handleEditButton = useCallback((tag: Tag) => {
     setIsEditMode(true);
     setSelectedTag(tag);
     setNameTag(tag.name);
     setDialogFormOpen(true);
+    setNameTagError('');
   }, []);
 
   const handleAddButton = useCallback(() => {
@@ -30,17 +42,53 @@ export default function Index() {
     setSelectedTag(null);
     setNameTag('');
     setDialogFormOpen(true);
+    setNameTagError('');
   }, []);
 
   const handleConfirmSubmit = useCallback(async () => {
-    toast.success('Tersimpan!', {
-      description: 'Tag Produk Anda telah berhasil tersimpan',
-    });
+    const payload = { name: nameTag };
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  }, []);
+    const onSuccess = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['getTagsProductList'],
+      });
+
+      setDialogConfirmOpen(false);
+      setDialogFormOpen(false);
+      setSelectedTag(null);
+      setIsEditMode(false);
+
+      toast.success('Tersimpan!', {
+        description: 'Tag Produk Anda telah berhasil tersimpan',
+      });
+    };
+
+    if (isEditMode && selectedTag) {
+      updateTag(
+        {
+          id: selectedTag.id,
+          name: nameTag,
+        },
+        { onSuccess }
+      );
+    } else {
+      createTag(payload, {
+        onSuccess,
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.status === 422) {
+            const message = error.response.data?.errors?.name?.[0];
+            if (message === 'The name has already been taken.') {
+              setNameTagError('Tag sudah digunakan');
+            } else {
+              setNameTagError(message);
+            }
+            setDialogConfirmOpen(false);
+            setDialogFormOpen(true);
+          }
+        },
+      });
+    }
+  }, [isEditMode, nameTag, selectedTag, createTag, updateTag, queryClient]);
 
   const handleResetForm = useCallback(() => {
     if (isEditMode && selectedTag) {
@@ -82,6 +130,8 @@ export default function Index() {
             handleResetForm={handleResetForm}
             nameTag={nameTag}
             setNameTag={setNameTag}
+            nameTagError={nameTagError}
+            setNameTagError={setNameTagError}
           />
 
           <ProductTagConfirmDialog

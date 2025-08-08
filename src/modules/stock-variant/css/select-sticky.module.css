@@ -1,0 +1,340 @@
+.selectContentSticky {
+  width: 100%;
+  padding: 0;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.searchHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.searchContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.searchInputContainer {
+  position: relative;
+  flex: 1;
+   min-width: 0; 
+}
+
+.searchIcon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 16px;
+  width: 16px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 32px;
+  padding-right: 12px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 100%;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.searchInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.searchButton {
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.searchButton:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.searchButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.supplierList {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 256px;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.supplierList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.supplierList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.supplierList::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+.supplierList::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+.supplierItem {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.supplierItem:hover {
+  background-color: #f8fafc;
+}
+
+.supplierItem:last-child {
+  border-bottom: none;
+}
+
+.supplierName {
+  font-weight: 500;
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
+
+.supplierDetails {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.stateMessage {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.loadingState {
+  color: #6b7280;
+}
+
+.loadingState::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  border: 2px solid #d1d5db;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.errorState {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.emptyState {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.paginationFooter {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 12px;
+  box-shadow: 0 -1px 2px 0 rgb(0 0 0 / 0.05);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.paginationContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.paginationInfo {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.paginationButton {
+  height: 28px;
+  width: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.paginationButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+  transform: none;
+}
+
+.paginationIcon {
+  height: 14px;
+  width: 14px;
+  color: #6b7280;
+}
+
+.paginationButton:hover:not(:disabled) .paginationIcon {
+  color: #374151;
+}
+
+/* Focus states for accessibility */
+.searchInput:focus,
+.searchButton:focus,
+.paginationButton:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .selectContentSticky {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .searchHeader,
+  .paginationFooter {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .searchInput {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .searchInput::placeholder {
+    color: #9ca3af;
+  }
+  
+  .supplierItem:hover {
+    background-color: #374151;
+  }
+  
+  .supplierName {
+    color: #f9fafb;
+  }
+}
+
+.selectContentSticky {
+  width: var(--radix-select-trigger-width); /* Mengikuti width trigger */
+  min-width: 300px; /* Minimum width untuk readability */
+  max-width: 500px; /* Maximum width untuk mobile */
+  padding: 0;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Responsive width adjustments */
+@media (max-width: 768px) {
+  .selectContentSticky {
+    width: 95vw; /* Almost full width on mobile */
+    max-width: none;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .selectContentSticky {
+    width: var(--radix-select-trigger-width);
+    min-width: 350px; /* Lebih lebar untuk desktop */
+  }
+}
+
+/* Jika ingin fixed width untuk consistency */
+.selectContentFixed {
+  width: 400px !important;
+  min-width: 400px;
+  max-width: 400px;
+}
+
+/* Untuk form yang lebih lebar */
+.selectContentWide {
+  width: var(--radix-select-trigger-width);
+  min-width: 450px;
+  max-width: 600px;
+}

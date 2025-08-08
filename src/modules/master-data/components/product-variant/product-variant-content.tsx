@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  useCreateVariantProductMasterData,
+  useUpdateVariantProductMasterData,
+} from '@/__generated__/api/hooks/master-data/variant-product.hooks';
 import { Button } from '@/components/button/button';
 import { InformationText } from '@/components/information-text/information-text';
 import { toast } from '@/components/toast/toast';
@@ -8,6 +12,8 @@ import ProductVariantFormDialog from '@/modules/master-data/components/product-v
 import TableList from '@/modules/master-data/components/product-variant/table-list';
 import { Variant } from '@/modules/master-data/types/variant';
 import { Plus } from '@icon-park/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 
 export default function Index() {
@@ -17,12 +23,18 @@ export default function Index() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const [nameVariant, setNameVariant] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  const { mutate: createVariant } = useCreateVariantProductMasterData();
+  const { mutate: updateVariant } = useUpdateVariantProductMasterData();
+  const queryClient = useQueryClient();
 
   const handleEditButton = useCallback((variant: Variant) => {
     setIsEditMode(true);
     setSelectedVariant(variant);
-    setNameVariant(variant.name);
+    setNameVariant(variant.variant_attribute_name);
     setDialogFormOpen(true);
+    setNameError('');
   }, []);
 
   const handleAddButton = useCallback(() => {
@@ -30,21 +42,57 @@ export default function Index() {
     setSelectedVariant(null);
     setNameVariant('');
     setDialogFormOpen(true);
+    setNameError('');
   }, []);
 
   const handleConfirmSubmit = useCallback(async () => {
-    toast.success('Tersimpan!', {
-      description: 'Varian Produk Anda telah berhasil tersimpan',
-    });
+    const payload = { variant_attribute_name: nameVariant };
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  }, []);
+    const onSuccess = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['getVariantProductList'],
+      });
+
+      setDialogConfirmOpen(false);
+      setDialogFormOpen(false);
+      setSelectedVariant(null);
+      setIsEditMode(false);
+
+      toast.success('Tersimpan!', {
+        description: 'Varian Produk Anda telah berhasil tersimpan',
+      });
+    };
+
+    if (isEditMode && selectedVariant) {
+      updateVariant(
+        {
+          id: selectedVariant.id,
+          variant_attribute_name: nameVariant,
+        },
+        { onSuccess }
+      );
+    } else {
+      createVariant(payload, {
+        onSuccess,
+        onError: (error: unknown) => {
+          if (isAxiosError(error) && error.response?.status === 422) {
+            const message = error.response.data?.errors?.variant_attribute_name?.[0];
+            if (message === 'The variant attribute name has already been taken.') {
+              setNameError('Varian sudah digunakan');
+            } else {
+              setNameError(message);
+            }
+            setDialogConfirmOpen(false);
+            setDialogFormOpen(true);
+          }
+        },
+      });
+    }
+  }, [isEditMode, nameVariant, selectedVariant, createVariant, updateVariant, queryClient]);
 
   const handleResetForm = useCallback(() => {
     if (isEditMode && selectedVariant) {
-      setNameVariant(selectedVariant.name);
+      setNameVariant(selectedVariant.variant_attribute_name);
     } else {
       setNameVariant('');
     }
@@ -82,6 +130,8 @@ export default function Index() {
             handleResetForm={handleResetForm}
             nameVariant={nameVariant}
             setNameVariant={setNameVariant}
+            nameError={nameError}
+            setNameError={setNameError}
           />
 
           <ProductVariantConfirmDialog

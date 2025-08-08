@@ -27,7 +27,17 @@ export default function Index() {
   const router = useRouter();
   const finalData = useProductVariantStore((state) => state.finalData);
   const clearFinalData = useProductVariantStore((state) => state.clearFinalData);
+  const setFinalData = useProductVariantStore((state) => state.setFinalData);
   const [toggleVariantTableAccordion, setToggleVariantTableAccordion] = useState(false);
+
+  const handleToggleActiveVariant = (checked: boolean, index: number) => {
+    const updatedData = [...finalData];
+    const item = updatedData[index];
+    if (item) {
+      item.isActive = checked;
+      setFinalData(updatedData);
+    }
+  };
 
   return (
     <Card className="text-[#555555] px-2 my-[1rem]">
@@ -204,7 +214,13 @@ export default function Index() {
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex flex-col gap-6">
                             <div className="flex items-center gap-2">
-                              <Switch id={`isActiveVariant-${index}`} defaultChecked />
+                              <Switch
+                                id={`isActiveVariant-${index}`}
+                                checked={item.isActive}
+                                onCheckedChange={(checked) =>
+                                  handleToggleActiveVariant(checked, index)
+                                }
+                              />
                               <Label htmlFor={`isActiveVariant-${index}`}> Varian Aktif </Label>
                             </div>
                           </div>

@@ -1,3 +1,6 @@
+import { listVariantAttributes } from '@/__generated__/api/client/product.client';
+import type { VariantAttributeItem } from '@/__generated__/api/dto/product.dto';
+import type { VariantAttributeOptionType } from '@/modules/master-data/components/product-variant/variant-select';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
@@ -14,11 +17,20 @@ import type { ProductVariantStore } from './types';
 
 export const useProductVariantStore = create<ProductVariantStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       productVariants: [] as ProductVariants,
       productVariantType: '' as ProductVariantType,
       formattedData: [] as FormattedDatas,
       finalData: [] as FormattedDatas,
+
+      // Variant Attributes Caching State
+      variantAttributes: [] as VariantAttributeOptionType[],
+      variantAttributesLoading: false,
+      variantAttributesPagination: {
+        currentPage: 0,
+        lastPage: 0,
+        hasMore: true,
+      },
 
       addProductVariant: (productVariant: ProductVariant) =>
         set((state) => ({ productVariants: [...state.productVariants, productVariant] })),
@@ -92,10 +104,32 @@ export const useProductVariantStore = create<ProductVariantStore>()(
 
           return { productVariants: updatedVariants };
         }),
-      changeProductVariantTypeByID: (id: string, type: ProductVariantType) =>
+      changeProductVariantTypeByID: (id: string, type: string, selectedID: string) =>
+        set((state) => ({
+          productVariants: state.productVariants.map((variant) => {
+            if (variant.id === id) {
+              return {
+                ...variant,
+                type,
+                selected_id: selectedID,
+              };
+            }
+            return variant;
+          }),
+        })),
+      setProductVariantAttributeByID: (
+        id: string,
+        variantAttribute: VariantAttributeOptionType | null
+      ) =>
         set((state) => ({
           productVariants: state.productVariants.map((variant) =>
-            variant.id === id ? { ...variant, type } : variant
+            variant.id === id
+              ? {
+                  ...variant,
+                  variantAttribute,
+                  type: variantAttribute?.label || variant.type,
+                }
+              : variant
           ),
         })),
       addPricesVariantOption: (
@@ -233,6 +267,103 @@ export const useProductVariantStore = create<ProductVariantStore>()(
         set(() => ({
           finalData: [],
         })),
+
+      // Variant Attributes Caching Methods
+      loadVariantAttributes: async (page = 1, search = '') => {
+        const state = get();
+
+        // If searching, reset pagination
+        if (search && state.variantAttributesPagination.currentPage > 0) {
+          set({
+            variantAttributes: [],
+            variantAttributesPagination: {
+              currentPage: 0,
+              lastPage: 0,
+              hasMore: true,
+            },
+          });
+        }
+
+        // Don't fetch if already loading
+        if (state.variantAttributesLoading) {
+          return state.variantAttributes;
+        }
+
+        // Don't fetch more pages if no more data available (but allow initial fetch)
+        if (!search && page > 1 && !state.variantAttributesPagination.hasMore) {
+          return state.variantAttributes;
+        }
+
+        try {
+          set({ variantAttributesLoading: true });
+
+          const params = {
+            page,
+            per_page: 10,
+            ...(search && { search }),
+          };
+
+          const response = await listVariantAttributes(params);
+
+          if (!response || !response.data || !Array.isArray(response.data)) {
+            console.error('Invalid response structure:', response);
+            set({ variantAttributesLoading: false });
+            return state.variantAttributes;
+          }
+
+          const options: VariantAttributeOptionType[] = response.data.map(
+            (attribute: VariantAttributeItem) => ({
+              label: attribute.variant_attribute_name,
+              value: attribute.id,
+              data: attribute,
+            })
+          );
+
+          const pagination = {
+            currentPage: response.pagination?.current_page || page,
+            lastPage: response.pagination?.last_page || page,
+            hasMore: response.pagination ? page < response.pagination.last_page : false,
+          };
+
+          // If it's a new search or first page, replace; otherwise append
+          const newAttributes =
+            search || page === 1 ? options : [...state.variantAttributes, ...options];
+
+          set({
+            variantAttributes: newAttributes,
+            variantAttributesPagination: pagination,
+            variantAttributesLoading: false,
+          });
+
+          return newAttributes;
+        } catch (error) {
+          console.error('Error loading variant attributes:', error);
+          set({ variantAttributesLoading: false });
+          return state.variantAttributes;
+        }
+      },
+
+      setVariantAttributesLoading: (loading: boolean) => set({ variantAttributesLoading: loading }),
+
+      addVariantAttributes: (
+        attributes: VariantAttributeOptionType[],
+        pagination: { currentPage: number; lastPage: number; hasMore: boolean }
+      ) =>
+        set((state) => ({
+          variantAttributes: [...state.variantAttributes, ...attributes],
+          variantAttributesPagination: pagination,
+        })),
+
+      clearVariantAttributes: () =>
+        set({
+          variantAttributes: [],
+          variantAttributesLoading: false,
+          variantAttributesPagination: {
+            currentPage: 0,
+            lastPage: 0,
+            hasMore: true,
+          },
+        }),
     }),
     {
       name: 'product-variant-store',

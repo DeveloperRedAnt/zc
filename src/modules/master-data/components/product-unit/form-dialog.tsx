@@ -19,6 +19,8 @@ interface UnitDialogProps {
   handleResetForm: () => void;
   nameUnit: string;
   setNameUnit: (value: string) => void;
+  nameUnitError: string;
+  setNameUnitError: (value: string) => void;
 }
 
 const ProductUnitFormDialog: React.FC<UnitDialogProps> = ({
@@ -29,10 +31,12 @@ const ProductUnitFormDialog: React.FC<UnitDialogProps> = ({
   handleResetForm,
   nameUnit,
   setNameUnit,
+  nameUnitError,
+  setNameUnitError,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby="unit-dialog-description">
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader className="mb-2">
           <DialogTitle> Unit Produk </DialogTitle>
         </DialogHeader>
@@ -41,11 +45,15 @@ const ProductUnitFormDialog: React.FC<UnitDialogProps> = ({
           isWidthFull
           label="Nama Unit"
           placeholder="cth: kg"
-          className="mb-2"
+          className={`${nameUnitError ? 'border !border-red-500' : ''}`}
           value={nameUnit}
-          onChange={(e) => setNameUnit(e.target.value)}
+          onChange={(e) => {
+            setNameUnit(e.target.value);
+            if (nameUnitError) setNameUnitError('');
+          }}
         />
-        <DialogFooter>
+        {nameUnitError && <p className="text-sm text-red">{nameUnitError}</p>}
+        <DialogFooter className="mt-2">
           <Button variant="ghost" className={isEditMode ? '' : 'hidden'} onClick={handleResetForm}>
             <Refresh size={14} />
             Reset

@@ -44,6 +44,7 @@ export type TypeToZod<T> = Required<{
           try {
             const { signOut } = await import('next-auth/react');
             await signOut({ redirect: true, callbackUrl: '/sign-in' });
+            console.log('Unauthorized', error);
           } catch (logoutError) {
             console.error('Error during automatic logout:', logoutError);
           }
@@ -226,7 +227,7 @@ export type TypeToZod<T> = Required<{
   }).partial().passthrough();
   export const VariantSchemaSchema = createZodObject<DTO.VariantSchema>({ 
     id: z.number(), 
-    name: z.string(), 
+    variant_attribute_name: z.string(), 
   }).partial().passthrough();
   export const TokenResponseSchemaSchema = createZodObject<DTO.TokenResponseSchema>({ 
     token: z.string(), 
@@ -249,7 +250,7 @@ export type TypeToZod<T> = Required<{
     updated_at: z.string(), 
   }).partial().passthrough();
   export const CreateUnitRequestSchemaSchema = createZodObject<DTO.CreateUnitRequestSchema>({ 
-    display_name: z.string(), 
+    unit_name: z.string(), 
   }).partial().passthrough();
   export const UnitSchemaSchema = createZodObject<DTO.UnitSchema>({ 
     data: z.array(z.record(z.string(), z.any())), 

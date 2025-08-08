@@ -19,6 +19,8 @@ interface VariantDialogProps {
   handleResetForm: () => void;
   nameVariant: string;
   setNameVariant: (value: string) => void;
+  nameError: string;
+  setNameError: (value: string) => void;
 }
 
 const ProductVariantFormDialog: React.FC<VariantDialogProps> = ({
@@ -29,6 +31,8 @@ const ProductVariantFormDialog: React.FC<VariantDialogProps> = ({
   handleResetForm,
   nameVariant,
   setNameVariant,
+  nameError,
+  setNameError,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -41,11 +45,15 @@ const ProductVariantFormDialog: React.FC<VariantDialogProps> = ({
           isWidthFull
           label="Nama Varian"
           placeholder="cth: Warna"
-          className="mb-2"
+          className={`${nameError ? 'border !border-red-500' : ''}`}
           value={nameVariant}
-          onChange={(e) => setNameVariant(e.target.value)}
+          onChange={(e) => {
+            setNameVariant(e.target.value);
+            if (nameError) setNameError('');
+          }}
         />
-        <DialogFooter>
+        {nameError && <p className="text-sm text-red">{nameError}</p>}
+        <DialogFooter className="mt-2">
           <Button variant="ghost" className={isEditMode ? '' : 'hidden'} onClick={handleResetForm}>
             <Refresh size={14} />
             Reset

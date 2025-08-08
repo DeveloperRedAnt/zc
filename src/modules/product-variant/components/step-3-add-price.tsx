@@ -288,6 +288,7 @@ const AddMultiPrice = ({ onSave, onBack }: AddMultiPriceProps) => {
 
     // Ambil data terbaru dari Zustand (bukan dari variable formattedData lama)
     const latestFormattedData = useProductVariantStore.getState().formattedData;
+
     setFinalData(JSON.parse(JSON.stringify(latestFormattedData)));
 
     toast.success('Data berhasil disimpan!', {

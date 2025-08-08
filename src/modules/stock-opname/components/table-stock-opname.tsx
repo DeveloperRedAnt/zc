@@ -65,6 +65,9 @@ export type TableStockOpnameProps = {
   setSortBy: (sortBy: string) => void;
   setSortOrder: (sortOrder: 'asc' | 'desc') => void;
   setLimit: (limit: number) => void;
+  stockOpnames: StockOpname[];
+  isLoading: boolean;
+  totalPages: number;
 };
 
 export default function TableStockOpname({
@@ -76,6 +79,9 @@ export default function TableStockOpname({
   setPage,
   setSortBy,
   setSortOrder,
+  stockOpnames = [],
+  isLoading = false,
+  totalPages = 1,
 }: TableStockOpnameProps) {
   const router = useRouter();
 
@@ -85,72 +91,6 @@ export default function TableStockOpname({
     if (page > 1) {
       setPage(1);
     }
-  };
-
-  // Mock data for Stock Opname - replace with actual API call later
-  const stockOpnameData: StockOpname[] = [
-    {
-      id: '1',
-      opname_date: '07/06/25',
-      opname_purpose: 'Opname November',
-      store_name: 'PT Ezhe Source',
-      product_count: '45 Produk',
-      responsible_person: 'Lorri Taya Warf',
-    },
-    {
-      id: '2',
-      opname_date: '12/04/25',
-      opname_purpose: 'Opname Oktober',
-      store_name: 'CV Electronic Geek',
-      product_count: '39 Produk',
-      responsible_person: 'Kathy Jane Pacheco',
-    },
-    {
-      id: '3',
-      opname_date: '28/05/25',
-      opname_purpose: 'Opname September',
-      store_name: 'PT Super Duper',
-      product_count: '40 Produk',
-      responsible_person: 'Lorri Taya Warf',
-    },
-    {
-      id: '4',
-      opname_date: '29/03/25',
-      opname_purpose: 'Opname Agustus',
-      store_name: 'CV Cut Rite Lawn Care',
-      product_count: '46 Produk',
-      responsible_person: 'Lorri Taya Warf',
-    },
-    {
-      id: '5',
-      opname_date: '29/10/25',
-      opname_purpose: 'Opname Juli',
-      store_name: "PT Johnson's General Stores",
-      product_count: '11 Produk',
-      responsible_person: 'Lorri Taya Warf',
-    },
-    {
-      id: '6',
-      opname_date: '01/08/24',
-      opname_purpose: 'Checking urgent',
-      store_name: 'PT Ezhe Source',
-      product_count: '37 Produk',
-      responsible_person: 'Kathy Jane Pacheco',
-    },
-    {
-      id: '7',
-      opname_date: '03/08/24',
-      opname_purpose: 'Opname Juni',
-      store_name: 'PT Ezhe Source',
-      product_count: '3 Produk',
-      responsible_person: 'Kathy Jane Pacheco',
-    },
-  ];
-
-  const isLoading = false;
-  const meta = {
-    last_page: 1,
-    total: stockOpnameData.length,
   };
 
   const columns = React.useMemo(
@@ -196,7 +136,7 @@ export default function TableStockOpname({
   );
 
   const table = useReactTable({
-    data: stockOpnameData,
+    data: stockOpnames,
     columns,
     manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
@@ -204,21 +144,13 @@ export default function TableStockOpname({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
-    pageCount: meta?.last_page ?? -1,
+    pageCount: totalPages,
     state: {
       pagination: {
-        pageIndex: (page ?? 1) - 1,
-        pageSize: limit ?? 10,
+        pageIndex: page,
+        pageSize: limit,
       },
-    },
-    onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
-        const newPagination = updater({
-          pageIndex: (page ?? 1) - 1,
-          pageSize: limit ?? 10,
-        });
-        setPage(newPagination.pageIndex + 1);
-      }
+      sorting: sortBy && sortOrder ? [{ id: sortBy, desc: sortOrder === 'desc' }] : [],
     },
   });
 
@@ -230,6 +162,9 @@ export default function TableStockOpname({
         isLoading={isLoading}
         onPage={setPage}
         onPageSize={setLimit}
+        page={page}
+        pageSize={limit}
+        totalPages={totalPages}
       />
     </div>
   );
