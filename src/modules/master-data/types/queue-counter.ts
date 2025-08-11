@@ -1,5 +1,5 @@
 export type QueueCounter = {
-  store_id: string | number;
+  store_id: number;
   store: string;
   prefix: string;
   counter_start: number;

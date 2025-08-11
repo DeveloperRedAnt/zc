@@ -112,7 +112,7 @@ export function useProductTags(
  */
 export function useCreateProduct(
   options?: UseMutationOptions<
-    DTO.CreateProductResponseSchema,
+    DTO.CreateProductResponseData,
     Error,
     {
       body: DTO.CreateProductRequestSchema;

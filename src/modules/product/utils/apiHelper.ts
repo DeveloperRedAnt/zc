@@ -49,6 +49,7 @@ interface FormDataInput {
   expired_reminder_in_days?: number | null;
   expired_reminder_in_date?: string | null;
   is_wholesale?: boolean;
+  is_taxable?: boolean;
   // Allow additional properties for flexibility
   [key: string]: unknown;
 }
@@ -209,7 +210,7 @@ export function mapFormDataToApiPayload(formData: FormDataInput): ProductPayload
     package: formData.package || 'Plastik',
     is_active: formData.isActiveProduct !== undefined ? formData.isActiveProduct : true,
     is_favorite: formData.isFavorite !== undefined ? formData.isFavorite : false,
-    is_non_tax: false,
+    is_non_tax: !formData.is_taxable,
     content: formData.content || '',
     unit_id: formData.unit_id || 1,
     tag_ids: [1], // Default tag for now

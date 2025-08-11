@@ -1,46 +1,44 @@
+import { useGetQueueCounterList } from '@/__generated__/api/hooks/master-data/queue-counter.hooks';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { QueueCounter } from '@/modules/master-data/types/queue-counter';
 import { Edit } from '@icon-park/react';
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import React from 'react';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import React, { useState, useMemo } from 'react';
+
+type QueueCounterApiItem = QueueCounter & {
+  queue_counter?: {
+    prefix: string;
+    counter_start: number;
+    rotation: number;
+  };
+};
 
 type TableQueueCounterListProps = {
   handleEditButton?: (queueCounter: QueueCounter) => void;
 };
 
-const data: QueueCounter[] = [
-  {
-    store_id: 1,
-    store: 'PT Ezhe Source',
-    prefix: 'EZH',
-    counter_start: 1,
-    rotation: 30,
-  },
-  {
-    store_id: 2,
-    store: 'PT Specialty Restaurant Group TBK',
-    prefix: 'SRG',
-    counter_start: 1,
-    rotation: 7,
-  },
-  {
-    store_id: 3,
-    store: 'CV Electronic Geek',
-    prefix: 'ZYC',
-    counter_start: 1,
-    rotation: 1,
-  },
-];
-
 export default function Index({ handleEditButton }: TableQueueCounterListProps) {
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const page = pagination.pageIndex + 1;
+  const perPage = pagination.pageSize;
+
+  const { data, isLoading } = useGetQueueCounterList({
+    page,
+    per_page: perPage,
+  });
+
+  const rotationMap: Record<number, string> = {
+    1: '1 Hari',
+    2: '7 Hari',
+    3: '1 Bulan',
+    4: '1 Tahun',
+  };
+
   const columnHelper = createColumnHelper<QueueCounter>();
   const baseColumns = [
     columnHelper.accessor('store', {
@@ -57,7 +55,7 @@ export default function Index({ handleEditButton }: TableQueueCounterListProps) 
     }),
     columnHelper.accessor('rotation', {
       header: () => <div className="font-semibold text-black"> Reset Rotasi </div>,
-      cell: (info) => info.getValue(),
+      cell: (info) => rotationMap[info.getValue()],
     }),
     columnHelper.display({
       id: 'aksi',
@@ -73,21 +71,34 @@ export default function Index({ handleEditButton }: TableQueueCounterListProps) 
     }),
   ];
 
+  const queueCounters: QueueCounter[] = useMemo(() => {
+    return (
+      data?.data.map((item: QueueCounterApiItem) => ({
+        store_id: item.store_id,
+        store: item.store,
+        prefix: item.queue_counter?.prefix || item.prefix,
+        counter_start: item.queue_counter?.counter_start || item.counter_start,
+        rotation: item.queue_counter?.rotation || item.rotation,
+      })) ?? []
+    );
+  }, [data]);
+
   const table = useReactTable({
-    data: data,
+    data: queueCounters,
     columns: baseColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    pageCount: Math.ceil((data?.pagination?.total ?? 0) / pagination.pageSize),
+    state: {
+      pagination,
+    },
     manualPagination: true,
-    manualSorting: false,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
   });
   return (
     <>
       <div className="container py-2 w-full">
-        <DataTable table={table} isLoading={false} />
-        <DataTablePagination table={table} isLoading={false} />
+        <DataTable table={table} isLoading={isLoading} />
+        <DataTablePagination table={table} isLoading={isLoading} />
       </div>
     </>
   );

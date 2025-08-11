@@ -30,9 +30,10 @@ type Props = {
   item: PriceMultiPackItem;
   onChange: (id: number, field: keyof PriceMultiPackItem, value: string | number) => void;
   onRemove?: () => void;
+  errors?: { [field: string]: string };
 };
 
-export default function MultiPackItem({ index, item, onChange, onRemove }: Props) {
+export default function MultiPackItem({ index, item, onChange, onRemove, errors = {} }: Props) {
   const itemNameRef = useRef<HTMLInputElement>(null);
   const quantityRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
@@ -80,9 +81,9 @@ export default function MultiPackItem({ index, item, onChange, onRemove }: Props
             placeholder="cth: Single"
             required
             isWidthFull
-            className={itemNameError ? '!border-[#F08181]' : 'border-[#C2C7D0]'}
+            className={itemNameError || errors.itemName ? '!border-[#F08181]' : 'border-[#C2C7D0]'}
           />
-          <FormFieldError message={itemNameError} />
+          <FormFieldError message={itemNameError || errors.itemName} />
         </div>
 
         {/* Kuantiti */}
@@ -96,7 +97,7 @@ export default function MultiPackItem({ index, item, onChange, onRemove }: Props
             }}
             label="Kuantiti"
             required
-            error={quantityError}
+            error={quantityError || errors.quantity}
           />
         </div>
 
@@ -116,9 +117,9 @@ export default function MultiPackItem({ index, item, onChange, onRemove }: Props
             }}
             required
             isWidthFull
-            className={priceError ? '!border-[#F08181]' : 'border-[#C2C7D0]'}
+            className={priceError || errors.price ? '!border-[#F08181]' : 'border-[#C2C7D0]'}
           />
-          <FormFieldError message={priceError} />
+          <FormFieldError message={priceError || errors.price} />
         </div>
       </div>
 

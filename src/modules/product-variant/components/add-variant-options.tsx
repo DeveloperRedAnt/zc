@@ -93,6 +93,7 @@ const ProductVariantOptions = ({
           id: cryptoRandomString({ length: 10 }),
           type: productVariantType,
           name: '',
+          selected_id: '',
         });
       }
       initializedRef.current = true;

@@ -14,6 +14,10 @@ export default function Header({ isLoading = false }: { isLoading?: boolean }) {
     '/dashboard/users',
     '/dashboard/organization',
     '/dashboard/stores',
+    '/dashboard/master-data',
+    '/dashboard/packages',
+    '/dashboard/products/add',
+    '/dashboard/products/edit',
   ].some((path) => pathname?.startsWith(path));
 
   return (

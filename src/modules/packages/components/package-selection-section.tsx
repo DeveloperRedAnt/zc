@@ -5,8 +5,8 @@ import { Check, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import enterprisePacket from './../../../../public/assets/images/enterprise-packet.svg';
 import ZycasPlusLogo from './../../../../public/assets/images/zycas-plus-logo.svg';
+import enterprisePacket from './../../../../public/assets/images/zycasmax-logo.svg';
 import { FeatureComparisonModal } from './popup-feature-comparison';
 
 const freePackageFeatures = [
@@ -154,7 +154,7 @@ export default function PackageSelectionSection() {
               <div className="w-[120px] h-[43px] flex items-center">
                 <Image
                   src={enterprisePacket}
-                  alt="ZycasPlusLogo"
+                  alt="ZycasMaxLogo"
                   className="w-full h-full object-contain"
                 />
               </div>

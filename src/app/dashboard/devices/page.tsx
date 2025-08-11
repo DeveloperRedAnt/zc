@@ -1,7 +1,59 @@
 import { Card, CardContent, CardDescription } from '@/components/card/card';
 import { Heading } from '@/components/heading/heading';
 import { Text } from '@/components/text/text';
-import DialogRevokeDevice from '@/modules/devices/components/dialog-revoke-device';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+const DialogRevokeDevice = dynamic(
+  () => import('@/modules/devices/components/dialog-revoke-device'),
+  {
+    loading: () => <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />,
+  }
+);
+
+const DeviceCardSkeleton = () => (
+  <Card className="m-4">
+    <CardContent className="pt-6 flex justify-between items-center">
+      <div className="flex-1">
+        <div className="h-5 w-16 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-3 w-40 bg-gray-200 rounded animate-pulse" />
+      </div>
+      <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />
+    </CardContent>
+  </Card>
+);
+
+interface Device {
+  device_id: string;
+  name: string;
+  date: string;
+}
+
+const DeviceCard = dynamic(
+  () =>
+    Promise.resolve(({ device }: { device: Device }) => (
+      <Card className="m-4">
+        <CardContent className="pt-6 flex justify-between items-center">
+          <div>
+            <Text weight="bold" className="text-[#0FA6C1]">
+              {device.device_id}
+            </Text>
+            <Text>{device.name}</Text>
+            <CardDescription className="mt-3">Tanggal ditautkan: {device.date}</CardDescription>
+          </div>
+          <div>
+            <Suspense fallback={<div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />}>
+              <DialogRevokeDevice />
+            </Suspense>
+          </div>
+        </CardContent>
+      </Card>
+    )),
+  {
+    loading: () => <DeviceCardSkeleton />,
+  }
+);
 
 export function generateMetadata() {
   return {
@@ -36,22 +88,20 @@ export default function Index() {
           List Device Tertaut
         </Heading>
       </div>
-      {devices.map((item) => (
-        <Card className="m-4" key={item.device_id}>
-          <CardContent className="pt-6 flex justify-between items-center">
-            <div>
-              <Text weight="bold" className="text-[#0FA6C1]">
-                {item.device_id}
-              </Text>
-              <Text>{item.name}</Text>
-              <CardDescription className="mt-3">Tanggal ditautkan: {item.date}</CardDescription>
-            </div>
-            <div>
-              <DialogRevokeDevice />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+
+      <Suspense
+        fallback={
+          <>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <DeviceCardSkeleton key={`device-skeleton-${i}`} />
+            ))}
+          </>
+        }
+      >
+        {devices.map((device) => (
+          <DeviceCard key={device.device_id} device={device} />
+        ))}
+      </Suspense>
     </>
   );
 }

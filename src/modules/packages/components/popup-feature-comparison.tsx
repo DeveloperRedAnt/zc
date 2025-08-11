@@ -2,8 +2,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/d
 import { CheckOne, CloseOne } from '@icon-park/react';
 import Image from 'next/image';
 import React from 'react';
-import EnterprisePackage from './../../../../public/assets/images/enterprise-packet.svg';
 import ZycasPlusLogo from './../../../../public/assets/images/zycas-plus-logo.svg';
+import EnterprisePackage from './../../../../public/assets/images/zycasmax-logo.svg';
 
 interface FeatureComparisonModalProps {
   title: string;
@@ -106,7 +106,7 @@ export function FeatureComparisonModal({ title, open, onOpenChange }: FeatureCom
               <div className="text-xs text-gray-500">Paket Enterprise</div>
               <Image
                 src={EnterprisePackage}
-                alt="EnterprisePackage"
+                alt="ZycasMaxLogo"
                 className="w-[107px] h-[32px] object-contain"
               />
               <div className="text-xs font-medium">Rp 280.000 per Bulan</div>

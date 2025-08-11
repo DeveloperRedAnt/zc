@@ -5,8 +5,6 @@ import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
 import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import { DataTable } from '@/components/table/data-table';
-import DetailProductPaduan from '@/modules/product/components/detail-product-paduan';
-import DetailProductVariant from '@/modules/product/components/detail-product-variant';
 import { ArrowLeft, Edit, Star } from '@icon-park/react';
 import {
   createColumnHelper,
@@ -16,8 +14,55 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-import React from 'react';
+import React, { Suspense } from 'react';
+
+const DetailProductPaduan = dynamic(
+  () => import('@/modules/product/components/detail-product-paduan'),
+  {
+    loading: () => (
+      <div className="border-b-gray-200 py-6">
+        <div className="mb-2">
+          <div className="h-5 bg-gray-200 rounded animate-pulse w-32" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={`item-${i}`} className="flex justify-between items-center p-4 border rounded">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-40" />
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+              </div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
+
+const DetailProductVariant = dynamic(
+  () => import('@/modules/product/components/detail-product-variant'),
+  {
+    loading: () => (
+      <div className="border-b-gray-200 py-6">
+        <div className="mb-2">
+          <div className="h-5 bg-gray-200 rounded animate-pulse w-32" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={`item-${i}`} className="grid grid-cols-3 gap-4 p-4 border rounded">
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface ChangeStockHistory {
   date: string;
@@ -130,12 +175,12 @@ export default function Index() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {data?.tags && data.tags.length > 0 ? (
-                  data.tags.map((tag) => (
+                  data.tags.map((tag, i) => (
                     <div
-                      key={tag}
+                      key={`${tag.id}-${i}`}
                       className="h-[1.5rem] w-auto px-3 text-[0.75rem] border border-[#C2C7D0] rounded-[0.25rem] flex items-center justify-center"
                     >
-                      {tag}
+                      {tag.name}
                     </div>
                   ))
                 ) : (
@@ -145,10 +190,56 @@ export default function Index() {
             </div>
 
             {data?.type?.toLowerCase() === 'composite' && data?.composite && (
-              <DetailProductPaduan data={data?.composite} />
+              <Suspense
+                fallback={
+                  <div className="border-b-gray-200 py-6">
+                    <div className="mb-2">
+                      <div className="h-5 bg-gray-200 rounded animate-pulse w-32" />
+                    </div>
+                    <div className="space-y-4">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={`item-${i}`}
+                          className="flex justify-between items-center p-4 border rounded"
+                        >
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded animate-pulse w-40" />
+                            <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                          </div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <DetailProductPaduan data={data?.composite} />
+              </Suspense>
             )}
             {data?.type?.toLowerCase() === 'variant' && (
-              <DetailProductVariant data={data?.variants || []} />
+              <Suspense
+                fallback={
+                  <div className="border-b-gray-200 py-6">
+                    <div className="mb-2">
+                      <div className="h-5 bg-gray-200 rounded animate-pulse w-32" />
+                    </div>
+                    <div className="space-y-4">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={`item-${i}`}
+                          className="grid grid-cols-3 gap-4 p-4 border rounded"
+                        >
+                          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <DetailProductVariant data={data?.variants || []} />
+              </Suspense>
             )}
 
             <div className="border-b-gray-200 py-6">
@@ -235,7 +326,7 @@ export default function Index() {
                     <p className="font-semibold"> Peringatan Produk Kedaluwarsa: </p>
                     <p className="font-[400] mt-1">
                       {data?.expired_reminder?.is_enabled
-                        ? `Aktif - ${data?.expired_reminder?.reminder_in_days} Hari`
+                        ? `Aktif - ${data?.expired_reminder?.countdown}`
                         : 'Tidak Aktif'}
                     </p>
                   </div>

@@ -133,6 +133,7 @@ export const onStoreStockFirstVariant = async (params: {
       url: `/api/stores`,
       injectHeaders: ['x-device-id', 'x-organization-id'],
       params,
+      withPagination: true,
       transformer: (data: Record<string, unknown>) => data as unknown as DTO.StoreListResponse
     })
 

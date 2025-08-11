@@ -5,10 +5,9 @@ import { Card, CardContent } from '@/components/card/card';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import { Input } from '@/components/input/input';
 import { Label } from '@/components/label/label';
-import { useOrganizationStore } from '@/store/organization-store';
+
 import Cookies from 'js-cookie';
 import { signIn } from 'next-auth/react';
-import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -22,7 +21,6 @@ export default function SignInPage() {
   const [errors, setErrors] = useState<{ whatsapp?: string; password?: string }>({});
   const [globalError, setGlobalError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { setOrganization } = useOrganizationStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,18 +43,8 @@ export default function SignInPage() {
         return;
       }
 
-      const session = await getSession();
-      const organizations = session?.user?.organizations;
-
-      if (!Array.isArray(organizations) || organizations.length === 0) {
-        setOrganization({ id: 0, name: '', flex: 'choose-organization' });
-        Cookies.set('flex', 'add-organization');
-        router.push('/login/add-organization');
-      } else {
-        Cookies.set('flex', 'select-organization');
-        router.push('/login/select-organization');
-      }
-      setIsLoading(false);
+      Cookies.set('flex', 'select-organization');
+      router.push('/login/select-organization');
     } catch (error) {
       setGlobalError(`Terjadi kesalahan. Silakan coba lagi. ${String(error)}`);
       setIsLoading(false);

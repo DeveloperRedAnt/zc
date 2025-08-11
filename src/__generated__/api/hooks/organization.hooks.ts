@@ -1,5 +1,3 @@
-// Organization domain React Query hooks
-
 import {
   UseMutationOptions,
   UseQueryOptions,
@@ -19,7 +17,6 @@ export function useGetOrganization(
   return useQuery({
     queryKey: createStandardQueryKey("getOrganization", params),
     queryFn: () => {
-      console.log("test")
       return api.getOrganization(params)
     },
     ...options,
@@ -140,9 +137,9 @@ export function useOnInToDashboard(
 }
 
 // list organization for dashboard
-export function useGetDashboardOrganizationsEmploye(
+export function useGetDashboardOrganizationsEmployee(
   params: DTO.GetDashboardOrganizationsParams,
-  options?: UseQueryOptions<DTO.ApiResponseOrganizationByEmployee>
+  options?: UseQueryOptions<DTO.DashboardOrganizationsResponse>
 ) {
   return useQuery({
     queryKey: createStandardQueryKey("getDashboardOrganizations", params),

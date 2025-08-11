@@ -11,7 +11,8 @@
         "noUnusedVariables": "error"
       },
       "suspicious": {
-        "noConsoleLog": "error"
+        "noConsoleLog": "error",
+        "noArrayIndexKey": "off"
       },
       "a11y": {
         "useValidAnchor": "off",

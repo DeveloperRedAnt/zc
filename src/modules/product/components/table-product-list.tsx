@@ -1,4 +1,4 @@
-import { ApiProduct } from '@/__generated__/api/dto'; // Sesuaikan dengan path types Anda
+import { ApiProduct } from '@/__generated__/api/dto';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import {
@@ -51,8 +51,10 @@ type TableProductListProps = {
     total: number;
     total_pages: number;
   };
-  onPageChange?: (page: number) => void; // Add this prop
-  currentPage?: number; // Add this prop
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  currentPage?: number;
+  currentPageSize?: number;
 };
 
 // Function to transform API data to table format
@@ -70,7 +72,7 @@ const transformApiDataToTableFormat = (apiData: ApiProduct[]): Product[] => {
     size: product.content || '-',
     stock: '-', // Data stok tidak tersedia, bisa diganti kalau field-nya ada
     het: product.price || '-',
-    status: 'Aktif', // Tidak tersedia di API, default sementara
+    status: product.is_active ? 'Aktif' : 'Non Aktif',
     details:
       product.variants?.map((variant) => ({
         name: variant.name || '-',
@@ -85,8 +87,10 @@ export default function TableProductList({
   data = [],
   isLoading = false,
   meta,
-  onPageChange, // Add this prop
-  currentPage = 1, // Add this prop
+  onPageChange,
+  onPageSizeChange,
+  currentPage = 1,
+  currentPageSize = 10,
 }: TableProductListProps) {
   // Transform API data to table format
   const tableData = useMemo(() => {
@@ -249,22 +253,43 @@ export default function TableProductList({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    manualPagination: true, // Enable manual pagination since we're using API pagination
-    pageCount: meta?.total_pages || 0,
+    manualPagination: true,
+    pageCount: meta?.total_pages || Math.ceil((meta?.total ?? 0) / (currentPageSize ?? 10)),
     state: {
       pagination: {
-        pageIndex: (currentPage || 1) - 1, // Use currentPage prop instead of meta
-        pageSize: meta?.per_page || 10,
+        pageIndex: (currentPage || 1) - 1, // Convert 1-based to 0-based
+        pageSize: currentPageSize || 10, // Gunakan currentPageSize
       },
     },
     onPaginationChange: (updater) => {
-      // Handle pagination change
       if (typeof updater === 'function') {
-        const newPagination = updater({
+        const currentPagination = {
           pageIndex: (currentPage || 1) - 1,
-          pageSize: meta?.per_page || 10,
-        });
-        onPageChange?.(newPagination.pageIndex + 1); // Convert back to 1-based index
+          pageSize: currentPageSize || 10,
+        };
+
+        const newPagination = updater(currentPagination);
+        const newPage = newPagination.pageIndex + 1; // Convert back to 1-based
+        const newPageSize = newPagination.pageSize;
+
+        // Jika page size berubah, panggil onPageSizeChange
+        if (newPageSize !== currentPageSize) {
+          onPageSizeChange?.(newPageSize);
+        } else {
+          // Jika hanya page yang berubah, panggil onPageChange
+          onPageChange?.(newPage);
+        }
+      } else {
+        const newPage = updater.pageIndex + 1; // Convert back to 1-based
+        const newPageSize = updater.pageSize;
+
+        // Jika page size berubah, panggil onPageSizeChange
+        if (newPageSize !== currentPageSize) {
+          onPageSizeChange?.(newPageSize);
+        } else {
+          // Jika hanya page yang berubah, panggil onPageChange
+          onPageChange?.(newPage);
+        }
       }
     },
   });
@@ -302,6 +327,7 @@ export default function TableProductList({
           );
         }}
       />
+
       <DataTablePagination table={table} isLoading={isLoading} />
     </div>
   );

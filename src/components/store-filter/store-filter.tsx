@@ -12,21 +12,6 @@ import { useEffect, useState } from 'react';
 import type { GroupBase, OptionsOrGroups } from 'react-select';
 import { AsyncPaginate } from 'react-select-async-paginate';
 
-// Define the actual API response structure
-interface ActualStoreListResponse {
-  code: number;
-  status: string;
-  name: string;
-  message: string;
-  data: StoreItem[];
-  pagination: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
-}
-
 // Use the type from the Zustand store
 export type { StoreOptionType as OptionType } from '@/hooks/use-store-filter/use-store-filter';
 
@@ -54,10 +39,25 @@ const createLoadOptions = (
         sort_direction: 'asc' as const,
       };
 
-      const response = (await listStore(params)) as unknown as ActualStoreListResponse;
+      const response = await listStore(params);
 
-      // Check if response has expected structure
-      if (!response || !response.data || !Array.isArray(response.data)) {
+      // Check if response is a direct array or has data property
+      let storeData: StoreItem[];
+      let metaData: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+      } | null = null;
+
+      if (Array.isArray(response)) {
+        // Direct array response
+        storeData = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        // Object with data property
+        storeData = response.data;
+        metaData = response.meta;
+      } else {
         console.error('Invalid response structure:', response);
         return {
           options: [],
@@ -65,7 +65,7 @@ const createLoadOptions = (
         };
       }
 
-      const options: StoreOptionType[] = response.data.map((store: StoreItem) => {
+      const options: StoreOptionType[] = storeData.map((store: StoreItem) => {
         return {
           label: `#${zeroPad(store.id, 4)} - ${store.name}`,
           value: store.id,
@@ -73,11 +73,36 @@ const createLoadOptions = (
         };
       });
 
-      // Save to Zustand store
-      addLoadedOptions(options, response.pagination, search || '');
+      // Save to Zustand store - handle pagination
+      let paginationState: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+      };
+      let hasMore = false;
 
-      // Check if there are more pages available
-      const hasMore = response.pagination ? currentPage < response.pagination.last_page : false;
+      if (metaData) {
+        // Object response with meta
+        paginationState = {
+          current_page: metaData.current_page,
+          last_page: metaData.last_page,
+          per_page: metaData.per_page,
+          total: metaData.total,
+        };
+        hasMore = currentPage < metaData.last_page;
+      } else {
+        // Direct array response - assume single page
+        paginationState = {
+          current_page: 1,
+          last_page: 1,
+          per_page: storeData.length,
+          total: storeData.length,
+        };
+        hasMore = false;
+      }
+
+      addLoadedOptions(options, paginationState, search || '');
 
       return {
         options,
@@ -93,7 +118,12 @@ const createLoadOptions = (
   };
 };
 
-export default function StoreFilter() {
+export type StoreFilterProps = {
+  disabled?: boolean;
+  organizationId?: string;
+};
+
+export default function StoreFilter({ disabled }: StoreFilterProps) {
   const { setSelectedStore, addLoadedOptions } = useStoreFilter();
 
   const [value, onChange] = useState<StoreOptionType | null>(null);
@@ -132,83 +162,88 @@ export default function StoreFilter() {
     <>
       <div className="flex items-center">
         <p className="font-semibold mr-2 text-sm flex basis-[380px]"> Tampilan Data untuk: </p>
-        <AsyncPaginate
-          defaultOptions
-          value={isMounted ? value : null}
-          loadOptions={loadOptions}
-          onChange={handleChange}
-          placeholder="Pilih Toko"
-          className="min-w-[12rem]"
-          styles={{
-            container: (base) => ({
-              ...base,
-              width: '100%',
-              fontSize: '14px',
-            }),
-            control: (base, state) => ({
-              ...base,
-              minHeight: '40px',
-              height: '40px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
-              borderColor: state?.isFocused
-                ? 'var(--color-zycas-primary)'
-                : 'var(--color-gray-300)',
-              // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
-              boxShadow: state?.isFocused ? '0 0 0 1px var(--color-zycas-primary)' : 'none',
-              '&:hover': {
+        {isMounted ? (
+          <AsyncPaginate
+            defaultOptions
+            value={value}
+            loadOptions={loadOptions}
+            onChange={handleChange}
+            placeholder="Pilih Toko"
+            className="min-w-[12rem]"
+            isDisabled={disabled}
+            styles={{
+              container: (base) => ({
+                ...base,
+                width: '100%',
+                fontSize: '14px',
+              }),
+              control: (base, state) => ({
+                ...base,
+                minHeight: '40px',
+                height: '40px',
+                backgroundColor: 'white',
+                borderRadius: '8px',
                 // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
                 borderColor: state?.isFocused
                   ? 'var(--color-zycas-primary)'
                   : 'var(--color-gray-300)',
-              },
-              fontSize: '14px',
-            }),
-            valueContainer: (base) => ({
-              ...base,
-              padding: '0 8px',
-              marginTop: '-2px',
-              fontSize: '14px',
-            }),
-            input: (base) => ({
-              ...base,
-              margin: '0px',
-              color: 'black',
-              fontSize: '14px',
-            }),
-            indicatorsContainer: (base) => ({
-              ...base,
-              height: '40px',
-            }),
-            dropdownIndicator: (base) => ({
-              ...base,
-              padding: '0 8px',
-            }),
-            menu: (base) => ({
-              ...base,
-              fontSize: '14px',
-              zIndex: 50,
-            }),
-            option: (base) => ({
-              ...base,
-              fontSize: '14px',
-              padding: '8px 12px',
-            }),
-            singleValue: (base) => ({
-              ...base,
-              fontSize: '14px',
-            }),
-            multiValue: (base) => ({
-              ...base,
-              fontSize: '14px',
-            }),
-            multiValueLabel: (base) => ({
-              ...base,
-              fontSize: '14px',
-            }),
-          }}
-        />
+                // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
+                boxShadow: state?.isFocused ? '0 0 0 1px var(--color-zycas-primary)' : 'none',
+                '&:hover': {
+                  // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
+                  borderColor: state?.isFocused
+                    ? 'var(--color-zycas-primary)'
+                    : 'var(--color-gray-300)',
+                },
+                fontSize: '14px',
+              }),
+              valueContainer: (base) => ({
+                ...base,
+                padding: '0 8px',
+                marginTop: '-2px',
+                fontSize: '14px',
+              }),
+              input: (base) => ({
+                ...base,
+                margin: '0px',
+                color: 'black',
+                fontSize: '14px',
+              }),
+              indicatorsContainer: (base) => ({
+                ...base,
+                height: '40px',
+              }),
+              dropdownIndicator: (base) => ({
+                ...base,
+                padding: '0 8px',
+              }),
+              menu: (base) => ({
+                ...base,
+                fontSize: '14px',
+                zIndex: 50,
+              }),
+              option: (base) => ({
+                ...base,
+                fontSize: '14px',
+                padding: '8px 12px',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                fontSize: '14px',
+              }),
+              multiValue: (base) => ({
+                ...base,
+                fontSize: '14px',
+              }),
+              multiValueLabel: (base) => ({
+                ...base,
+                fontSize: '14px',
+              }),
+            }}
+          />
+        ) : (
+          <div className="min-w-[12rem] h-[40px] bg-gray-100 animate-pulse rounded" />
+        )}
       </div>
     </>
   );

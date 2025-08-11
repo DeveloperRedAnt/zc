@@ -1,6 +1,6 @@
 import {
   useCreateOrganization,
-  useGetDashboardOrganizationsEmploye,
+  useGetDashboardOrganizationsEmployee,
   useUpdateOrganization,
 } from '@/__generated__/api/hooks';
 
@@ -110,27 +110,8 @@ export default function OrganizationDashboard() {
     };
   }, [search]);
 
-  // Define the expected type for the API response
-  type DashboardOrganizationsResponse = {
-    data: Array<{
-      id: string | number;
-      name: string;
-      phone: string;
-      email: string;
-      npwp?: string;
-      nib?: string;
-      siup?: string; // Add siup property as optional
-    }>;
-    pagination?: {
-      current_page?: number;
-      last_page?: number;
-      per_page?: number;
-      total?: number;
-    };
-  };
-
   // Fetch organizations
-  const { data, isLoading } = useGetDashboardOrganizationsEmploye(
+  const { data: response, isLoading } = useGetDashboardOrganizationsEmployee(
     {
       'x-device-id': '1',
       page: page,
@@ -151,15 +132,15 @@ export default function OrganizationDashboard() {
         reloadKey,
       ],
     }
-  ) as { data?: DashboardOrganizationsResponse; isLoading: boolean };
+  );
 
-  const currentPage = data?.pagination?.current_page ?? 1;
-  const lastPage = data?.pagination?.last_page ?? 1;
-  const perPage = data?.pagination?.per_page ?? 10;
+  const currentPage = response?.pagination?.current_page || 1;
+  const lastPage = response?.pagination?.last_page || 1;
+  const perPage = validatedLimit;
 
   const organizations = useMemo(() => {
-    if (!data || !data.data) return [];
-    return data.data.map((item) => ({
+    if (!response || !response.data) return [];
+    return response.data.map((item) => ({
       id: String(item.id),
       name: item.name,
       phone: item.phone,
@@ -168,7 +149,7 @@ export default function OrganizationDashboard() {
       nib: item.nib ?? '',
       siup: item.siup ?? '',
     }));
-  }, [data]);
+  }, [response]);
 
   useEffect(() => {
     setPage(1);

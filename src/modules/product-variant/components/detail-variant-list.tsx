@@ -5,6 +5,7 @@ import { InformationText } from '@/components/information-text/information-text'
 import CustomInput from '@/components/input/custom-input';
 import InputFile from '@/components/input/input-file';
 import { Text } from '@/components/text/text';
+import { MultiUnitPrice } from '@/modules/product-variant/components/variant-options/multi-unit-price';
 import React, { useState, useEffect } from 'react';
 import type { FormattedData } from '../types';
 
@@ -18,9 +19,10 @@ export type ProductCardValue = {
 type ProductCardListProps = {
   formattedData: FormattedData;
   onChange?: (values: ProductCardValue) => void; // Changed from array to single value
+  errors?: { [field: string]: string };
 };
 
-const DetailVariantList = ({ formattedData, onChange }: ProductCardListProps) => {
+const DetailVariantList = ({ formattedData, onChange, errors = {} }: ProductCardListProps) => {
   const [cardValue, setCardValue] = useState<ProductCardValue>({
     file: formattedData.thumbnail || '',
     barcode: formattedData.barcode || '',
@@ -46,7 +48,12 @@ const DetailVariantList = ({ formattedData, onChange }: ProductCardListProps) =>
 
   return (
     <>
-      <ProductCard option={formattedData} value={cardValue} onChange={handleCardChange} />
+      <ProductCard
+        option={formattedData}
+        value={cardValue}
+        onChange={handleCardChange}
+        errors={errors}
+      />
     </>
   );
 };
@@ -55,9 +62,10 @@ type ProductCardProps = {
   option: FormattedData;
   value: ProductCardValue;
   onChange: (value: ProductCardValue) => void;
+  errors?: { [field: string]: string };
 };
 
-const ProductCard = ({ option, value, onChange }: ProductCardProps) => {
+const ProductCard = ({ option, value, onChange, errors = {} }: ProductCardProps) => {
   const [file, setFile] = useState<string>(value.file);
   const [barcode, setBarcode] = useState<string>(value.barcode);
   const [sku, setSKU] = useState<string>(value.sku);
@@ -98,7 +106,6 @@ const ProductCard = ({ option, value, onChange }: ProductCardProps) => {
         setMinStock(newMinStock);
         break;
     }
-
     const updatedValue = {
       file: newFile,
       barcode: newBarcode,
@@ -136,6 +143,14 @@ const ProductCard = ({ option, value, onChange }: ProductCardProps) => {
                   handleInputChange('barcode', e.target.value);
                 }}
               />
+              {errors.barcode && (
+                <span
+                  className="text-red-500 text-xs"
+                  style={{ marginTop: '-11px', display: 'block' }}
+                >
+                  {errors.barcode}
+                </span>
+              )}
               <CustomInput
                 label="SKU"
                 placeholder="cth: 782217821"
@@ -145,6 +160,14 @@ const ProductCard = ({ option, value, onChange }: ProductCardProps) => {
                   handleInputChange('sku', e.target.value);
                 }}
               />
+              {errors.sku && (
+                <span
+                  className="text-red-500 text-xs"
+                  style={{ marginTop: '-11px', display: 'block' }}
+                >
+                  {errors.sku}
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Text size="md" className="font-semibold text-[#555555]">
@@ -160,9 +183,18 @@ const ProductCard = ({ option, value, onChange }: ProductCardProps) => {
                   handleInputChange('minStock', Number(e.target.value));
                 }}
               />
+              {errors.minStock && (
+                <span
+                  className="text-red-500 text-xs"
+                  style={{ marginTop: '-6px', display: 'block' }}
+                >
+                  {errors.minStock}
+                </span>
+              )}
             </div>
           </div>
         </div>
+        <MultiUnitPrice />
       </CardContent>
     </Card>
   );

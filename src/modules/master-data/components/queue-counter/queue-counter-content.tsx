@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  useCreateQueueCounterMasterData,
+  useUpdateQueueCounterMasterData,
+} from '@/__generated__/api/hooks/master-data/queue-counter.hooks';
 import type { OptionType } from '@/components/dropdown/dropdown';
 import { InformationText } from '@/components/information-text/information-text';
 import { toast } from '@/components/toast/toast';
@@ -7,14 +11,16 @@ import QueueCounterConfirmDialog from '@/modules/master-data/components/queue-co
 import QueueCounterFormDialog from '@/modules/master-data/components/queue-counter/form-dialog';
 import TableList from '@/modules/master-data/components/queue-counter/table-list';
 import { QueueCounter } from '@/modules/master-data/types/queue-counter';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { QueueCounterFormData } from './queue-counter-schema';
 import { queueCounterFormSchema } from './queue-counter-schema';
 
 const optionsResetRotation: OptionType[] = [
   { label: '1 Hari', value: 1 },
-  { label: '7 Hari', value: 7 },
-  { label: '1 Bulan', value: 30 },
+  { label: '7 Hari', value: 2 },
+  { label: '1 Bulan', value: 3 },
+  { label: '1 Tahun', value: 4 },
 ];
 
 export const defaultQueueCounterData: QueueCounterFormData = {
@@ -29,6 +35,10 @@ export default function Index() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedQueueCounter, setSelectedQueueCounter] = useState<QueueCounter | null>(null);
   const [formData, setFormData] = useState<QueueCounterFormData | null>(null);
+
+  const { mutateAsync: createQueueCounter } = useCreateQueueCounterMasterData();
+  const { mutateAsync: updateQueueCounter } = useUpdateQueueCounterMasterData();
+  const queryClient = useQueryClient();
 
   const result = queueCounterFormSchema.safeParse(formData);
   const isFormValid = result.success;
@@ -52,19 +62,28 @@ export default function Index() {
 
   const handleConfirmSubmit = async () => {
     try {
+      if (!formData) return;
+
+      const payload = {
+        prefix: formData.prefix,
+        counter_start: formData.counter_start,
+        rotation: formData.rotation,
+        store_id: selectedQueueCounter?.store_id ?? 0,
+      };
+
       if (isEditMode && selectedQueueCounter) {
-        // update API
+        await updateQueueCounter({ id: selectedQueueCounter.store_id, ...payload });
       } else {
-        // create API
+        await createQueueCounter(payload);
       }
 
       toast.success('Tersimpan!', {
         description: 'No. Urut Nota Anda telah berhasil tersimpan',
       });
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      queryClient.invalidateQueries({
+        queryKey: ['getQueueCounterList'],
+      });
     } catch (_e) {
       toast.error('Gagal menyimpan');
     } finally {

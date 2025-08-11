@@ -8,7 +8,10 @@ import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-
 import { Plus, Refresh } from '@icon-park/react';
 import MultiPackItem from './multi-pack-item';
 
-export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolean }) {
+export default function FormPriceMultiPack({
+  isEdit = false,
+  onReset,
+}: { isEdit?: boolean; onReset?: () => void }) {
   const {
     priceMultiPackList,
     addMultiPackItem,
@@ -16,10 +19,19 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
     removeMultiPackItem,
     resetMultiPack,
     toggleWholesale,
+    multiPackErrors,
   } = usePriceMultiPackStore();
 
   const handleRadioChange = (value: string) => {
     toggleWholesale(value === 'wholesale');
+  };
+
+  const handleReset = () => {
+    if (onReset) {
+      onReset();
+    } else {
+      resetMultiPack();
+    }
   };
 
   return (
@@ -27,7 +39,7 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
       <div className="pt-6 mb-4 flex justify-between items-center">
         <p>Harga Multi Satuan</p>
         {isEdit && (
-          <Button type="button" variant="outline" onClick={resetMultiPack}>
+          <Button type="button" variant="outline" onClick={handleReset}>
             <Refresh />
             Reset
           </Button>
@@ -68,6 +80,7 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
           key={item.id}
           index={index}
           item={item}
+          errors={multiPackErrors[item.id] || {}}
           onChange={updateMultiPackItem}
           onRemove={priceMultiPackList.length > 1 ? () => removeMultiPackItem(item.id) : undefined}
         />

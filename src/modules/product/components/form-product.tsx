@@ -22,8 +22,10 @@ import { useProductCompositeStore } from '@/modules/products/storing-data/produc
 import { useProductDetailStore } from '@/modules/products/storing-data/product-detail/stores';
 import { useProductInformationStore } from '@/modules/products/storing-data/product-information/stores';
 import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
+import { useProductTaxStore } from '@/modules/products/storing-data/product-tax/stores';
 import { useTrackStockProductStore } from '@/modules/products/storing-data/track-stock-product/stores';
 import { useMemo } from 'react';
+import FormTax from './form-tax';
 
 type FormProductFormProps = {
   toggleStatusTrackingEnabled: boolean;
@@ -45,6 +47,7 @@ export default function FormProductForm({
   const trackStock = useTrackStockProductStore((state) => state.data);
   const composite = useProductCompositeStore((state) => state.data);
   const variants = useProductVariantStore((state) => state.finalData);
+  const isTaxable = useProductTaxStore((state) => state.isTax);
 
   const toast = useToast();
 
@@ -63,8 +66,18 @@ export default function FormProductForm({
       composite,
       variants: variants,
       is_wholesale: isWholesale,
+      is_taxable: isTaxable,
     };
-  }, [productInfo, productDetail, multiPack, composite, variants, trackStock, isWholesale]);
+  }, [
+    productInfo,
+    productDetail,
+    multiPack,
+    composite,
+    variants,
+    trackStock,
+    isWholesale,
+    isTaxable,
+  ]);
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -80,9 +93,13 @@ export default function FormProductForm({
         body: mappedData,
       },
       {
-        onSuccess: (res: DTO.CreateProductResponseSchema) => {
+        onSuccess: (data: DTO.CreateProductResponseData) => {
+          const productId =
+            data.products && data.products.length > 0 ? data.products[0]?.product_id : null;
           toast.showSuccess('Tersimpan', 'Produk Paduan Anda telah berhasil disimpan');
-          router.push(`/dashboard/products/${res.data.product}/create/set-first-stock`);
+          if (productId) {
+            router.push(`/dashboard/products/${productId}/create/set-first-stock`);
+          }
         },
         onError: (error) => {
           toast.showError('Gagal', `Produk Anda gagal disimpan karena ${error.message}`);
@@ -108,6 +125,7 @@ export default function FormProductForm({
           <FormProductComposite />
           <FormProductVariant />
           <FormProductDetail />
+          <FormTax />
           <FormPriceMultiPack />
           <FormTrackStockProduct onTrackStockChange={onTrackStockChange} />
 

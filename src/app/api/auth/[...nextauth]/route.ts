@@ -22,24 +22,26 @@ export const authOptions: NextAuthOptions = {
         try {
           const whatsapp = credentials?.whatsapp ?? '';
           const password = credentials?.password ?? '';
+
           if (!whatsapp || !password) return null;
 
-          const response = await axios.post(
-            `${API_URL}/api/employee/token`,
-            {
-              phone: whatsapp,
-              password: password,
+          const body = JSON.stringify({
+            phone: whatsapp,
+            password: password,
+          });
+
+          const config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: `${API_URL}/api/v2/employee/token`,
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
             },
-            {
-              headers: {
-                accept: 'application/json',
-                'x-device-id': '1',
-                'x-store-id': '56',
-                'x-organization-id': '51',
-                'Content-Type': 'application/json',
-              },
-            }
-          );
+            data: body,
+          };
+
+          const response = await axios.request(config);
           const data = response.data;
           if (data?.token) {
             return {

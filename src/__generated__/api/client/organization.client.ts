@@ -52,22 +52,29 @@ export const selectOrganization = async (params: {
 });
 
 
-export const GetOrganizationOfUser = async (params: DTO.GetOrganizationOfUserRequestSchema): Promise<Array<DTO.OrganizationSchema>> => getDataFromApi<DTO.GetOrganizationOfUserRequestSchema, Array<DTO.OrganizationSchema>>({
+export const GetOrganizationOfUser = async (params: DTO.GetOrganizationOfUserRequestSchema): Promise<Array<DTO.GetOrganizationOfUserResponseSchema>> => getDataFromApi<DTO.GetOrganizationOfUserRequestSchema, Array<DTO.GetOrganizationOfUserResponseSchema>>({
   type: 'get',
   url: `/api/org-of-user/${params['user-id']}`,
   injectHeaders: ['x-device-id', 'x-organization-id'],
   params,
   withPagination: true,
   transformer: (data: Record<string, unknown>) => {
-    // When pagination is enabled, the data is already extracted from response.data.data
-    // We need to ensure it's an array
-    if (Array.isArray(data)) {
-      return data as Array<DTO.OrganizationSchema>;
+
+    console.log("data", data)
+    // The API response has the format: { data: [...] }
+    // Extract the data array from the response
+    if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {
+      return data.data as Array<DTO.GetOrganizationOfUserResponseSchema>;
     }
     
-    // If it's not an array, return an empty array as fallback
-    console.warn('Expected array response but got:', typeof data);
-    return [] as Array<DTO.OrganizationSchema>;
+    // If data is already an array (in case of different response structure)
+    if (Array.isArray(data)) {
+      return data as Array<DTO.GetOrganizationOfUserResponseSchema>;
+    }
+    
+    // Fallback to empty array
+    console.warn('Unexpected response structure for GetOrganizationOfUser:', data);
+    return [] as Array<DTO.GetOrganizationOfUserResponseSchema>;
   }
 })
 
@@ -111,16 +118,16 @@ export const UpdateOrganization = async (params: {
     injectHeaders: ['x-device-id', 'x-organization-id'],
     params,
     body: params.body,
-    transformer: (data: any) => data as DTO.EnterOrganizationResponseSchema
+    transformer: (data: Record<string, unknown>) => data as DTO.EnterOrganizationResponseSchema
   })
 
   export const getDashboardOrganizations = async (
     params?: DTO.GetDashboardOrganizationsParams
-  ) => getDataFromApi<DTO.GetDashboardOrganizationsParams, DTO.ApiResponseOrganizationByEmployee>({
+  ) => getDataFromApi<DTO.GetDashboardOrganizationsParams, DTO.DashboardOrganizationsResponse>({
     type: 'get',
     url: '/api/dashboard/organizations',
     injectHeaders: ['x-device-id', 'x-organization-id'],
     params,
-    // Transformer memastikan tipe data yang dikembalikan sesuai dengan yang diharapkan hook
-    transformer: (data: Record<string, unknown>) => data as DTO.ApiResponseOrganizationByEmployee
+    withPagination: true,
+    transformer: (data: Record<string, unknown>) => data as unknown as DTO.DashboardOrganizationsResponse
   })

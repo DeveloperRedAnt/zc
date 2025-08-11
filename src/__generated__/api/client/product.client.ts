@@ -217,6 +217,7 @@ export const createUnitProduct = async (params: {
     url: '/api/dashboard/products',
     injectHeaders: ['x-store-id', 'x-organization-id'],
     params,
+    withPagination: true,
     transformer: (data: Record<string, unknown>) => data as DTO.ApiResponse
   });
 
@@ -345,13 +346,16 @@ export const createUnitProduct = async (params: {
  */
 export const createProduct = async (params: {
   body: DTO.CreateProductRequestSchema;
-}) => getDataFromApi<typeof params, DTO.CreateProductResponseSchema>({
+}) => getDataFromApi<typeof params, DTO.CreateProductResponseData>({
   type: 'post',
   url: '/api/dashboard/products',
   injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
   params,
   body: params.body,
-  transformer: (data: Record<string, unknown>) => data as DTO.CreateProductResponseSchema
+  transformer: (data: Record<string, unknown>) => {
+    console.log(data);
+    return data as DTO.CreateProductResponseData
+  }
 });
 
 export const getListProductStockOpnames = async (params: DTO.ProductStockOpnameRequest): Promise<DTO.ProductStockOpnameResponse> => getDataFromApi<typeof params, DTO.ProductStockOpnameResponse>({

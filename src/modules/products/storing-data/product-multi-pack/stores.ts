@@ -4,6 +4,7 @@ import { PriceMultiPackItem } from './types';
 interface PriceMultiPackState {
   priceMultiPackList: PriceMultiPackItem[];
   isWholesale: boolean;
+  multiPackErrors: { [itemId: number]: { [field: string]: string } };
   setMultiPackList: (list: PriceMultiPackItem[]) => void;
   addMultiPackItem: () => void;
   updateMultiPackItem: (
@@ -14,11 +15,12 @@ interface PriceMultiPackState {
   removeMultiPackItem: (id: number) => void;
   resetMultiPack: () => void;
   toggleWholesale: (isWholesale) => void;
+  setMultiPackErrors: (errors: { [itemId: number]: { [field: string]: string } }) => void;
 }
-
 export const usePriceMultiPackStore = create<PriceMultiPackState>((set) => ({
   priceMultiPackList: [{ id: Date.now(), itemName: '', quantity: 1, price: 0 }],
   isWholesale: false,
+  multiPackErrors: {},
   setMultiPackList: (list) => set({ priceMultiPackList: list }),
 
   toggleWholesale: () => set((state) => ({ isWholesale: !state.isWholesale })),
@@ -46,5 +48,7 @@ export const usePriceMultiPackStore = create<PriceMultiPackState>((set) => ({
   resetMultiPack: () =>
     set({
       priceMultiPackList: [{ id: Date.now(), itemName: '', quantity: 1, price: 0 }],
+      multiPackErrors: {},
     }),
+  setMultiPackErrors: (errors) => set({ multiPackErrors: errors }),
 }));

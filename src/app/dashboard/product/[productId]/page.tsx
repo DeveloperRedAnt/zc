@@ -132,10 +132,10 @@ export default function Index() {
                 {data?.tags && data.tags.length > 0 ? (
                   data.tags.map((tag) => (
                     <div
-                      key={tag}
+                      key={tag.id}
                       className="h-[1.5rem] w-auto px-3 text-[0.75rem] border border-[#C2C7D0] rounded-[0.25rem] flex items-center justify-center"
                     >
-                      {tag}
+                      {tag.name}
                     </div>
                   ))
                 ) : (
@@ -177,6 +177,35 @@ export default function Index() {
                       </div>
                     </>
                   )}
+                </div>
+              </div>
+            </div>
+            <div className="border-b-gray-200 py-6">
+              <div className="mb-2">
+                <p> Produk Kena Pajak </p>
+              </div>
+              <div className="flex-1 space-y-10">
+                <div className="flex flex-wrap w-full">
+                  {(() => {
+                    const variantUnits = data?.variants?.[0]?.variant_units;
+                    return variantUnits && variantUnits.length > 0 ? (
+                      variantUnits.map((unit) => (
+                        <div
+                          key={`${unit.unit_name}-${unit.conversion_value}`}
+                          className="text-[14px] w-1/2 mt-6"
+                        >
+                          <p className="font-semibold">
+                            {unit.unit_name} - {unit.conversion_value} {data?.package}:
+                          </p>
+                          <p className="font-[400] mt-1">{unit.price || '-'}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-[#C2C7D0] italic text-[14px]">
+                        Tidak ada data harga multi satuan
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

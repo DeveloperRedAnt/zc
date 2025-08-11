@@ -8,138 +8,123 @@ const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
-const SelectTrigger = ({
-  ref,
-  className,
-  children,
-  icon,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.Trigger> | null>;
-  icon?: React.ReactNode;
-}) => {
-  const styles = selectStyles();
+// Initialize styles once outside of components to prevent re-renders
+const styles = selectStyles();
 
-  const DefaultIcon = <Lucide.ChevronsUpDown className={styles.icon()} strokeWidth={2} />;
+const SelectTrigger = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+    icon?: React.ReactNode;
+  }
+>(({ className, children, icon, ...props }, ref) => {
+  const triggerClassName = React.useMemo(() => styles.trigger({ className }), [className]);
+
+  const iconClassName = React.useMemo(() => styles.icon(), []);
 
   return (
-    <SelectPrimitive.Trigger ref={ref} className={styles.trigger({ className })} {...props}>
+    <SelectPrimitive.Trigger ref={ref} className={triggerClassName} {...props}>
       {children}
-      <SelectPrimitive.Icon asChild>{icon ?? DefaultIcon}</SelectPrimitive.Icon>
+      <SelectPrimitive.Icon asChild>
+        {icon || <Lucide.ChevronsUpDown className={iconClassName} strokeWidth={2} />}
+      </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
-};
+});
 
-const SelectScrollUpButton = ({
-  ref,
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.ScrollUpButton> | null>;
-}) => {
-  const styles = selectStyles();
+const SelectScrollUpButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
+>(({ className, ...props }, ref) => {
+  const scrollButtonClassName = React.useMemo(
+    () => styles.scrollButton({ className }),
+    [className]
+  );
+
   return (
-    <SelectPrimitive.ScrollUpButton
-      ref={ref}
-      className={styles.scrollButton({ className })}
-      {...props}
-    >
+    <SelectPrimitive.ScrollUpButton ref={ref} className={scrollButtonClassName} {...props}>
       <Lucide.ChevronUp strokeWidth={2} />
     </SelectPrimitive.ScrollUpButton>
   );
-};
+});
 
-const SelectScrollDownButton = ({
-  ref,
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.ScrollDownButton> | null>;
-}) => {
-  const styles = selectStyles();
+const SelectScrollDownButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
+>(({ className, ...props }, ref) => {
+  const scrollButtonClassName = React.useMemo(
+    () => styles.scrollButton({ className }),
+    [className]
+  );
+
   return (
-    <SelectPrimitive.ScrollDownButton
-      ref={ref}
-      className={styles.scrollButton({ className })}
-      {...props}
-    >
+    <SelectPrimitive.ScrollDownButton ref={ref} className={scrollButtonClassName} {...props}>
       <Lucide.ChevronDown strokeWidth={2} />
     </SelectPrimitive.ScrollDownButton>
   );
-};
+});
 
-const SelectContent = ({
-  ref,
-  className,
-  children,
-  position = 'popper',
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.Content> | null>;
-}) => {
-  const styles = selectStyles();
+const SelectContent = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+>(({ className, children, position = 'popper', ...props }, ref) => {
+  const contentClassName = React.useMemo(() => styles.content({ className }), [className]);
+
+  const viewportClassName = React.useMemo(
+    () => (position === 'popper' ? styles.viewportPopper() : styles.viewport()),
+    [position]
+  );
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={ref}
-        className={styles.content({ className })}
+        className={contentClassName}
         position={position}
         {...props}
       >
         <SelectScrollUpButton />
-        <SelectPrimitive.Viewport
-          className={position === 'popper' ? styles.viewportPopper() : styles.viewport()}
-        >
+        <SelectPrimitive.Viewport className={viewportClassName}>
           {children}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
-};
+});
 
-const SelectLabel = ({
-  ref,
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.Label> | null>;
-}) => {
-  const styles = selectStyles();
-  return <SelectPrimitive.Label ref={ref} className={styles.label({ className })} {...props} />;
-};
+const SelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => {
+  const labelClassName = React.useMemo(() => styles.label({ className }), [className]);
 
-const SelectItem = ({
-  ref,
-  className,
-  children,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.Item> | null>;
-}) => {
-  const styles = selectStyles();
+  return <SelectPrimitive.Label ref={ref} className={labelClassName} {...props} />;
+});
+
+const SelectItem = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, ...props }, ref) => {
+  const itemClassName = React.useMemo(() => styles.item({ className }), [className]);
+
   return (
-    <SelectPrimitive.Item ref={ref} className={styles.item({ className })} {...props}>
+    <SelectPrimitive.Item ref={ref} className={itemClassName} {...props}>
       <SelectPrimitive.ItemIndicator className={styles.itemIndicator()}>
         <Lucide.Check className={styles.itemIndicatorIcon()} strokeWidth={2} />
       </SelectPrimitive.ItemIndicator>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
-};
+});
 
-const SelectSeparator = ({
-  ref,
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator> & {
-  ref?: React.RefObject<React.ComponentRef<typeof SelectPrimitive.Separator> | null>;
-}) => {
-  const styles = selectStyles();
-  return (
-    <SelectPrimitive.Separator ref={ref} className={styles.separator({ className })} {...props} />
-  );
-};
+const SelectSeparator = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => {
+  const separatorClassName = React.useMemo(() => styles.separator({ className }), [className]);
+
+  return <SelectPrimitive.Separator ref={ref} className={separatorClassName} {...props} />;
+});
 
 Select.displayName = SelectPrimitive.Root.displayName;
 SelectGroup.displayName = SelectPrimitive.Group.displayName;

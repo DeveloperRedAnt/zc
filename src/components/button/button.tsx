@@ -1,5 +1,5 @@
+import { Slot } from '@radix-ui/react-slot';
 import * as Lucide from 'lucide-react';
-import { Slot } from 'radix-ui';
 import * as React from 'react';
 import type { ButtonVariants } from './button.css';
 import { buttonStyles } from './button.css';
@@ -21,7 +21,7 @@ const Button = ({
   asChild = false,
   ...props
 }: ButtonProps & { ref?: React.RefObject<HTMLButtonElement | null> }) => {
-  const Comp = asChild ? Slot.Root : 'button';
+  const Comp = asChild ? Slot : 'button';
   const isDisabled = disabled || isLoading;
   const styles = buttonStyles({ variant, size, isLoading });
 

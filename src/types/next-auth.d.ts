@@ -1,4 +1,4 @@
-import type { Organizations } from '@/__generated__/api/dto/auth.dto';
+import type { Organization } from '@/__generated__/api/dto/auth.dto';
 import type { DefaultSession, DefaultUser } from 'next-auth';
 
 declare module 'next-auth' {
@@ -9,11 +9,11 @@ declare module 'next-auth' {
       name?: string;
       email?: string;
       image?: string;
-      organizations?: Organizations; // <-- pindahkan ke dalam user
+      organization?: Organization; // <-- pindahkan ke dalam user
     } & DefaultSession['user'];
     token?: string;
     selectedOrganization?: string;
-    organizations?: Organizations;
+    organization?: Organization;
   }
 
   interface User extends DefaultUser {

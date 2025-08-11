@@ -96,14 +96,19 @@ export type CreateProductRequestSchema = {
   composites?: CreateProductComposite;
 }
 
+export type CreateProductResponseData = {
+  products: {
+    product_id: number;
+    product_variant_id: number;
+  }[],
+  type: string;
+}
 export type CreateProductResponseSchema = {
   code: number;
   status: string;
   name: string;
   message: string;
-  data: {
-    product: string;
-  };
+  data: CreateProductResponseData;
 }
 
 export type ProductsFirstStockSchema = {
@@ -209,10 +214,14 @@ export type ApiProduct = {
     is_enabled: boolean;
     reminder_in_days: number;
     reminder_in_date: string;
+    countdown: string;
   };
   current_stock?: number;
   type?: 'variant' | 'composite' | 'simple';
-  tags: string[]
+  tags: {
+    id: number;
+    name: string;
+  }[];
 };
 
 export type ApiVariant = {
@@ -236,7 +245,7 @@ export type ApiVariant = {
 
 export type ApiResponse = {
   data: ApiProduct[];
-  meta: {
+  pagination: {
     current_page: number;
     per_page: number;
     total: number;

@@ -8,13 +8,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select/select';
-import { TotalTransactionAmount } from '@/modules/reports/sales-payment/components/card-transaction/total-transaction-amount';
-import { TransactionStatCard } from '@/modules/reports/sales-payment/components/card-transaction/tunai-debit-qris-voucher';
-import { transactionStats } from '@/modules/reports/sales-payment/constant';
 import { Period, PieChartDataEntry } from '@/modules/reports/sales-payment/types';
 import { ChevronDown } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React from 'react';
+import React, { Suspense } from 'react';
+
+const TotalTransactionAmount = dynamic(
+  () =>
+    import(
+      '@/modules/reports/sales-payment/components/card-transaction/total-transaction-amount'
+    ).then((mod) => ({ default: mod.TotalTransactionAmount })),
+  {
+    loading: () => <div className="h-20 bg-gray-200 rounded animate-pulse" />,
+  }
+);
+
+const TransactionStatCard = dynamic(
+  () =>
+    import(
+      '@/modules/reports/sales-payment/components/card-transaction/tunai-debit-qris-voucher'
+    ).then((mod) => ({ default: mod.TransactionStatCard })),
+  {
+    loading: () => <div className="h-16 bg-gray-200 rounded animate-pulse" />,
+  }
+);
+
+import { transactionStats } from '@/modules/reports/sales-payment/constant';
 
 const pieChartData: PieChartDataEntry[] = [
   { name: 'Tunai', value: 275, fill: '#4F46E5' },
@@ -44,6 +63,11 @@ const chartConfig = {
 
 const ChartPie = dynamic(() => import('@/modules/reports/sales-payment/chart/chart-pie'), {
   ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <div className="h-48 w-48 bg-gray-200 rounded-full animate-pulse" />
+    </div>
+  ),
 });
 
 export default function Index() {
@@ -132,17 +156,25 @@ export default function Index() {
         </Card>
         {/* Kartu Ringkasan Transaksi */}
         <div className="p-4 flex flex-col">
-          <TotalTransactionAmount value={totalTransactions} />
+          <Suspense fallback={<div className="h-20 bg-gray-200 rounded animate-pulse" />}>
+            <TotalTransactionAmount value={totalTransactions} />
+          </Suspense>
           <div className="grid grid-cols-2 gap-4 mt-5">
-            {transactionStats.slice(1).map((stat) => (
-              <TransactionStatCard
-                key={stat.id}
-                icon={stat.icon}
-                title={stat.title}
-                value={stat.value}
-                className="w-full"
-              />
-            ))}
+            <Suspense
+              fallback={Array.from({ length: 4 }).map((_, i) => (
+                <div key={`item-${i}`} className="h-16 bg-gray-200 rounded animate-pulse" />
+              ))}
+            >
+              {transactionStats.slice(1).map((stat) => (
+                <TransactionStatCard
+                  key={stat.id}
+                  icon={stat.icon}
+                  title={stat.title}
+                  value={stat.value}
+                  className="w-full"
+                />
+              ))}
+            </Suspense>
           </div>
         </div>
       </div>

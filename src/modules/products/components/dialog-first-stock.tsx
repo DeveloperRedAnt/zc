@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/alert-dialog/alert-dialog';
 import { Button } from '@/components/button/button';
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 
 type DialogFirstStockProps = {
@@ -21,6 +22,7 @@ type DialogFirstStockProps = {
   confirmText: string;
   contentClassName?: string;
   onCancel?: () => void;
+  loading?: boolean;
 };
 
 export function DialogFirstStock({
@@ -32,6 +34,7 @@ export function DialogFirstStock({
   confirmText,
   contentClassName,
   onCancel,
+  loading,
 }: DialogFirstStockProps) {
   return (
     <AlertDialog open={openClose}>
@@ -53,7 +56,13 @@ export function DialogFirstStock({
               type="button"
               className="bg-primary text-white"
             >
-              {confirmText}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="animate-spin w-4 h-4" /> Menyimpan...
+                </span>
+              ) : (
+                confirmText
+              )}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>

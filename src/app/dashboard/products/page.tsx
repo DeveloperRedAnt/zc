@@ -7,11 +7,89 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card
 import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import SkeletonPreset from '@/components/skeleton/skeleton-preset';
 import { usePageLoading } from '@/hooks/use-page-loading/use-page-loading';
-import FilterProductList from '@/modules/product/components/filter-product-list';
-import TableProductList from '@/modules/product/components/table-product-list';
 import { DownloadOne, Plus } from '@icon-park/react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+
+const FilterProductList = dynamic(
+  () => import('@/modules/product/components/filter-product-list'),
+  {
+    loading: () => (
+      <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={`product-${i}`} className="h-10 bg-gray-200 rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
+
+const TableProductList = dynamic(() => import('@/modules/product/components/table-product-list'), {
+  loading: () => (
+    <div className="overflow-x-auto">
+      <table className="min-w-full">
+        <thead className="bg-gray-50">
+          <tr>
+            {['Image', 'Nama Produk', 'Kategori', 'Harga Jual', 'Stok', 'Status', 'Aksi'].map(
+              (_, i) => (
+                <th key={`product-${i}`} className="px-6 py-3 text-left">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                </th>
+              )
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <tr key={`product-${i}`} className="border-b hover:bg-gray-50">
+              <td className="px-6 py-4">
+                <div className="h-16 w-16 bg-gray-200 rounded animate-pulse" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="space-y-1">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse" />
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="p-4 border-t bg-gray-50">
+        <div className="flex justify-between items-center">
+          <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+          <div className="flex gap-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={`product-${i}`} className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+});
 
 export default function Index() {
   const router = useRouter();
@@ -34,6 +112,7 @@ export default function Index() {
     data: productsResponse,
     isLoading: isLoadingProducts,
     error: productsError,
+    refetch,
   } = useListProducts({
     body: filters,
   });
@@ -45,24 +124,33 @@ export default function Index() {
     }, 2000);
   }, [setLoading]);
 
-  // Set required headers in localStorage for development
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('x-device-id', '1');
-      localStorage.setItem('x-store-id', '1');
-      localStorage.setItem('x-organization-id', '1');
-    }
+  // Handle filter changes - menggunakan useCallback untuk mencegah re-render berlebihan
+  const handleFilterChange = useCallback((newFilters: Partial<ProductSchema>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   }, []);
 
-  // Handle filter changes - Fixed function name
-  const handleFilterChange = (newFilters: Partial<ProductSchema>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
-  };
+  // Handle pagination - menggunakan useCallback dan memastikan page ter-update
+  const handlePageChange = useCallback((page: number) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev, page };
+      return newFilters;
+    });
+  }, []);
 
-  // Handle pagination
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
-  };
+  // Handle page size change - tambahan untuk rows per page
+  const handlePageSizeChange = useCallback((pageSize: number) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev, per_page: pageSize, page: 1 }; // Reset ke page 1 saat ganti page size
+      return newFilters;
+    });
+  }, []);
+
+  // Refetch data ketika filters berubah
+  useEffect(() => {
+    if (refetch) {
+      refetch();
+    }
+  }, [refetch]);
 
   // Handle error
   if (productsError) {
@@ -90,7 +178,7 @@ export default function Index() {
                   type="button"
                   variant="info"
                   className="flex items-center"
-                  onClick={() => router.push('/dashboard/product/add')}
+                  onClick={() => router.push('/dashboard/products/add')}
                 >
                   <Plus />
                   Tambah Produk
@@ -104,18 +192,96 @@ export default function Index() {
             <SkeletonCardContent />
           ) : (
             <>
-              <FilterProductList
-                onFilterChange={handleFilterChange}
-                currentFilters={filters}
-                loadingDataProduct={isLoadingProducts}
-              />
-              <TableProductList
-                data={productsResponse?.data || []}
-                isLoading={isLoadingProducts}
-                meta={productsResponse?.meta}
-                onPageChange={handlePageChange}
-                currentPage={filters.page || 1}
-              />
+              <Suspense
+                fallback={
+                  <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={`product-${i}`}
+                          className="h-10 bg-gray-200 rounded animate-pulse"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <FilterProductList
+                  onFilterChange={handleFilterChange}
+                  currentFilters={filters}
+                  loadingDataProduct={isLoadingProducts}
+                />
+              </Suspense>
+
+              <Suspense
+                fallback={
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          {[
+                            'Image',
+                            'Nama Produk',
+                            'Kategori',
+                            'Harga Jual',
+                            'Stok',
+                            'Status',
+                            'Aksi',
+                          ].map((_, i) => (
+                            <th key={`product-${i}`} className="px-6 py-3 text-left">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <tr key={`product-${i}`} className="border-b hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div className="h-16 w-16 bg-gray-200 rounded animate-pulse" />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="space-y-1">
+                                <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
+                                <div className="h-3 bg-gray-200 rounded animate-pulse w-24" />
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-20" />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-24" />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-16" />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse" />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-2">
+                                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              >
+                <TableProductList
+                  data={productsResponse?.data || []}
+                  isLoading={isLoadingProducts}
+                  meta={productsResponse?.pagination}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  currentPage={filters.page || 1}
+                  currentPageSize={filters.per_page || 10}
+                />
+              </Suspense>
             </>
           )}
         </CardContent>

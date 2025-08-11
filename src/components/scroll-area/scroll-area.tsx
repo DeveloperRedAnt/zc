@@ -11,7 +11,7 @@ const ScrollBar = ({
 }: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> & {
   ref?: React.RefObject<React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> | null>;
 }) => {
-  const styles = scrollAreaStyles({ orientation });
+  const styles = React.useMemo(() => scrollAreaStyles({ orientation }), [orientation]);
   return (
     <ScrollAreaPrimitive.ScrollAreaScrollbar
       ref={ref}
@@ -32,7 +32,7 @@ const ScrollArea = ({
 }: React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
   ref?: React.RefObject<React.ComponentRef<typeof ScrollAreaPrimitive.Root> | null>;
 }) => {
-  const styles = scrollAreaStyles();
+  const styles = React.useMemo(() => scrollAreaStyles(), []);
   return (
     <ScrollAreaPrimitive.Root ref={ref} className={styles.root({ className })} {...props}>
       <ScrollAreaPrimitive.Viewport className={styles.viewport()}>
