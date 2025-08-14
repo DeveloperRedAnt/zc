@@ -5,18 +5,30 @@ import { InformationText } from '@/components/information-text/information-text'
 import { Label } from '@/components/label/label';
 import { RadioGroup, RadioGroupItem } from '@/components/radio-group/radio-group';
 import { usePriceMultiPackStore } from '@/modules/products-edit/storing-data/product-multi-pack/stores';
+import { PriceMultiPackItem } from '@/modules/products-edit/storing-data/product-multi-pack/types';
 import { Plus, Refresh } from '@icon-park/react';
 import MultiPackItem from './multi-pack-item';
 
-export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolean }) {
-  const {
-    priceMultiPackList,
-    addMultiPackItem,
-    updateMultiPackItem,
-    removeMultiPackItem,
-    resetMultiPack,
-    toggleWholesale,
-  } = usePriceMultiPackStore();
+export default function FormPriceMultiPack({
+  isEdit = false,
+  productId = 1,
+}: { isEdit?: boolean; productId?: number }) {
+  const store = usePriceMultiPackStore();
+  const productData = store.products[productId] ?? {
+    multiPackItems: [],
+    isWholesale: false,
+    priceMultiPackList: [],
+  };
+
+  const addMultiPackItem = () => store.addMultiPackItem(productId);
+  const updateMultiPackItem = (
+    id: number,
+    field: keyof PriceMultiPackItem,
+    value: string | number
+  ) => store.updateMultiPackItem(productId, id, field, value);
+  const removeMultiPackItem = (id: number) => store.removeMultiPackItem(productId, id);
+  const resetMultiPack = () => store.resetMultiPack(productId);
+  const toggleWholesale = (_isWholesale: boolean) => store.toggleWholesale(productId);
 
   const handleRadioChange = (value: string) => {
     toggleWholesale(value === 'wholesale');
@@ -49,27 +61,35 @@ export default function FormPriceMultiPack({ isEdit = false }: { isEdit?: boolea
       </ul>
 
       <RadioGroup
-        defaultValue="multi-pack"
+        value={productData.isWholesale ? 'wholesale' : 'multi-pack'}
         className="flex space-x-2 mb-6 mt-8"
         onValueChange={handleRadioChange}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem id="option-1" value="multi-pack" />
-          <Label htmlFor="option-1 font-semibold">Multi Kemasan</Label>
+          <Label htmlFor="option-1" className="font-semibold">
+            Multi Kemasan
+          </Label>
         </div>
         <div className="flex items-center space-x-2">
           <RadioGroupItem id="option-2" value="wholesale" />
-          <Label htmlFor="option-2 font-semibold">Grosir</Label>
+          <Label htmlFor="option-2" className="font-semibold">
+            Grosir
+          </Label>
         </div>
       </RadioGroup>
 
-      {priceMultiPackList.map((item, index) => (
+      {productData.priceMultiPackList.map((item, index) => (
         <MultiPackItem
           key={item.id}
           index={index}
           item={item}
           onChange={updateMultiPackItem}
-          onRemove={priceMultiPackList.length > 1 ? () => removeMultiPackItem(item.id) : undefined}
+          onRemove={
+            productData.priceMultiPackList.length > 1
+              ? () => removeMultiPackItem(item.id)
+              : undefined
+          }
         />
       ))}
 

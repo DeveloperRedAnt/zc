@@ -33,13 +33,24 @@ interface ActualApiProduct {
   current_stock: string;
   maximum_retail_price: string;
   is_active: boolean;
-  variants: unknown[];
+  variants: ProductVariant[];
+}
+
+// Define variant structure
+interface ProductVariant {
+  id: number;
+  product_id: number;
+  name: string;
+  package?: string;
+  content?: string;
+  current_stock?: string;
+  maximum_retail_price?: string;
 }
 
 export type ProductOptionType = {
-  value: number;
+  value: string;
   label: string;
-  data: ActualApiProduct;
+  data: ProductVariant;
 };
 
 interface ProductPickerProps {
@@ -80,17 +91,21 @@ const createLoadOptions = () => {
         };
       }
 
-      const options: ProductOptionType[] = response.data.map((product: ActualApiProduct) => {
-        // Handle the actual API response structure
-        const productName = product.name || `Nama Product - ${product.id}`;
-        const packageInfo = product.package ? ` - ${product.package}` : '';
-        const contentInfo = product.content ? ` (${product.content})` : '';
+      const options: ProductOptionType[] = response.data.flatMap((product: ActualApiProduct) => {
+        // Return variants as flat objects
+        return product.variants.map((variant: ProductVariant) => {
+          // Build label with variant information
+          const label = `${product.name} (${variant.name})`;
 
-        return {
-          label: `${productName}${packageInfo}${contentInfo}`,
-          value: product.id,
-          data: product,
-        };
+          return {
+            label,
+            value: `${variant.id};${product.id}`,
+            data: {
+              ...variant,
+              product_id: product.id, // Ensure product_id is always set from the parent product
+            },
+          };
+        });
       });
 
       // Check if there are more pages available
@@ -119,14 +134,8 @@ const ProductPicker = memo(function ProductPicker({
 }: ProductPickerProps) {
   const [isClient, setIsClient] = useState(false);
 
-  // Set required headers in localStorage for API calls and handle client-side hydration
   useEffect(() => {
     setIsClient(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('x-device-id', '1');
-      localStorage.setItem('x-store-id', '1');
-      localStorage.setItem('x-organization-id', '1');
-    }
   }, []);
 
   // Create loadOptions function
@@ -142,6 +151,23 @@ const ProductPicker = memo(function ProductPicker({
     [onChange]
   );
 
+  // Don't render on server-side to avoid hydration mismatch
+  if (!isClient) {
+    return (
+      <div className={className}>
+        {label && (
+          <label className="block mb-1 text-sm font-medium">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+        )}
+        <div className="h-[38px] border border-gray-300 rounded-[8px] px-2 bg-white min-w-[16rem] flex items-center text-gray-500">
+          {placeholder}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       {label && (
@@ -152,7 +178,7 @@ const ProductPicker = memo(function ProductPicker({
       )}
       <AsyncPaginate
         defaultOptions
-        value={isClient ? value : null}
+        value={value}
         loadOptions={loadOptions}
         onChange={handleChange}
         placeholder={placeholder}

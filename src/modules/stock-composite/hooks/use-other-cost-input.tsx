@@ -1,37 +1,27 @@
-import { usePostCompositeStock } from '@/__generated__/api/hooks/composite.hooks';
-import { useSelectOrganization } from '@/__generated__/api/hooks/organization.hooks';
+import { usePostCompositeStock } from '@/__generated__/api/hooks/init-first-stock/composite.hooks';
+import { useGetProductDetail } from '@/__generated__/api/hooks/product.hooks';
 import { useOrganizationStore } from '@/store/organization-store';
+import { getStoreID } from '@/utils/cookies-helper';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { FormValues } from '../types/form-values';
+import { formValuesSchema } from '../types/form-values';
 
-const schema = z.object({
-  batchStock: z.string().min(1, 'Jumlah batch wajib diisi'),
-  otherCost: z.string().optional(),
-  toko: z.string().min(1, 'Toko wajib dipilih'),
-  expiredDate: z.date({ required_error: 'Tanggal kedaluwarsa wajib diisi' }),
-});
-
-export type FormValues = z.infer<typeof schema>;
-
-export function useCompositeStockForm() {
-  const [openSaveDialogComposite, setOpenSaveDialogComposite] = useState(false);
-  const [formData, setFormData] = useState<FormValues | null>(null);
-  const org = useOrganizationStore((state) => state.organization);
-  const [_selectedStore, _setSelectedStore] = useState('');
-  const [selectedOrg, _setSelectedOrg] = useState('');
-
-  const productionPerBatch = 5;
-  const DEVICE_ID = '1';
-  const ORGANIZATION_ID = '1';
+export function useCompositeStockForm(productId: number) {
+  const storeId = getStoreID();
 
   const {
-    mutate: saveCompositeStock,
-    isPending: isSaving,
-    data: saveResult,
-    error: saveError,
-  } = usePostCompositeStock();
+    data: productDetail,
+    error: productDetailError,
+    isLoading: productDetailLoading,
+  } = useGetProductDetail({ id: productId }, storeId);
+
+  const [openSaveDialogComposite, setOpenSaveDialogComposite] = useState(false);
+
+  const [formData, setFormData] = useState<FormValues | null>(null);
+
+  const org = useOrganizationStore((state) => state.organization);
 
   const {
     handleSubmit,
@@ -40,39 +30,56 @@ export function useCompositeStockForm() {
     getValues,
     watch,
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(formValuesSchema),
     defaultValues: {
-      batchStock: '',
-      otherCost: '',
-      toko: '',
-      expiredDate: undefined,
+      batch_stock: '',
+      other_cost: '',
+      store_id: '',
+      expired_date: undefined,
+      stock_date: undefined,
     },
   });
 
-  const { data, isLoading } = useSelectOrganization(
-    {
-      'x-device-id': DEVICE_ID,
-      'x-organization-id': ORGANIZATION_ID,
-      'x-store-id': '1',
-      body: {
-        id: Number(selectedOrg),
-        name: selectedOrg,
-      },
-    },
-    {
-      retry: false,
-      queryKey: [DEVICE_ID, ORGANIZATION_ID, selectedOrg],
-    }
-  );
+  const productMixes = useMemo(() => {
+    return (
+      productDetail?.composite?.components?.map((comp) => ({
+        name: comp.name ?? comp.product_name ?? '',
+        qty: comp.quantity !== undefined && comp.quantity !== null ? String(comp.quantity) : '',
+      })) ?? []
+    );
+  }, [productDetail]);
 
-  const batchStock = watch('batchStock');
-  const totalInitialStock = batchStock ? Number(batchStock) * productionPerBatch : 0;
+  const productMixesPayload = useMemo(() => {
+    return (
+      productDetail?.composite?.components?.map((comp) => ({
+        id: comp.id,
+        product_id: comp.product_id,
+        product_variant_id: comp.product_variant_id ?? null,
+        name: comp.name ?? comp.product_name ?? '',
+        quantity: comp.quantity ?? '',
+      })) ?? []
+    );
+  }, [productDetail]);
 
-  const organizationOptions = Array.isArray(data)
-    ? data.map((org) => ({ value: String(org.id), label: org.name }))
-    : data
-      ? [{ value: String(data.id), label: data.name }]
-      : [];
+  const productionPerBatch = productDetail?.composite?.production_per_batch ?? 0;
+  const purchase_price = productDetail?.composite?.purchase_price ?? 0;
+
+  const batchStock = watch('batch_stock');
+
+  const totalInitialStock = useMemo(() => {
+    return Number(batchStock) * productionPerBatch;
+  }, [batchStock, productionPerBatch]);
+
+  const organizationOptions = useMemo(() => {
+    return org ? [{ value: String(org.id), label: org.name }] : [];
+  }, [org]);
+
+  const {
+    mutate: saveCompositeStock,
+    isPending: isSaving,
+    data: saveResult,
+    error: saveError,
+  } = usePostCompositeStock();
 
   const popUpClikSaveDialogComposite = (data: FormValues) => {
     setFormData(data);
@@ -83,6 +90,41 @@ export function useCompositeStockForm() {
 
   const saveFirstStock = () => {
     if (!formData) return;
+
+    // Helper format tanggal
+    const formatDate = (date?: Date | string) => {
+      if (!date) return '';
+      if (typeof date === 'string') return date.slice(0, 10);
+      return date.toISOString().slice(0, 10);
+    };
+
+    const products = productMixesPayload.map((mix) => {
+      const production_per_batch = Number(productionPerBatch);
+      const stock_batch_realization = Number(formData.batch_stock);
+
+      return {
+        product_id: Number(mix.product_id),
+        product_variant_id: Number(mix.product_variant_id),
+        store_id: Number(formData.store_id),
+        production_per_batch,
+        stock_batch_realization,
+        quantity: production_per_batch * stock_batch_realization,
+        purchase_price: Number(purchase_price),
+        purchase_date: formatDate(formData.stock_date),
+        expired_at: formatDate(formData.expired_date),
+      };
+    });
+
+    const payload = {
+      product_type: 'composite' as const,
+      stock_date: formatDate(formData.stock_date),
+      other_cost: Number(formData.other_cost) || 0,
+      note: `INIT-STOCK-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+      stock_reason_code_id: 1,
+      type: 'in' as const,
+      products,
+    };
+    saveCompositeStock({ body: payload, store_id: Number(formData.store_id) });
     setOpenSaveDialogComposite(false);
   };
 
@@ -99,16 +141,16 @@ export function useCompositeStockForm() {
     openSaveDialogComposite,
     totalInitialStock,
     organizationOptions,
-    isLoading,
+    purchase_price,
+    isLoading: productDetailLoading,
+    error: productDetailError,
     productionPerBatch,
-    productMixes: [
-      { name: 'Kaos Combed 34 cm (Merah - Small)', qty: '10 pcs' },
-      { name: 'Kopi Gato - 250ml', qty: '20 botol' },
-    ],
-    // tanstack
+    productMixes,
+    productMixesPayload,
     saveCompositeStock,
     isSaving,
     saveResult,
     saveError,
+    productDetail,
   };
 }

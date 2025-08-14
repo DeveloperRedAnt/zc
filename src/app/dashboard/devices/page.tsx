@@ -1,4 +1,8 @@
-import { Card, CardContent, CardDescription } from '@/components/card/card';
+'use client';
+
+import { useGetDeviceList } from '@/__generated__/api/hooks';
+import { Badge } from '@/components/badge/badge';
+import { Card, CardContent } from '@/components/card/card';
 import { Heading } from '@/components/heading/heading';
 import { Text } from '@/components/text/text';
 import dynamic from 'next/dynamic';
@@ -8,6 +12,7 @@ const DialogRevokeDevice = dynamic(
   () => import('@/modules/devices/components/dialog-revoke-device'),
   {
     loading: () => <div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />,
+    ssr: false,
   }
 );
 
@@ -24,84 +29,98 @@ const DeviceCardSkeleton = () => (
   </Card>
 );
 
-interface Device {
-  device_id: string;
-  name: string;
-  date: string;
-}
+import type { DeviceData } from '@/__generated__/api/dto';
 
-const DeviceCard = dynamic(
-  () =>
-    Promise.resolve(({ device }: { device: Device }) => (
-      <Card className="m-4">
-        <CardContent className="pt-6 flex justify-between items-center">
-          <div>
+const DeviceCard = ({ device }: { device: DeviceData }) => (
+  <Card className="m-4">
+    <CardContent className="pt-6">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
             <Text weight="bold" className="text-[#0FA6C1]">
-              {device.device_id}
+              {device.code}
             </Text>
-            <Text>{device.name}</Text>
-            <CardDescription className="mt-3">Tanggal ditautkan: {device.date}</CardDescription>
+            <Badge variant="outline" className="text-xs">
+              ID: {device.id}
+            </Badge>
+          </div>
+          <Text weight="medium" className="text-lg mb-1">
+            {device.name}
+          </Text>
+          <Text className="text-sm text-gray-600 mb-1">{device.model}</Text>
+          <Text className="text-xs text-gray-500 mb-3">SN: {device.serial_number}</Text>
+        </div>
+        <div>
+          <Suspense fallback={<div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />}>
+            <DialogRevokeDevice />
+          </Suspense>
+        </div>
+      </div>
+
+      <div className="border-t pt-3">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">Store</Text>
+            <Text className="text-sm mt-1">{device.store.name}</Text>
+            <Text className="text-xs text-gray-500">{device.store.type}</Text>
           </div>
           <div>
-            <Suspense fallback={<div className="h-10 w-24 bg-gray-200 rounded animate-pulse" />}>
-              <DialogRevokeDevice />
-            </Suspense>
+            <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Organization
+            </Text>
+            <Text className="text-sm mt-1">{device.organization.name}</Text>
+            <Text className="text-xs text-gray-500">{device.organization.owner.name}</Text>
           </div>
-        </CardContent>
-      </Card>
-    )),
-  {
-    loading: () => <DeviceCardSkeleton />,
-  }
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 );
 
-export function generateMetadata() {
-  return {
-    title: 'Zycash Dashboard',
-    description: 'Welcome to Zycash Dashboard.',
-  };
-}
+export default function DevicesPage() {
+  const { data: devicesResponse, isLoading, error } = useGetDeviceList();
 
-const devices = [
-  {
-    device_id: '01',
-    name: 'Advan C27',
-    date: '08 Desember 2024',
-  },
-  {
-    device_id: 'A2',
-    name: 'Samsung S7 Tab',
-    date: '15 Desember 2024',
-  },
-  {
-    device_id: 'G5',
-    name: 'Galaxy S20',
-    date: '28 Desember 2024',
-  },
-];
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="text-center py-12">
+          <Text className="text-red-600 mb-2">Error loading devices</Text>
+          <Text className="text-gray-500 text-sm">
+            {error instanceof Error ? error.message : 'Failed to load devices'}
+          </Text>
+        </div>
+      </div>
+    );
+  }
 
-export default function Index() {
   return (
     <>
       <div className="p-4">
         <Heading level="h4" weight="semibold" className="text-base">
           List Device Tertaut
         </Heading>
+        {devicesResponse && (
+          <Text className="text-sm text-gray-500 mt-1">
+            {devicesResponse.data.length} device(s) found
+          </Text>
+        )}
       </div>
 
-      <Suspense
-        fallback={
-          <>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <DeviceCardSkeleton key={`device-skeleton-${i}`} />
-            ))}
-          </>
-        }
-      >
-        {devices.map((device) => (
-          <DeviceCard key={device.device_id} device={device} />
-        ))}
-      </Suspense>
+      {isLoading ? (
+        <>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <DeviceCardSkeleton key={`device-skeleton-${i}`} />
+          ))}
+        </>
+      ) : devicesResponse?.data.length ? (
+        devicesResponse.data.map((device) => <DeviceCard key={device.id} device={device} />)
+      ) : (
+        <div className="p-4">
+          <div className="text-center py-12">
+            <Text className="text-gray-500">No devices found</Text>
+          </div>
+        </div>
+      )}
     </>
   );
 }

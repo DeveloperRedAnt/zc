@@ -3,7 +3,6 @@
 import { UseMutationOptions, UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import * as api from '../client';
 import * as DTO from '../dto';
-import { getQueryKey } from './base.hooks';
 
 export function useResetEmployeePassword(
   options?: UseMutationOptions<DTO.ResetEmployeePasswordResponseSchema, DTO.ErrorResponseSchema, DTO.ResetEmployeePasswordRequestSchema>
@@ -22,9 +21,6 @@ export function useResetEmployeePassword(
  */
 export function useResetEmployeePin(
   options?: UseMutationOptions<DTO.ResetEmployeePinResponseSchema, DTO.ErrorResponseSchema, {
-    'x-device-id': string; 
-    'x-store-id': string; 
-    'x-organization-id': string; 
     body: {
       id_employee: number;
     }
@@ -42,13 +38,12 @@ export function useGetEmployee(
   options?: UseQueryOptions<DTO.EmployeeListResponse[]>
 ) {
 
-  const { body, ...headers } = params || {};
+  const { body } = params || {};
 
   return useQuery({
     queryKey: ['getEmployee', body.search, body.per_page, body.search_by_status, body.sort_by, body.sort_direction],
     queryFn: () =>
       api.listEmployees({
-        ...headers,
         body,
       }),
     placeholderData: (prev) => prev,
@@ -76,13 +71,12 @@ export function useCreateEmployee(
     DTO.CreateEmployeeResponse,
     Error,
     { 
-      'x-organization-id': string; 
-      body: FormData;
+      body: DTO.CreateEmployeePayload;
     }
   >
 ) {
   return useMutation({
-    mutationFn: (params) => api.createEmployee(params),
+    mutationFn: (params) => api.createEmployee({ body: params.body }),
     ...options,
   });
 }
@@ -96,7 +90,6 @@ export function useUpdateEmployee(
     Error,
     {
       id: number;
-      'x-organization-id': string;
       body: DTO.CreateEmployeePayload;
     }
   >
@@ -112,15 +105,18 @@ export function useUpdateEmployee(
  */
 export function useGetListPosition(
   params: { 
-    'x-device-id': string; 
-    'x-store-id': string; 
-    'x-organization-id': string;
+    body?: Partial<DTO.GetListPositionPayloadSchema>;
   },
-  options?: UseQueryOptions<DTO.GetListPositionResponse>
+  options?: UseQueryOptions<{ label: string; value: number }[]>
 ) {
+  const { body } = params || {};
+  const search = body?.search || '';
+  const per_page = body?.per_page || 10;
+  const page = body?.page || 1;
+
   return useQuery({
-    queryKey: getQueryKey('getListPosition', params),
-    queryFn: () => api.listPosition(params),
+    queryKey: ['getListPosition', search, per_page, page],
+    queryFn: () => api.listPosition({ body }),
     ...options,
   });
 }
@@ -134,7 +130,6 @@ export function useAssignPermissionEmployee(
     Error,
     {
       id: number;
-      'x-organization-id': string;
       body: {
         store_id: number;
         position_id: number;
@@ -185,6 +180,24 @@ export function useChangeEmployeePin(
 ) {
   return useMutation({
     mutationFn: (params) => api.changeEmployeePin(params),
+    ...options,
+  });
+}
+
+export function useListPermissionGroup(
+  params: {
+    body?: {
+      employee_id?: string;
+    };
+  },
+  options?: UseQueryOptions<DTO.PermissionGroupSchema[]>
+) {
+  const { body } = params || {};
+  const employee_id = body?.employee_id || '';
+
+  return useQuery({
+    queryKey: ['listPermissionGroup', employee_id],
+    queryFn: () => api.listPermissionGroup(params),
     ...options,
   });
 }

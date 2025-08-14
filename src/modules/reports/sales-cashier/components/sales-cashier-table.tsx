@@ -1,186 +1,94 @@
+'use client';
+
+import { useSalesCashier } from '@/__generated__/api/hooks/sales-daily-days.hooks';
+import { getMonthRange } from '@/utils/dateRange';
 import {
-  SortingState,
-  createColumnHelper,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
+import Cookies from 'js-cookie';
 import React from 'react';
-import { mockData } from '../constants/mock-data';
-import type { SalesCashierTableRow } from '../types/sales-cashier-table.types';
-import { FilterCashierTable } from './filter-cashier-table';
-import { SalesTable } from './sales-table';
+import { useVoidReportFilters } from '../hooks/use-chasier-report-filters';
+import { VoidReportFilters } from './sales-cashier-filters';
+import { VoidReportTableCore, createVoidReportColumns } from './sales-cashier-table-core';
+import { TablePagination } from './sales-cashier-table-pagination';
 
-const columnHelper = createColumnHelper<SalesCashierTableRow>();
+const { start, end } = getMonthRange();
 
-export function SalesCashierTable() {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const pageSize = 10;
+export default function VoidReportTable() {
+  const { filters, updateSorting } = useVoidReportFilters();
+  const organization_id = Cookies.get('x-device-id') || '1';
 
-  const columns = React.useMemo(() => {
-    return [
-      columnHelper.accessor('periode', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Periode
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('nama_kasir', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Nama Kasir
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('transaksi', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Transaksi
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue().toLocaleString()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('omzet', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Omzet
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('shift', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Shift
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('rata_rata_transaksi_per_shift', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Rata-rata Transaksi per Shift
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue().toLocaleString()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('transaksi_dibatalkan', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Transaksi Dibatalkan
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue().toLocaleString()}</span>,
-        enableSorting: true,
-      }),
-      columnHelper.accessor('transaksi_retur', {
-        header: ({ column }) => (
-          <div
-            className="font-bold text-black flex items-center cursor-pointer select-none"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Transaksi Retur
-            <ArrowUpDown
-              className={`ml-1 h-3 w-3 ${column.getIsSorted() ? 'text-black' : 'text-gray-400'}`}
-            />
-          </div>
-        ),
-        cell: (info) => <span>{info.getValue().toLocaleString()}</span>,
-        enableSorting: true,
-      }),
-    ];
-  }, []);
+  const salesCashierFilters = {
+    start_date: filters.start_date || start,
+    end_date: filters.end_date || end,
+    cashier_id: filters.cashier_id ? Number(filters.cashier_id) : null,
+    store_id: filters.store_id ? Number(filters.store_id) : null,
+    page: filters.page === 0 ? 1 : filters.page + 1,
+    per_page: filters.pageSize ?? 2,
+    sort_by: filters.sortBy || '',
+    sort_dir:
+      filters.sortDirection === 'asc' || filters.sortDirection === 'desc'
+        ? filters.sortDirection
+        : 'asc',
+  };
+
+  const { data: queryData, isLoading } = useSalesCashier(salesCashierFilters, organization_id);
+
+  const tableData = Array.isArray(queryData?.data?.data)
+    ? queryData.data.data.map((item) => ({
+        ...item,
+        omzet: String(item.omzet),
+      }))
+    : [];
+
+  const columns = React.useMemo(
+    () =>
+      createVoidReportColumns(
+        filters.sortBy,
+        (filters.sortDirection === 'asc' || filters.sortDirection === 'desc'
+          ? filters.sortDirection
+          : 'asc') as 'asc' | 'desc',
+        updateSorting
+      ),
+    [filters.sortBy, filters.sortDirection, updateSorting]
+  );
+
   const table = useReactTable({
-    data: mockData,
+    data: tableData,
     columns,
+    pageCount: queryData?.data?.last_page ?? 1,
     state: {
-      sorting,
+      sorting:
+        filters.sortBy && filters.sortDirection
+          ? [{ id: filters.sortBy, desc: filters.sortDirection === 'desc' }]
+          : [],
+      pagination: {
+        pageIndex: (queryData?.data?.current_page ?? 1) - 1,
+        pageSize: queryData?.data?.per_page ?? filters.pageSize,
+      },
     },
-    onSortingChange: setSorting,
+    manualPagination: true,
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    pageCount: Math.ceil(mockData.length / pageSize),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
-  // Simulate loading state
-  React.useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
-    <div className="container mx-auto py-2 space-y-4">
-      <FilterCashierTable
-        responsiblePersonOptions={[
-          { value: 'all-responsible', label: 'Semua Penanggungjawab' },
-          { value: 'responsible-1', label: 'Penanggungjawab 1' },
-          { value: 'responsible-2', label: 'Penanggungjawab 2' },
-        ]}
-        cashierOptions={[
-          { value: 'all-cashier', label: 'Semua Kasir' },
-          { value: 'cashier-1', label: 'Kasir 1' },
-          { value: 'cashier-2', label: 'Kasir 2' },
-        ]}
+    <>
+      <VoidReportFilters />
+      <VoidReportTableCore
+        table={table}
+        columns={columns}
+        isLoading={isLoading}
+        pageSize={filters.pageSize}
       />
-      <SalesTable table={table} columns={columns} pageSize={pageSize} isLoading={isLoading} />
-    </div>
+      <TablePagination table={table} totalPages={queryData?.data?.last_page ?? 1} />
+    </>
   );
 }

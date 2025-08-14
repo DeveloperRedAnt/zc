@@ -11,8 +11,8 @@ interface SortableHeaderProps {
 export function SortableHeader({ columnId, children, className }: SortableHeaderProps) {
   const { filters, toggleSort } = useVoidReportFilters();
 
-  const isActive = filters.sortBy === columnId;
-  const direction = filters.sortDirection;
+  const isActive = filters.sort_by === columnId;
+  const direction = filters.sort_dir;
 
   const handleClick = () => {
     toggleSort(columnId);

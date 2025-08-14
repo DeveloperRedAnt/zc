@@ -17,10 +17,10 @@ import { Text } from '@/components/text/text';
 import { toast } from '@/components/toast/toast';
 import { ArrowLeft, ArrowRight, Check, FullSelection } from '@icon-park/react';
 import React, { useState, useRef } from 'react';
+import DetailVariantList from '../../products-edit/components/options/detail-variant-list-option';
+import type { ProductCardValue } from '../../products-edit/components/options/detail-variant-list-option';
 import { useProductVariantStore } from '../store';
 import type { FormattedData as FormattedDataType, ProductVariants } from '../types';
-import DetailVariantList from './detail-variant-list';
-import type { ProductCardValue } from './detail-variant-list';
 
 type DetailData = FormattedDataType;
 

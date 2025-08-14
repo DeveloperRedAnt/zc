@@ -65,13 +65,16 @@ function Dropdown<Multi extends boolean = false>({
 }: DropdownProps<Multi>): React.ReactElement | null {
   // Untuk mengatasi hydration error, pastikan komponen mount hanya di client side
   const [isMounted, setIsMounted] = useState(false);
+  const [stableId] = useState(
+    () => `dropdown-${name || Math.random().toString(36).substring(2, 9)}`
+  );
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   // Gunakan ID stabil untuk menghindari perbedaan server-client
-  const inputId = id || `dropdown-${name || Math.random().toString(36).substring(2, 9)}`;
+  const inputId = id || stableId;
   const instanceId = `instance-${inputId}`;
 
   // Handler untuk onChange yang compatible dengan dynamic import

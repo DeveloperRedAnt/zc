@@ -1,5 +1,6 @@
 'use client';
 
+import * as DTO from '@/__generated__/api/dto';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,8 @@ type DialogFirstStockProps = {
   confirmText: string;
   contentClassName?: string;
   onCancel?: () => void;
+  stockExceeds: DTO.StockBaikDataItem[];
+  isLoading?: boolean;
 };
 
 export function DialogStockExceed({
@@ -29,6 +32,8 @@ export function DialogStockExceed({
   confirmText,
   contentClassName,
   onCancel,
+  stockExceeds,
+  isLoading,
 }: DialogFirstStockProps) {
   return (
     <AlertDialog open={openClose}>
@@ -37,26 +42,29 @@ export function DialogStockExceed({
           <AlertDialogTitle className="text-red-500">
             Stok Baik melebihi Stok Sistem
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-4">
-            <p className="text-gray-600">
-              Terdeteksi stok produk melebihi perhitungan dari stok sistem, dimungkinkan ada
-              penambahan stok yang belum tercatat pada sistem. Harap melanjutkan melalui menu
-              penambahan stok untuk produk berikut:
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Terdeteksi stok produk melebihi perhitungan dari stok sistem, dimungkinkan ada
+                penambahan stok yang belum tercatat pada sistem. Harap melanjutkan melalui menu
+                penambahan stok untuk produk berikut:
+              </p>
 
-            <ul className="list-disc list-inside space-y-1 text-gray-700">
-              <li>Kaos Combed 34 cm (Merah - Small)</li>
-              <li>Papua New Guinea Organic Robusta 250gr</li>
-            </ul>
+              <ul className="list-disc list-inside space-y-1 text-gray-700">
+                {stockExceeds.map((item) => (
+                  <li key={item.product_id}>{item.name}</li>
+                ))}
+              </ul>
 
-            <p className="font-medium text-gray-800">
-              Apakah Anda yakin akan melanjutkan Stok Opname?
-            </p>
+              <p className="font-medium text-gray-800">
+                Apakah Anda yakin akan melanjutkan Stok Opname?
+              </p>
 
-            <p className="text-sm text-red-500">
-              Anda tetap dapat menyimpan Stok Opname namun sistem akan melanjutkan pencatatan hanya
-              untuk produk yang dianggap sesuai.
-            </p>
+              <p className="text-sm text-red-500">
+                Anda tetap dapat menyimpan Stok Opname namun sistem akan melanjutkan pencatatan
+                hanya untuk produk yang dianggap sesuai.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -67,6 +75,7 @@ export function DialogStockExceed({
           </AlertDialogCancel>
           <AlertDialogAction asChild>
             <Button
+              isLoading={isLoading}
               variant="destructive"
               onClick={onConfirm}
               type="button"

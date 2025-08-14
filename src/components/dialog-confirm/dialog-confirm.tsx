@@ -21,6 +21,7 @@ type DialogConfirmProps = {
   confirmText: string;
   contentClassName?: string;
   onCancel?: () => void;
+  isLoading?: boolean;
 };
 
 export function DialogConfirm({
@@ -32,6 +33,7 @@ export function DialogConfirm({
   confirmText,
   contentClassName,
   onCancel,
+  isLoading,
 }: DialogConfirmProps) {
   return (
     <AlertDialog open={openClose}>
@@ -48,6 +50,7 @@ export function DialogConfirm({
           </AlertDialogCancel>
           <AlertDialogAction asChild>
             <Button
+              isLoading={isLoading}
               variant="outline"
               onClick={onConfirm}
               type="button"

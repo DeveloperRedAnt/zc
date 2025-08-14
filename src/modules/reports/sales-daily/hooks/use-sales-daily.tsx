@@ -1,89 +1,49 @@
-import { parseAsInteger, parseAsJson, parseAsString, useQueryStates } from 'nuqs';
-import type { Period, PeriodType } from '../types/sales-daily.types';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 
-type SerializedPeriod = {
-  type: PeriodType;
-  value: unknown;
-};
-const defaultPeriod: Period = {
-  type: 'daily',
-  value: {
-    from: new Date(2025, 6, 17),
-    to: new Date(2025, 6, 19),
-  },
-};
-
-const serializePeriod = (period: Period): SerializedPeriod => ({
-  type: period.type,
-  value:
-    period.value && typeof period.value === 'object' && 'from' in period.value
-      ? {
-          ...period.value,
-          from:
-            period.value.from instanceof Date ? period.value.from.toISOString() : period.value.from,
-          to: period.value.to instanceof Date ? period.value.to.toISOString() : period.value.to,
-        }
-      : period.value,
-});
-
-const deserializePeriod = (value: unknown): Period => {
-  if (!value || typeof value !== 'object') return defaultPeriod;
-
-  const serialized = value as SerializedPeriod;
-  if (!serialized.type) return defaultPeriod;
-
-  // Handle date-based periods
-  if (['daily', 'weekly', 'monthly'].includes(serialized.type)) {
-    if (serialized.value && typeof serialized.value === 'object' && 'from' in serialized.value) {
-      const dateRange = serialized.value as Record<string, unknown>;
-      return {
-        type: serialized.type,
-        value: {
-          from:
-            typeof dateRange.from === 'string'
-              ? new Date(dateRange.from)
-              : (dateRange.from as Date),
-          to: typeof dateRange.to === 'string' ? new Date(dateRange.to) : (dateRange.to as Date),
-        },
-      };
-    }
-  }
-
-  // Return as-is for quarterly/yearly
-  return { type: serialized.type, value: serialized.value } as Period;
-};
-export function useSalesDetailFilters() {
+export const useSalesDetailFilters = () => {
   const [filters, setFilters] = useQueryStates({
-    responsiblePerson: parseAsString.withDefault('all-responsible'),
-    cashier: parseAsString.withDefault('all-cashier'),
-    selectedPeriod: parseAsJson(deserializePeriod).withDefault(defaultPeriod),
+    grouping: parseAsString.withDefault('weekly'),
+    store_id: parseAsString.withDefault(''),
+    start_date: parseAsString.withDefault(''),
+    end_date: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(0),
     pageSize: parseAsInteger.withDefault(10),
     sortBy: parseAsString.withDefault(''),
     sortDirection: parseAsString.withDefault('asc'),
   });
 
-  const updateWithPageReset = (updates: Partial<typeof filters>) => {
-    setFilters((prev) => ({ ...prev, ...updates, page: 0 }));
+  const updateWithPageReset = ({ ...updates }) => {
+    setFilters({ ...updates, page: 0 });
   };
 
   return {
     filters,
-    updateSelectedPeriod: (selectedPeriod: Period) =>
-      updateWithPageReset({ selectedPeriod: serializePeriod(selectedPeriod) as Period }),
+    updateToko: (store_id) => updateWithPageReset({ store_id }),
+    updateStartDate: (start_date) => updateWithPageReset({ start_date }),
+    updateEndDate: (end_date) => updateWithPageReset({ end_date }),
+    updatePage: (page) => setFilters({ page }),
+    updatePageSize: (pageSize) => updateWithPageReset({ pageSize }),
+    updateSorting: (sortBy, sortDirection) => {
+      setFilters({ ...filters, sortBy, sortDirection, page: 0 });
+    },
+    updateGrouping: (grouping) => updateWithPageReset({ grouping }),
+
+    toggleSort: (columnId) => {
+      const newDirection =
+        filters.sortBy === columnId && filters.sortDirection === 'asc' ? 'desc' : 'asc';
+      updateWithPageReset({ sortBy: columnId, sortDirection: newDirection });
+    },
+
     resetFilters: () => {
       setFilters({
-        responsiblePerson: 'all-responsible',
-        cashier: 'all-cashier',
-        selectedPeriod: serializePeriod(defaultPeriod) as Period,
+        start_date: null,
+        end_date: null,
+        store_id: null,
         page: 1,
         pageSize: 10,
         sortBy: 'name_cashier',
         sortDirection: 'asc',
       });
     },
-    updateCashier: (cashier: string) => updateWithPageReset({ cashier }),
-    updateResponsiblePerson: (responsiblePerson: string) =>
-      updateWithPageReset({ responsiblePerson }),
   };
-}
+};

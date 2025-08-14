@@ -5,14 +5,15 @@ import { getProfitLossReports, getVoidReports } from '../client/reports';
 import { ProfitLossReportRequest, VoidReportRequest } from '../dto/reports.dto';
 
 interface VoidReportFilters {
-  search: string;
-  responsiblePerson: string;
-  cashier: string;
-  selectedPeriod: Period;
+  start_date: string;
+  end_date: string;
+  nota_number: string;
+  cashier_name: string;
+  void_by: string;
+  sort_dir: 'asc' | 'desc';
   page: number;
-  pageSize: number;
-  sortBy: string;
-  sortDirection: string;
+  per_page: number;
+  sort_by: string;  
 }
 
 const convertPeriodToDateRange = (period: Period): { dateFrom?: string; dateTo?: string } => {
@@ -21,24 +22,23 @@ const convertPeriodToDateRange = (period: Period): { dateFrom?: string; dateTo?:
   const { from, to } = period.value;
 
   const formatDate = (d: unknown) => (d instanceof Date ? d.toISOString().slice(0, 10) : typeof d === 'string' ? d : undefined);
-
   return { dateFrom: formatDate(from), dateTo: formatDate(to) };
 };
 
-const buildQueryParams = (filters: VoidReportFilters, debouncedSearch: string): VoidReportRequest => ({
-  search: debouncedSearch || undefined,
-  responsiblePerson: filters.responsiblePerson !== 'all-responsible' ? filters.responsiblePerson : undefined,
-  cashier: filters.cashier !== 'all-cashier' ? filters.cashier : undefined,
-  sortBy: filters.sortBy || undefined,
-  sortDirection: ['asc', 'desc'].includes(filters.sortDirection) ? (filters.sortDirection as 'asc' | 'desc') : undefined,
-  page: filters.page,
-  pageSize: filters.pageSize,
-  ...convertPeriodToDateRange(filters.selectedPeriod),
+const buildQueryParams = (filters: VoidReportFilters): VoidReportRequest => ({
+  start_date: filters.start_date,
+  end_date: filters.end_date,
+  nota_number: filters.nota_number,
+  cashier_name: filters.cashier_name,
+  void_by: filters.void_by,
+  sort_dir: filters.sort_dir,
+  page: String(filters.page),
+  per_page: filters.per_page,
+  sort_by: filters.sort_by,
 });
 
 export function useVoidReportQuery(deviceId: string, storeId: string, filters: VoidReportFilters) {
-  const debouncedSearch = useDebounce(filters.search, 300);
-  const queryParams = buildQueryParams(filters, debouncedSearch);
+  const queryParams = buildQueryParams(filters);
   
   return useQuery({
     queryKey: ['void-reports', deviceId, storeId, queryParams],
@@ -74,10 +74,10 @@ const buildProfitLossQueryParams = (filters: ProfitLossReportFilters, debouncedS
   ...convertPeriodToDateRange(filters.selectedPeriod),
 });
 
+
 export function useProfitLossReportQuery(deviceId: string, storeId: string, filters: ProfitLossReportFilters) {
   const debouncedSearch = useDebounce(filters.search, 300);
   const queryParams = buildProfitLossQueryParams(filters, debouncedSearch);
-  
   return useQuery({
     queryKey: ['profit-loss-reports', deviceId, storeId, queryParams],
     queryFn: () =>

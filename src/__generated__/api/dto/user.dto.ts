@@ -149,4 +149,10 @@ export type PermissionSchema = {
     id: number;
     name: string;
   };
+
+  export type GetListPositionPayloadSchema = {
+    search?: string;
+    per_page?: number;
+    page?: number;
+  };
   

@@ -1,12 +1,7 @@
+// summary-table.tsx
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select/select';
+import { ApiSalesSummaryData } from '@/__generated__/api/dto/reports/sales-summary.dto';
 import {
   SortingState,
   createColumnHelper,
@@ -27,43 +22,70 @@ type SalesSummary = {
   transaksi_jumlah: string;
   transaksi_nominal: string;
   hpp: string;
+  service_charge: string;
+  profit: string;
+  loss: string;
 };
+
+type SummaryTableProps = {
+  data?: ApiSalesSummaryData[];
+  pagination?: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  isLoading?: boolean;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+};
+
 const columnHelper = createColumnHelper<SalesSummary>();
 
-const mockData: SalesSummary[] = [
-  {
-    periode: '2022',
-    netto: 'Rp 8.262.195',
-    bruto: 'Rp 4.373.475',
-    diskon: 'Rp 143.758',
-    pajak: 'Rp 172.772',
-    transaksi_jumlah: '16 Transaksi',
-    transaksi_nominal: 'Rp 86.914',
-    hpp: 'Rp 3.246.808',
-  },
-  {
-    periode: '2021',
-    netto: 'Rp 2.285.097',
-    bruto: 'Rp 1.069.382',
-    diskon: 'Rp 42.221',
-    pajak: 'Rp 164.781',
-    transaksi_jumlah: '2 Transaksi',
-    transaksi_nominal: 'Rp 599.537',
-    hpp: 'Rp 3.246.808',
-  },
-  {
-    periode: '2020',
-    netto: 'Rp 7.267.960',
-    bruto: 'Rp 4.917.177',
-    diskon: 'Rp 74.707',
-    pajak: 'Rp 95.488',
-    transaksi_jumlah: '35 Transaksi',
-    transaksi_nominal: 'Rp 380.764',
-    hpp: 'Rp 3.246.808',
-  },
-];
+// Transform API data to table format
+// const transformApiDataToTableFormat = (apiData: ApiSalesSummaryData[]): SalesSummary[] => {
+//   return apiData.map((item) => ({
+//     periode: item.period,
+//     netto: item.netto,
+//     bruto: item.bruto,
+//     diskon: item.discount,
+//     pajak: item.tax,
+//     transaksi_jumlah: `${item.transaction_count} Transaksi`,
+//     transaksi_nominal: item.netto, // You might want to calculate average here
+//     hpp: item.cogs,
+//     service_charge: item.service_charge,
+//     profit: item.profit,
+//     loss: item.loss,
+//   }));
+// };
+const transformApiDataToTableFormat = (apiData: ApiSalesSummaryData[]): SalesSummary[] => {
+  return apiData.map((item) => ({
+    periode: item.period,
+    netto: item.netto,
+    bruto: item.bruto,
+    diskon: item.discount,
+    pajak: item.tax,
+    transaksi_jumlah: `${item.transaction_count} Transaksi`,
+    transaksi_nominal: item.netto,
+    hpp: item.cogs,
+    service_charge: item.service_charge,
+    profit: item.profit,
+    loss: item.loss,
+  }));
+};
 
-export function SummaryTable() {
+export function SummaryTable({
+  data = [],
+  pagination,
+  isLoading = false,
+  currentPage = 1,
+  onPageChange,
+}: SummaryTableProps) {
+  // Transform API data
+  const tableData = React.useMemo(() => {
+    return transformApiDataToTableFormat(data);
+  }, [data]);
+
   const columns = React.useMemo(
     () => [
       columnHelper.accessor('periode', {
@@ -86,6 +108,10 @@ export function SummaryTable() {
         header: () => <div className="font-bold text-black">Pajak</div>,
         cell: (info) => <span>{info.getValue()}</span>,
       }),
+      columnHelper.accessor('service_charge', {
+        header: () => <div className="font-bold text-black">Service Charge</div>,
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
       columnHelper.display({
         id: 'transaksi',
         header: () => (
@@ -93,14 +119,12 @@ export function SummaryTable() {
             Transaksi
             <div className="flex justify-center gap-2 text-xs mt-1">
               <span>Jumlah</span>
-              <span>Nominal</span>
             </div>
           </div>
         ),
         cell: (info) => (
           <div className="flex flex-col items-center">
             <div>{info.row.original.transaksi_jumlah}</div>
-            <div>{info.row.original.transaksi_nominal}</div>
           </div>
         ),
       }),
@@ -108,29 +132,60 @@ export function SummaryTable() {
         header: () => <div className="font-bold text-black">HPP</div>,
         cell: (info) => <span>{info.getValue()}</span>,
       }),
+      columnHelper.accessor('profit', {
+        header: () => <div className="font-bold text-black">Profit</div>,
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('loss', {
+        header: () => <div className="font-bold text-black">Loss</div>,
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
     ],
     []
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
 
   const table = useReactTable({
-    data: mockData,
+    data: tableData,
     columns,
     state: {
       sorting,
-      pagination,
+      pagination: {
+        pageIndex: currentPage - 1,
+        pageSize: pagination?.per_page || 10,
+      },
     },
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: true,
+    pageCount: pagination?.last_page || 1,
   });
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-2">
+        <div className="flex justify-center items-center h-32">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="text-gray-500">Loading table...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tableData.length) {
+    return (
+      <div className="container mx-auto py-2">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-gray-500">No data available</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-2">
@@ -185,52 +240,43 @@ export function SummaryTable() {
         </tbody>
       </table>
 
-      <div className="flex items-center justify-between px-2 py-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Rows per page</span>
-          <Select
-            value={table.getState().pagination.pageSize.toString()}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger className="w-[70px] h-8 border-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 20, 30, 50].map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-
-          <div className="min-w-[2rem] text-center">
-            <span className="text-sm">{table.getState().pagination.pageIndex + 1}</span>
+      {pagination && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              Showing {(currentPage - 1) * pagination.per_page + 1} to{' '}
+              {Math.min(currentPage * pagination.per_page, pagination.total)} of {pagination.total}{' '}
+              results
+            </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => onPageChange?.(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+
+            <div className="min-w-[2rem] text-center">
+              <span className="text-sm">
+                {currentPage} of {pagination.last_page}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onPageChange?.(currentPage + 1)}
+              disabled={currentPage >= pagination.last_page}
+              className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

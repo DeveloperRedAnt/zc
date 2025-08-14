@@ -10,7 +10,6 @@ import WizardProgressBar from '@/components/wizard-manager/wizard-progress-bar';
 import Step1DetailUserForm from '@/modules/user/components/step1-detail-user-form';
 import Step2PermissionForm from '@/modules/user/components/step2-permission-form';
 import { useUserStore } from '@/modules/user/store';
-import { toFormData } from '@/utils/form-data';
 import { ArrowRight } from '@icon-park/react';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
@@ -70,8 +69,7 @@ export default function page() {
         const payload = photo ? { ...basePayload, image: photo } : basePayload;
 
         const response = await createEmployee({
-          'x-organization-id': '1',
-          body: toFormData(payload),
+          body: payload,
         });
 
         const newId = response.id; // Access id directly from response
@@ -81,7 +79,6 @@ export default function page() {
       } else {
         await updateEmployee({
           id: employeeId,
-          'x-organization-id': '1',
           body: photo ? { ...basePayload, image: photo } : basePayload,
         });
         router.push(`/dashboard/users/${employeeId}/assign-permission`);

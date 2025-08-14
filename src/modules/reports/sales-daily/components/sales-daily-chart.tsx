@@ -1,9 +1,8 @@
 'use client';
 
-import * as React from 'react';
-import { CartesianGrid, Line, LineChart, Tooltip, TooltipProps, XAxis } from 'recharts';
-
 import { ChartConfig, ChartContainer } from '@/components/chart/chart';
+import * as React from 'react';
+import { CartesianGrid, Line, LineChart, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
 
 type CustomTooltipProps = TooltipProps<number, string> & {
   payload?: {
@@ -50,40 +49,6 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export const description = 'An interactive area chart';
 
-const chartData = [
-  { date: '2025-01-01', pertumbuhanTransaksi: 95, pertumbuhanPendapatan: 3600000 },
-  { date: '2025-01-02', pertumbuhanTransaksi: 105, pertumbuhanPendapatan: 3850000 },
-  { date: '2025-01-03', pertumbuhanTransaksi: 110, pertumbuhanPendapatan: 4000000 },
-  { date: '2025-01-04', pertumbuhanTransaksi: 115, pertumbuhanPendapatan: 4200000 },
-  { date: '2025-01-05', pertumbuhanTransaksi: 130, pertumbuhanPendapatan: 4500000 },
-  { date: '2025-01-06', pertumbuhanTransaksi: 125, pertumbuhanPendapatan: 4375000 },
-  { date: '2025-01-07', pertumbuhanTransaksi: 140, pertumbuhanPendapatan: 4600000 },
-  { date: '2025-01-08', pertumbuhanTransaksi: 150, pertumbuhanPendapatan: 4850000 },
-  { date: '2025-01-09', pertumbuhanTransaksi: 160, pertumbuhanPendapatan: 5050000 },
-  { date: '2025-01-10', pertumbuhanTransaksi: 155, pertumbuhanPendapatan: 4950000 },
-  { date: '2025-01-11', pertumbuhanTransaksi: 170, pertumbuhanPendapatan: 5200000 },
-  { date: '2025-01-12', pertumbuhanTransaksi: 180, pertumbuhanPendapatan: 5400000 },
-  { date: '2025-01-13', pertumbuhanTransaksi: 175, pertumbuhanPendapatan: 5300000 },
-  { date: '2025-01-14', pertumbuhanTransaksi: 185, pertumbuhanPendapatan: 5580000 },
-  { date: '2025-01-15', pertumbuhanTransaksi: 8800000, pertumbuhanPendapatan: 5689677 },
-  { date: '2025-01-16', pertumbuhanTransaksi: 188, pertumbuhanPendapatan: 5620000 },
-  { date: '2025-01-17', pertumbuhanTransaksi: 195, pertumbuhanPendapatan: 5800000 },
-  { date: '2025-01-18', pertumbuhanTransaksi: 200, pertumbuhanPendapatan: 6000000 },
-  { date: '2025-01-19', pertumbuhanTransaksi: 205, pertumbuhanPendapatan: 6150000 },
-  { date: '2025-01-20', pertumbuhanTransaksi: 210, pertumbuhanPendapatan: 6300000 },
-  { date: '2025-01-21', pertumbuhanTransaksi: 220, pertumbuhanPendapatan: 6500000 },
-  { date: '2025-01-22', pertumbuhanTransaksi: 230, pertumbuhanPendapatan: 6800000 },
-  { date: '2025-01-23', pertumbuhanTransaksi: 240, pertumbuhanPendapatan: 7100000 },
-  { date: '2025-01-24', pertumbuhanTransaksi: 260, pertumbuhanPendapatan: 7450000 },
-  { date: '2025-01-25', pertumbuhanTransaksi: 250, pertumbuhanPendapatan: 7300000 },
-  { date: '2025-01-26', pertumbuhanTransaksi: 270, pertumbuhanPendapatan: 7700000 },
-  { date: '2025-01-27', pertumbuhanTransaksi: 290, pertumbuhanPendapatan: 8000000 },
-  { date: '2025-01-28', pertumbuhanTransaksi: 280, pertumbuhanPendapatan: 7800000 },
-  { date: '2025-01-29', pertumbuhanTransaksi: 300, pertumbuhanPendapatan: 8200000 },
-  { date: '2025-01-30', pertumbuhanTransaksi: 320, pertumbuhanPendapatan: 8550000 },
-  { date: '2025-01-31', pertumbuhanTransaksi: 330, pertumbuhanPendapatan: 8800000 },
-];
-
 const chartConfig = {
   pertumbuhanTransaksi: {
     label: 'Pertumbuhan Transaksi',
@@ -95,11 +60,25 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function SalesDailyChart() {
+export interface SalesDailyChartData {
+  date: string;
+  pertumbuhanTransaksi: number;
+  pertumbuhanPendapatan: number;
+}
+
+interface SalesDailyChartProps {
+  data: SalesDailyChartData[];
+  height?: number;
+  width?: number;
+}
+
+export function SalesDailyChart({ data, height, width }: SalesDailyChartProps) {
   const [timeRange, _setTimeRange] = React.useState('90d');
 
-  const filteredData = chartData.filter((item) => {
+  const filteredData = (data ?? []).filter((item) => {
+    if (typeof item.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.date)) return false;
     const date = new Date(item.date);
+    if (Number.isNaN(date.getTime())) return false;
     const referenceDate = new Date('2024-06-30');
     let daysToSubtract = 90;
     if (timeRange === '30d') {
@@ -112,11 +91,18 @@ export function SalesDailyChart() {
     return date >= startDate;
   });
 
+  const minTransaksi = Math.min(...filteredData.map((d) => d.pertumbuhanTransaksi ?? 0));
+  const maxTransaksi = Math.max(...filteredData.map((d) => d.pertumbuhanTransaksi ?? 0));
+  const minPendapatan = Math.min(...filteredData.map((d) => d.pertumbuhanPendapatan ?? 0));
+  const maxPendapatan = Math.max(...filteredData.map((d) => d.pertumbuhanPendapatan ?? 0));
+
   return (
     <ChartContainer config={chartConfig}>
       <LineChart
         accessibilityLayer
         data={filteredData}
+        height={height ?? 300}
+        width={width ?? 1200}
         margin={{
           left: 12,
           right: 12,
@@ -125,10 +111,12 @@ export function SalesDailyChart() {
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="date"
+          angle={-45}
           tickLine={false}
           axisLine={false}
-          tickMargin={8}
+          tickMargin={-0}
           minTickGap={32}
+          dy={10}
           tickFormatter={(value) => {
             const date = new Date(value);
             return date.toLocaleDateString('id-ID', {
@@ -138,6 +126,19 @@ export function SalesDailyChart() {
             });
           }}
         />
+        <YAxis
+          yAxisId="left"
+          domain={[minTransaksi, maxTransaksi]}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={[minPendapatan, maxPendapatan]}
+          tickLine={false}
+          axisLine={false}
+        />
         <Tooltip content={<CustomTooltip />} cursor={false} />
         <Line
           dataKey="pertumbuhanTransaksi"
@@ -145,6 +146,7 @@ export function SalesDailyChart() {
           stroke="#0EA5E9"
           strokeWidth={2}
           dot={false}
+          yAxisId="left"
         />
         <Line
           dataKey="pertumbuhanPendapatan"
@@ -152,6 +154,7 @@ export function SalesDailyChart() {
           stroke="#38BDF8"
           strokeWidth={2}
           dot={false}
+          yAxisId="right"
         />
       </LineChart>
     </ChartContainer>

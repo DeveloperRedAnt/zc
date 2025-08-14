@@ -8,10 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select/select';
-import { Period, PieChartDataEntry } from '@/modules/reports/sales-payment/types';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LucideIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useMemo } from 'react';
+
+import { DTO } from '@/__generated__/api/client/sales-payment-report.client';
+import {
+  usePaymentMethod,
+  usePaymentReport,
+} from '@/__generated__/api/hooks/sales-payment-report.hooks';
+import { useSalesPaymentParams } from '@/modules/reports/sales-payment/hooks/use-search-params';
+import { quarterToDateRange } from '@/utils/datepicker';
 
 const TotalTransactionAmount = dynamic(
   () =>
@@ -22,7 +29,6 @@ const TotalTransactionAmount = dynamic(
     loading: () => <div className="h-20 bg-gray-200 rounded animate-pulse" />,
   }
 );
-
 const TransactionStatCard = dynamic(
   () =>
     import(
@@ -32,35 +38,6 @@ const TransactionStatCard = dynamic(
     loading: () => <div className="h-16 bg-gray-200 rounded animate-pulse" />,
   }
 );
-
-import { transactionStats } from '@/modules/reports/sales-payment/constant';
-
-const pieChartData: PieChartDataEntry[] = [
-  { name: 'Tunai', value: 275, fill: '#4F46E5' },
-  { name: 'Debit / Kredit', value: 200, fill: '#313e40' },
-  { name: 'QRIS', value: 187, fill: '#F59E42' },
-  { name: 'Voucher', value: 173, fill: '#F43F5E' },
-];
-
-const chartConfig = {
-  Tunai: {
-    label: 'Tunai',
-    color: '##5252E0',
-  },
-  'Debit / Kredit': {
-    label: 'Debit / Kredit',
-    color: '#22D3EE',
-  },
-  QRIS: {
-    label: 'QRIS',
-    color: '#F59E42',
-  },
-  Voucher: {
-    label: 'Voucher',
-    color: '#EB6347',
-  },
-};
-
 const ChartPie = dynamic(() => import('@/modules/reports/sales-payment/chart/chart-pie'), {
   ssr: false,
   loading: () => (
@@ -70,80 +47,269 @@ const ChartPie = dynamic(() => import('@/modules/reports/sales-payment/chart/cha
   ),
 });
 
+const chartConfig = {
+  Tunai: { label: 'tunai', color: '##5252E0' },
+  'debit / kredit': { label: 'debit / kredit', color: '#22D3EE' },
+  qris: { label: 'qris', color: '#F59E42' },
+  voucher: { label: 'voucher', color: '#EB6347' },
+};
+
+type PeriodType = 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
+// Komponen filter periode
+function PeriodFilter({
+  startDate,
+  endDate,
+  setPeriodType,
+  setPeriodValue,
+  setStartDate,
+  setEndDate,
+  handleResetFilter,
+}) {
+  return (
+    <div className="flex flex-col max-w-xs w-full">
+      <label htmlFor="period-select" className="block text-base font-medium text-gray-700">
+        Periode
+      </label>
+      <DateRangePicker
+        allowedViews={['daily', 'weekly', 'monthly', 'quarterly']}
+        initialPeriod={{
+          type: 'daily',
+          value: {
+            from: new Date(startDate),
+            to: new Date(endDate),
+          },
+        }}
+        onReset={handleResetFilter}
+        onApply={(period) => {
+          setPeriodType(period.type);
+          if (period.type === 'quarterly') {
+            const fromQuarterObj = period.value.from as
+              | { quarter: 1 | 2 | 3 | 4; year: number }
+              | undefined;
+            const toQuarterObj = period.value.to as
+              | { quarter: 1 | 2 | 3 | 4; year: number }
+              | undefined;
+
+            let fromDate = '';
+            let toDate = '';
+
+            if (fromQuarterObj) {
+              fromDate = quarterToDateRange(fromQuarterObj.quarter, fromQuarterObj.year).from;
+            }
+            if (toQuarterObj) {
+              toDate = quarterToDateRange(toQuarterObj.quarter, toQuarterObj.year).to;
+            }
+
+            setPeriodValue({
+              from: period.value.from,
+              to: period.value.to,
+            });
+
+            if (fromDate && toDate) {
+              setStartDate(fromDate);
+              setEndDate(toDate);
+            }
+          } else {
+            const from =
+              period.value.from instanceof Date
+                ? period.value.from.toISOString().slice(0, 10)
+                : String(period.value.from).slice(0, 10);
+            const to =
+              period.value.to instanceof Date
+                ? period.value.to.toISOString().slice(0, 10)
+                : String(period.value.to).slice(0, 10);
+
+            setPeriodValue({ from, to });
+            setStartDate(from);
+            setEndDate(to);
+          }
+        }}
+        className="w-full max-w-md h-12 bg-white"
+      />
+    </div>
+  );
+}
+
+function PaymentMethodFilter({ name, setName }) {
+  const { data: Payment } = usePaymentMethod();
+  return (
+    <div className="flex-1 flex flex-col max-w-xs">
+      <label htmlFor="method-select" className="block text-sm font-medium text-gray-700 mb-1">
+        Metode Pembayaran
+      </label>
+      <Select value={name} onValueChange={setName} defaultValue="all">
+        <SelectTrigger
+          id="method-select"
+          icon={<ChevronDown className="h-4 w-4" />}
+          className="w-full h-12 data-[state=open]:bg-blue-100 data-[state=closed]:bg-white bg-white"
+        >
+          <SelectValue placeholder="Pilih Metode" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Semua Metode</SelectItem>
+          {Array.isArray(Payment)
+            ? Payment.map((item) => (
+                <SelectItem key={item.id} value={item.name}>
+                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
+                </SelectItem>
+              ))
+            : Payment?.data && (
+                <SelectItem key={Payment.data.id} value={Payment.data.name}>
+                  {Payment.data.name.charAt(0).toUpperCase() + Payment.data.name.slice(1)}
+                </SelectItem>
+              )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+// Komponen kartu metode pembayaran
+function PaymentMethodCards({ paymentMethods }) {
+  return (
+    <div className="grid grid-cols-2 gap-4 mt-5">
+      <Suspense
+        fallback={Array.from({ length: 4 }).map((_, i) => (
+          <div key={`item-${i}`} className="h-16 bg-gray-200 rounded animate-pulse" />
+        ))}
+      >
+        {paymentMethods.map((stat) => {
+          let icon: LucideIcon;
+          switch (stat.method) {
+            case 'tunai':
+              icon = require('lucide-react').Wallet;
+              break;
+            case 'debit / kredit':
+              icon = require('lucide-react').CreditCard;
+              break;
+            case 'qris':
+              icon = require('lucide-react').QrCode;
+              break;
+            case 'voucher':
+              icon = require('lucide-react').Ticket;
+              break;
+            default:
+              icon = require('lucide-react').Circle;
+          }
+          return (
+            <TransactionStatCard
+              key={stat.method}
+              icon={icon}
+              title={stat.method}
+              value={stat.total_transaction}
+              className="w-full"
+            />
+          );
+        })}
+      </Suspense>
+    </div>
+  );
+}
+
 export default function Index() {
-  const totalTransactions = pieChartData.reduce((sum, entry) => sum + entry.value, 0);
-  const [_selectedPeriod, setSelectedPeriod] = React.useState<Period>({
-    type: 'daily',
-    value: {
-      from: new Date(2025, 6, 17),
-      to: new Date(2025, 6, 19),
-    },
+  const [periodeType, setPeriodType] = React.useState<PeriodType>('daily');
+  const {
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    name,
+    setName,
+    isActive,
+    ids,
+    isGrouping,
+    setIsGrouping,
+  } = useSalesPaymentParams();
+  const [labelText, setLabelText] = React.useState('-');
+
+  const [periodValue, setPeriodValue] = React.useState<{
+    from: string | { quarter: number; year: number };
+    to: string | { quarter: number; year: number };
+  }>({
+    from: startDate,
+    to: endDate,
   });
+
+  const salesPayment: DTO.SalesDailyDaysRequest = useMemo(
+    () => ({
+      start_date: startDate,
+      end_date: endDate,
+      is_active: isActive,
+      ids,
+      name,
+      grouping: isGrouping,
+    }),
+    [startDate, endDate, isActive, ids, name, isGrouping]
+  );
+
+  const { data } = usePaymentReport(salesPayment);
+
+  const paymentMethods = useMemo(() => data?.recap?.payment_methods ?? [], [data]);
+  const totalTransactions = useMemo(() => data?.recap?.total_transaction ?? 0, [data]);
+
+  const pieChartData = useMemo(() => {
+    const labels = data?.graph?.labels ?? [];
+    const values = data?.graph?.data ?? [];
+    return labels.map((label, idx) => ({
+      name: label.charAt(0).toUpperCase() + label.slice(1),
+      value: values[idx] ?? 0,
+      fill: chartConfig[label.charAt(0).toUpperCase() + label.slice(1)]?.color || '#64748b',
+    }));
+  }, [data]);
+
+  useEffect(() => {
+    setIsGrouping(periodeType);
+    if (periodeType === 'quarterly') {
+      const isQuarterObj = (val: unknown): val is { quarter: number; year: number } =>
+        typeof val === 'object' && val !== null && 'quarter' in val && 'year' in val;
+      if (isQuarterObj(periodValue.from) && isQuarterObj(periodValue.to)) {
+        setLabelText(
+          `Q${periodValue.from.quarter} ${periodValue.from.year} - Q${periodValue.to.quarter} ${periodValue.to.year}`
+        );
+      } else {
+        setLabelText('-');
+      }
+    } else {
+      const fromValid = typeof periodValue.from === 'string' && periodValue.from;
+      const toValid = typeof periodValue.to === 'string' && periodValue.to;
+      if (fromValid && toValid) {
+        setLabelText(`${periodValue.from} - ${periodValue.to}`);
+      } else if (fromValid) {
+        setLabelText(`${periodValue.from}`);
+      } else {
+        setLabelText('-');
+      }
+    }
+  }, [periodValue, periodeType, setIsGrouping]);
+
+  function handleResetFilter() {
+    setStartDate('');
+    setEndDate('');
+    setIsGrouping('');
+    setName('');
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-semibold mb-6">Laporan Jenis Bayar</h1>
       <div className="flex flex-col md:flex-row justify-start gap-4 mb-6">
-        <div className="flex flex-col max-w-xs w-full">
-          <label htmlFor="period-select" className="block text-base font-medium text-gray-700">
-            Periode
-          </label>
-          <DateRangePicker
-            initialPeriod={{
-              type: 'daily',
-              value: {
-                from: new Date(2025, 6, 17),
-                to: new Date(2025, 6, 19),
-              },
-            }}
-            onApply={(period) => {
-              setSelectedPeriod(period);
-            }}
-            defaultDailyRange={{
-              from: new Date(2025, 6, 17),
-              to: new Date(2025, 6, 19),
-            }}
-            defaultMonthlyRange={{
-              from: new Date(2025, 6, 1),
-            }}
-            defaultQuarterlyRange={{
-              from: { quarter: 1, year: 2025 },
-            }}
-            defaultYearlyRange={{
-              from: 2020,
-              to: 2022,
-            }}
-            className="w-full max-w-md h-12 bg-white"
-          />
-        </div>
-        <div className="flex-1 flex flex-col max-w-xs">
-          <label htmlFor="method-select" className="block text-sm font-medium text-gray-700 mb-1">
-            Metode Pembayaran
-          </label>
-          <Select defaultValue="all">
-            <SelectTrigger
-              id="method-select"
-              icon={<ChevronDown className="h-4 w-4" />}
-              className="w-full h-12 data-[state=open]:bg-blue-100 data-[state=closed]:bg-white bg-white"
-            >
-              <SelectValue placeholder="Pilih Metode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Metode</SelectItem>
-              <SelectItem value="cash">Tunai</SelectItem>
-              <SelectItem value="debit-credit">Debit / Kredit</SelectItem>
-              <SelectItem value="qris">QRIS</SelectItem>
-              <SelectItem value="voucher">Voucher</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <PeriodFilter
+          startDate={startDate}
+          endDate={endDate}
+          setPeriodType={setPeriodType}
+          setPeriodValue={setPeriodValue}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          handleResetFilter={handleResetFilter}
+        />
+        <PaymentMethodFilter name={name} setName={setName} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pie Chart */}
         <Card className="p-4 flex flex-col" style={{ height: '379px' }}>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Pie Chart Laporan Jenis Bayar</CardTitle>
-            <p className="text-sm text-gray-500">15 Januari 2025 - 21 Januari 2025</p>
+            <p className="text-sm text-gray-500">{labelText}</p>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-4">
             <ChartPie
@@ -151,31 +317,13 @@ export default function Index() {
               pieChartData={pieChartData}
               totalTransactions={totalTransactions}
             />
-            {/* <ChartPie/> */}
           </CardContent>
         </Card>
-        {/* Kartu Ringkasan Transaksi */}
         <div className="p-4 flex flex-col">
           <Suspense fallback={<div className="h-20 bg-gray-200 rounded animate-pulse" />}>
             <TotalTransactionAmount value={totalTransactions} />
           </Suspense>
-          <div className="grid grid-cols-2 gap-4 mt-5">
-            <Suspense
-              fallback={Array.from({ length: 4 }).map((_, i) => (
-                <div key={`item-${i}`} className="h-16 bg-gray-200 rounded animate-pulse" />
-              ))}
-            >
-              {transactionStats.slice(1).map((stat) => (
-                <TransactionStatCard
-                  key={stat.id}
-                  icon={stat.icon}
-                  title={stat.title}
-                  value={stat.value}
-                  className="w-full"
-                />
-              ))}
-            </Suspense>
-          </div>
+          <PaymentMethodCards paymentMethods={paymentMethods} />
         </div>
       </div>
     </div>

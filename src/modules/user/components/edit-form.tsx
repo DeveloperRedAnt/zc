@@ -63,7 +63,6 @@ export default function EditForm() {
 
       await updateEmployee({
         id: id as number,
-        'x-organization-id': '1',
         body: basePayload,
       });
 

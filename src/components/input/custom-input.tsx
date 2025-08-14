@@ -58,15 +58,15 @@ const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, CustomInp
   ) => {
     const [displayValue, setDisplayValue] = useState('');
 
-    const safeValue = Array.isArray(value) ? value[0] ?? '' : value ?? '';
-
+    // biome-ignore lint/correctness/useExhaustiveDependencies: value dependency is sufficient as it covers value[0]
     useEffect(() => {
+      const safeValue = Array.isArray(value) ? value[0] ?? '' : value ?? '';
       if (currency) {
         setDisplayValue(formatNumber(safeValue));
       } else {
         setDisplayValue(String(safeValue));
       }
-    }, [safeValue, currency]);
+    }, [value, currency]);
 
     const PrependIconComponent =
       prependIcon && typeof IconPark[prependIcon] === 'function'

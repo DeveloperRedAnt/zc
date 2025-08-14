@@ -9,20 +9,22 @@ import FormProductDetail from '@/modules/products-edit/components/form-product-d
 import FormProductInformation from '@/modules/products-edit/components/form-product-information';
 import FormProductVariant from '@/modules/products-edit/components/form-product-variant';
 import FormTrackStockProduct from '@/modules/products-edit/components/form-track-stock-product';
-import { ArrowRight, Check } from '@icon-park/react';
+import { Check } from '@icon-park/react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
-import { useCreateProduct } from '@/__generated__/api/hooks/product.hooks';
+import { useUpdateProduct } from '@/__generated__/api/hooks/product.hooks';
+import { useGetProductDetail } from '@/__generated__/api/hooks/product.hooks';
 import { useToast } from '@/components/toast/toast';
 import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
-import { useProductVariantStore } from '@/modules/product-variant/store';
 import { useProductCompositeStore } from '@/modules/products-edit/storing-data/product-composite/stores';
 import { useProductDetailStore } from '@/modules/products-edit/storing-data/product-detail/stores';
 import { useProductInformationStore } from '@/modules/products-edit/storing-data/product-information/stores';
 import { usePriceMultiPackStore } from '@/modules/products-edit/storing-data/product-multi-pack/stores';
+import { useProductVariantStore } from '@/modules/products-edit/storing-data/product-variant/store';
 import { useTrackStockProductStore } from '@/modules/products-edit/storing-data/track-stock-product/stores';
 import { mapFormDataToApiPayload } from '@/modules/products-edit/utils/apiHelper';
-import { useMemo } from 'react';
+import { useParams } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 
 type FormProductFormProps = {
   toggleStatusTrackingEnabled: boolean;
@@ -32,38 +34,217 @@ type FormProductFormProps = {
 };
 
 export default function FormProductForm({
-  toggleStatusTrackingEnabled,
   onTrackStockChange,
   validateFields,
   router,
 }: FormProductFormProps) {
-  const productInfo = useProductInformationStore((state) => state);
-  const productDetail = useProductDetailStore((state) => state);
-  const multiPack = usePriceMultiPackStore((state) => state.priceMultiPackList);
-  const isWholesale = usePriceMultiPackStore((state) => state.isWholesale);
-  const trackStock = useTrackStockProductStore((state) => state.data);
-  const composite = useProductCompositeStore((state) => state.data);
-  const variants = useProductVariantStore((state) => state.finalData);
+  const params = useParams();
+  const productId = Number(params?.id);
+
+  const { data: productDetailData } = useGetProductDetail({ id: productId });
+  // Get product data for current product ID with proper selectors to avoid infinite loops
+  const productInfo = useProductInformationStore((state) => state.products[productId]) ?? {
+    thumbnailFile: null,
+    thumbnailUrl: null,
+    productName: '',
+    isActiveProduct: true,
+    isFavorite: false,
+    selectedTags: [],
+  };
+  const productDetail = useProductDetailStore((state) => state.products[productId]) ?? {};
+  const multiPackData = usePriceMultiPackStore((state) => state.products[productId]) ?? {
+    priceMultiPackList: [],
+  };
+  const trackStockData = useTrackStockProductStore((state) => state.products[productId]) ?? {};
+  const composite = useProductCompositeStore((state) => state.products[productId]) ?? {};
+  const variants = useProductVariantStore((state) => state.productVariantsStore[productId]) ?? [];
+
+  // Extract store actions separately to avoid re-renders
+  const setProductName = useProductInformationStore((state) => state.setProductName);
+  const setIsActiveProduct = useProductInformationStore((state) => state.setIsActiveProduct);
+  const setIsFavorite = useProductInformationStore((state) => state.setIsFavorite);
+  const setThumbnailUrl = useProductInformationStore((state) => state.setThumbnailUrl);
+  const setSelectedTags = useProductInformationStore((state) => state.setSelectedTags);
+  const setProductDetailAction = useProductDetailStore((state) => state.setProductDetail);
+  const setTrackStock = useTrackStockProductStore((state) => state.setTrackStock);
+  const setWholesale = usePriceMultiPackStore((state) => state.setWholesale);
+  const setMultiPackList = usePriceMultiPackStore((state) => state.setMultiPackList);
+  // const defaultPrices = usePriceMultiPackStore((state) => state.products[productId]);
+  const setComposite = useProductCompositeStore((state) => state.setComposite);
+  const setProductVariants = useProductVariantStore((state) => state.setProductVariants);
+  // Map productDetailData to stores when data is available
+  useEffect(() => {
+    if (productDetailData) {
+      // Map to Product Information Store
+      setProductName(productId, productDetailData.name || '');
+      setIsActiveProduct(productId, productDetailData.is_active ?? true);
+      setIsFavorite(productId, productDetailData.is_favorite ?? false);
+      setThumbnailUrl(productId, productDetailData.thumbnail || null);
+
+      // Map tags
+      if (
+        productDetailData.tags &&
+        Array.isArray(productDetailData.tags) &&
+        productDetailData.tags.length > 0
+      ) {
+        const mappedTags = productDetailData.tags.map((tag) => ({
+          label: tag.name,
+          value: tag.id,
+        }));
+        setSelectedTags(productId, mappedTags);
+      }
+
+      // Map barcode and sku based on First Product Variant
+      let barcode = '';
+      let sku = '';
+      if (productDetailData.variants && productDetailData.variants.length > 0) {
+        barcode = productDetailData.variants[0]?.barcode || '';
+      }
+      if (productDetailData.variants && productDetailData.variants.length > 0) {
+        sku = productDetailData.variants[0]?.sku_code || '';
+      }
+
+      if (productDetailData.variants && productDetailData.variants.length > 0) {
+        setWholesale(productId, productDetailData.variants[0]?.is_wholesale ?? false);
+      }
+
+      if (productDetailData.variants && productDetailData.variants.length > 0) {
+        const multiPackList =
+          productDetailData.variants[0]?.variant_units?.map((unit) => ({
+            id: Number(Date.now()),
+            itemName: unit.unit_name,
+            quantity: Number(unit.conversion_value),
+            price: Number(
+              typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price
+            ),
+          })) ?? [];
+        setMultiPackList(productId, multiPackList);
+      }
+
+      // Map to Product Detail Store
+      setProductDetailAction(productId, {
+        content: productDetailData.content || '',
+        package: productDetailData.package || '',
+        barcode: barcode,
+        sku: sku,
+        unit_id: productDetailData.unit?.id || null,
+        unit_string: productDetailData.unit?.name || '',
+      });
+
+      // Map to Track Stock Store - combine both stock_tracking and expired_reminder
+      const trackStockUpdateData: Partial<{
+        is_track_stock: boolean;
+        current_stock: number;
+        is_enable_expired_reminder: boolean;
+        expired_reminder_in_days: number | null;
+        expired_reminder_in_date: string | null;
+      }> = {};
+      trackStockUpdateData.current_stock = productDetailData.current_stock;
+
+      if (productDetailData.stock_tracking) {
+        trackStockUpdateData.is_track_stock = productDetailData.stock_tracking.is_enabled;
+      }
+
+      if (productDetailData.expired_reminder) {
+        trackStockUpdateData.is_enable_expired_reminder =
+          productDetailData.expired_reminder.is_enabled;
+        trackStockUpdateData.expired_reminder_in_days = Number(
+          productDetailData.expired_reminder.countdown
+        );
+        trackStockUpdateData.expired_reminder_in_date =
+          productDetailData.expired_reminder.countdown.toString();
+      }
+
+      // Set all track stock data at once to avoid overwriting
+      if (Object.keys(trackStockUpdateData).length > 0) {
+        setTrackStock(productId, trackStockUpdateData);
+      }
+
+      // Map variants if available
+      if (productDetailData.variants && productDetailData.variants.length > 0) {
+        const cleanedVariants = productDetailData.variants.map((variant) => ({
+          ...variant,
+          variant_units: variant.variant_units?.map((unit) => ({
+            ...unit,
+            price:
+              typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price,
+          })),
+        }));
+        setProductVariants(productId.toString(), cleanedVariants);
+      }
+
+      // Map composite data if available
+      if (productDetailData.composite) {
+        // Convert current_stock to number if needed before setting composite
+        const compositeData = {
+          ...productDetailData.composite,
+          current_stock: +productDetailData.composite.current_stock || 0,
+          components: (productDetailData.composite.components || []).map(({ name, ...rest }) => ({
+            name: name ?? null,
+            ...rest,
+          })),
+        };
+        setComposite(productId, compositeData);
+      }
+    }
+  }, [
+    productDetailData,
+    productId,
+    setProductName,
+    setIsActiveProduct,
+    setIsFavorite,
+    setThumbnailUrl,
+    setSelectedTags,
+    setProductDetailAction,
+    setTrackStock,
+    setWholesale,
+    setMultiPackList,
+    setComposite,
+    setProductVariants,
+    productDetailData?.variants?.[0]?.barcode,
+    productDetailData?.variants?.[0]?.sku_code,
+    productDetailData?.variants?.[0]?.is_wholesale,
+    productDetailData?.variants?.[0]?.variant_units,
+  ]);
 
   const toast = useToast();
 
   const { getRegisteredFields, setErrors } = useFormValidationContext();
+  // const { mutate: createProduct, isPending } = useCreateProduct();
 
-  const { mutate: createProduct, isPending } = useCreateProduct();
+  const { mutate: updateProduct, isPending } = useUpdateProduct();
 
-  // Gabungkan semua store
-  //@ts-ignore
   const finalPayload = useMemo(() => {
     return {
       ...productInfo,
       ...productDetail,
-      ...trackStock,
-      default_prices: multiPack,
-      is_wholesale: isWholesale,
+      ...trackStockData,
+      current_stock:
+        trackStockData &&
+        'current_stock' in trackStockData &&
+        typeof trackStockData.current_stock === 'number'
+          ? trackStockData.current_stock
+          : 0,
+      thumbnail: productInfo.thumbnailUrl ?? '',
+      default_prices: [],
+      is_wholesale: false,
       composite,
       variants: variants,
+      id: productId,
+      priceMultiPackList: multiPackData.priceMultiPackList ?? [],
+      type: productDetailData?.type,
     };
-  }, [productInfo, productDetail, multiPack, composite, variants, trackStock, isWholesale]);
+  }, [
+    productInfo,
+    productDetail,
+    composite,
+    variants,
+    trackStockData,
+    productId,
+    multiPackData,
+    productDetailData?.type,
+  ]);
+
   const handleSubmit = () => {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
@@ -74,7 +255,7 @@ export default function FormProductForm({
 
     const mappedData = mapFormDataToApiPayload(finalPayload);
 
-    createProduct(
+    updateProduct(
       {
         body: mappedData,
       },
@@ -107,12 +288,12 @@ export default function FormProductForm({
           <p className="text-danger"> Form bertanda (*) harus diisi </p>
 
           {/* Subform-modular yang masing-masing terhubung ke validation context */}
-          <FormProductInformation />
-          <FormProductComposite />
+          <FormProductInformation productId={productId} />
+          <FormProductComposite productId={productId} />
           <FormProductVariant />
-          <FormProductDetail />
-          <FormPriceMultiPack />
-          <FormTrackStockProduct onTrackStockChange={onTrackStockChange} />
+          <FormProductDetail productId={productId} />
+          <FormPriceMultiPack productId={productId} />
+          <FormTrackStockProduct productId={productId} onTrackStockChange={onTrackStockChange} />
 
           {/* Footer */}
           <div className="mt-10 border-t-gray-200 pt-4">
@@ -120,28 +301,16 @@ export default function FormProductForm({
               <Button type="button" variant="outline" className="mt-2 ml-[1px] flex items-center">
                 Batal
               </Button>
-              {toggleStatusTrackingEnabled ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  className="mt-2 ml-[1px] flex items-center"
-                  onClick={handleSubmit}
-                  isLoading={isPending}
-                >
-                  Simpan dan Input Stok Awal
-                  <ArrowRight />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-2 ml-[1px] flex items-center"
-                  onClick={handleSubmit}
-                >
-                  Simpan Produk
-                  <Check />
-                </Button>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-2 ml-[1px] flex items-center bg-[#75BF85] text-white"
+                onClick={handleSubmit}
+                isLoading={isPending}
+              >
+                Simpan Produk
+                <Check />
+              </Button>
             </div>
           </div>
         </form>

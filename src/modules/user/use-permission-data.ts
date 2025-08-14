@@ -77,9 +77,7 @@ export function usePermissionData({ isEdit = false }: { isEdit?: boolean }) {
       queryKey: ['getListPosition', { storeId: store.id }],
       queryFn: async () => {
         const result = await api.listPosition({
-          'x-device-id': '1', // Add missing x-device-id
-          'x-store-id': String(store.id),
-          'x-organization-id': '1',
+          body: {},
         });
         return { storeId: store.id, data: result };
       },
@@ -106,8 +104,6 @@ export function usePermissionData({ isEdit = false }: { isEdit?: boolean }) {
       queryKey: ['getPermissionGroup', store.id],
       queryFn: async () => {
         const result = await api.listPermissionGroup({
-          'x-store-id': String(store.id),
-          'x-organization-id': '1',
           body: {},
         });
         return { storeId: store.id, data: result };

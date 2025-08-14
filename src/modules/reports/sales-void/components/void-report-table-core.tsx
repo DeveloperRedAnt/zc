@@ -17,14 +17,14 @@ interface VoidReportTableCoreProps {
   table: ReactTable<VoidReport>;
   columns: ColumnDef<VoidReport>[];
   isLoading?: boolean;
-  pageSize?: number;
+  per_page?: number;
 }
 
 export function VoidReportTableCore({
   table,
   columns,
   isLoading = false,
-  pageSize = 10,
+  per_page = 10,
 }: VoidReportTableCoreProps) {
   return (
     <div className="overflow-x-auto">
@@ -46,7 +46,7 @@ export function VoidReportTableCore({
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableSkeleton rows={pageSize} columns={columns.length} />
+            <TableSkeleton rows={per_page} columns={columns.length} />
           ) : table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
@@ -74,35 +74,35 @@ export function VoidReportTableCore({
 export function createVoidReportColumns(): ColumnDef<VoidReport>[] {
   return [
     {
-      accessorKey: 'tglTransaksi',
-      header: () => <SortableHeader columnId="tglTransaksi">Tgl Transaksi</SortableHeader>,
+      accessorKey: 'transaction_date',
+      header: () => <SortableHeader columnId="transaction_date">Tgl Transaksi</SortableHeader>,
     },
     {
-      accessorKey: 'noNota',
-      header: () => <SortableHeader columnId="noNota">No. Nota</SortableHeader>,
+      accessorKey: 'nota_number',
+      header: () => <SortableHeader columnId="nota_number">No. Nota</SortableHeader>,
     },
     {
-      accessorKey: 'kasir',
-      header: () => <SortableHeader columnId="kasir">Kasir</SortableHeader>,
+      accessorKey: 'cashier',
+      header: () => <SortableHeader columnId="cashier">Kasir</SortableHeader>,
     },
     {
-      accessorKey: 'nominalPenjualan',
+      accessorKey: 'total_transaction',
       header: () => (
         <div className="text-right">
-          <SortableHeader columnId="nominalPenjualan">Nominal Penjualan</SortableHeader>
+          <SortableHeader columnId="total_transaction">Nominal Penjualan</SortableHeader>
         </div>
       ),
       cell: ({ row }) => {
-        return <div className="text-right">{row.getValue('nominalPenjualan')}</div>;
+        return <div className="text-right">{row.getValue('total_transaction')}</div>;
       },
     },
     {
-      accessorKey: 'tglVoid',
-      header: () => <SortableHeader columnId="tglVoid">Tgl Void</SortableHeader>,
+      accessorKey: 'void_date',
+      header: () => <SortableHeader columnId="void_date">Tgl Void</SortableHeader>,
     },
     {
-      accessorKey: 'penanggungjawab',
-      header: () => <SortableHeader columnId="penanggungjawab">Penanggungjawab</SortableHeader>,
+      accessorKey: 'void_by',
+      header: () => <SortableHeader columnId="void_by">Penanggungjawab</SortableHeader>,
     },
     {
       id: 'actions',

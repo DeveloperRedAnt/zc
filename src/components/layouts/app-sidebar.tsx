@@ -57,6 +57,7 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
   const pathname = usePathname();
   const segments = pathname.split('/');
   const segment = segments[2] || segments[1] || '';
+  const subSegment = segments[3] || '';
   const router = useRouter();
   const logout = useLogout('/sign-in');
   const clearOrganization = useOrganizationStore((state) => state.clearOrganization);
@@ -156,14 +157,14 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                           <Collapsible
                             key={item.title}
                             asChild
-                            defaultOpen={item.isActive}
+                            defaultOpen={segment === item.urlActive}
                             className="group/collapsible"
                           >
                             <SidebarMenuItem>
                               <CollapsibleTrigger asChild>
                                 <SidebarMenuButton
                                   tooltip={item.title}
-                                  isActive={segment === item.urlActive}
+                                  isActive={`${segment}/${subSegment}` === item.urlActive}
                                 >
                                   <div className="flex items-center gap-4">
                                     {IconComponent && (
@@ -181,16 +182,27 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
                               </CollapsibleTrigger>
                               <CollapsibleContent>
                                 <SidebarMenuSub>
-                                  {item.items?.map((subItem) => (
-                                    <SidebarMenuSubItem key={subItem.title}>
-                                      <SidebarMenuSubButton
-                                        asChild
-                                        isActive={segment === subItem.urlActive}
-                                      >
-                                        <Link href={subItem.url}>{subItem.title}</Link>
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  ))}
+                                  {item.items?.map((subItem) => {
+                                    const active = `${segment}/${subSegment}` === subItem.urlActive;
+                                    return (
+                                      <SidebarMenuSubItem key={subItem.title}>
+                                        <SidebarMenuSubButton asChild isActive={active}>
+                                          <Link
+                                            href={subItem.url}
+                                            className="flex items-center gap-2 hover:[&>span]:bg-white"
+                                          >
+                                            {/* Dot indikator */}
+                                            <span
+                                              className={`w-2 h-2 rounded-full mr-2 transition-colors ${
+                                                active ? 'bg-white' : 'bg-gray-600'
+                                              }`}
+                                            />
+                                            {subItem.title}
+                                          </Link>
+                                        </SidebarMenuSubButton>
+                                      </SidebarMenuSubItem>
+                                    );
+                                  })}
                                 </SidebarMenuSub>
                               </CollapsibleContent>
                             </SidebarMenuItem>
@@ -274,7 +286,7 @@ export default function AppSidebar({ isLoading }: { isLoading: boolean }) {
 
                   <DropdownMenuGroup>
                     <DropdownMenuItem>
-                      <Link href="/dashboard/packages" className="flex items-center">
+                      <Link href="/dashboard/management-subscription" className="flex items-center">
                         <BankCard
                           size="16"
                           style={{ width: '16.34px', height: '16px' }}

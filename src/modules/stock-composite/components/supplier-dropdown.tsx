@@ -66,6 +66,11 @@ export function SupplierDropdown({
     _unused: unknown,
     additional?: { page: number }
   ) => {
+    console.debug('[SupplierDropdown] API load', {
+      inputValue,
+      page: additional?.page ?? 1,
+      timestamp: new Date().toISOString(),
+    });
     setSearch(inputValue);
     setPage(additional?.page ?? 1);
 

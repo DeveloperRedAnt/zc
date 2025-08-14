@@ -36,7 +36,7 @@ export function useGetProductDetail(
   },
   options?
 ) {
-  return useQuery<DTO.ApiProduct>({
+  return useQuery<DTO.GetProductDetail>({
     queryKey: ['getProductDetail', params.id],
     queryFn: () => api.ProductDetail({id: params.id}),
     placeholderData: (prev) => prev,
@@ -77,19 +77,6 @@ export function useSetFirstStock(
   });
 }
 
-
-export function useStockDetail(
-  params: DTO.GetRequestStockSchema, 
-    options?: UseQueryOptions<DTO.ReturnDetailTempProductResponseSchema>
-) {
-  return useQuery({
-    queryKey: ['InitializeStockDetails', params],
-    queryFn: () => 
-      api.InitializeStockDetails(params),
-    ...options,
-  });
-}
-
 export function useProductTags(
   params: {
     'x-device-id': string;
@@ -125,3 +112,50 @@ export function useCreateProduct(
   });
 }
 
+export function useCheckStockBaik(
+  options?: UseMutationOptions<
+    DTO.CheckStockBaikItems,
+    Error,
+    {
+      body: DTO.GetCheckStockBaikRequestSchema
+    }
+  >
+) {
+
+  return useMutation({
+    mutationFn: async (params) => api.checkStockBaik({body: params.body}),
+    ...options,
+  });
+}
+
+export function useAdjustmentStockTakings(
+  options?: UseMutationOptions<
+    DTO.PostInitStockResponseSchema,
+    Error,
+    {
+      body: DTO.PostInitStockRequestSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: async (params) => api.adjustStockOpname(params.body),
+    ...options,
+  });
+}
+
+
+/**
+ * Create product mutation hook
+ */
+export function useUpdateProduct(options?: UseMutationOptions<DTO.CreateProductResponseData,
+    Error,
+    {
+      body: DTO.UpdateProductRequestSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: async (params) => api.updateProduct({ body: params.body}),
+    ...options,
+  });
+}

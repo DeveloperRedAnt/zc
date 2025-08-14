@@ -8,20 +8,10 @@ import { DateRangeActions, DateRangeState, WeeklyRange } from '../types-datepirc
 
 interface UseDateRangeStateProps {
   initialPeriod?: Period;
-  defaultDailyRange?: DateRange;
-  defaultSingleBorderedDate?: Date;
-  defaultMonthlyRange?: MonthlyRange;
-  defaultQuarterlyRange?: QuarterlyRange;
-  defaultYearlyRange?: YearlyRange;
 }
 
 export function useDateRangeState({
   initialPeriod,
-  defaultDailyRange,
-  defaultSingleBorderedDate,
-  defaultMonthlyRange,
-  defaultQuarterlyRange,
-  defaultYearlyRange,
 }: UseDateRangeStateProps): [DateRangeState, DateRangeActions] {
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -30,11 +20,9 @@ export function useDateRangeState({
 
   // State for each period type's selection
   const [dailyRange, setDailyRange] = React.useState<DateRange | undefined>(
-    initialPeriod?.type === 'daily' ? (initialPeriod.value as DateRange) : defaultDailyRange
+    initialPeriod?.type === 'daily' ? (initialPeriod.value as DateRange) : undefined
   );
-  const [singleBorderedDate, setSingleBorderedDate] = React.useState<Date | undefined>(
-    defaultSingleBorderedDate
-  );
+  const [singleBorderedDate, setSingleBorderedDate] = React.useState<Date | undefined>(undefined);
   const [weeklyRange, setWeeklyRange] = React.useState<WeeklyRange | undefined>(
     initialPeriod?.type === 'weekly'
       ? (initialPeriod.value as WeeklyRange)
@@ -45,20 +33,23 @@ export function useDateRangeState({
   );
   const [monthlyRange, setMonthlyRange] = React.useState<MonthlyRange | undefined>(
     initialPeriod?.type === 'monthly'
-      ? (initialPeriod.value as MonthlyRange)
-      : defaultMonthlyRange ?? { from: new Date(currentYear, currentMonth, 1) }
+      ? {
+          from: (initialPeriod.value as MonthlyRange).from,
+          to: (initialPeriod.value as MonthlyRange).to,
+        }
+      : { from: new Date(currentYear, currentMonth, 1) }
   );
   const [quarterlyRange, setQuarterlyRange] = React.useState<QuarterlyRange | undefined>(
     initialPeriod?.type === 'quarterly'
       ? (initialPeriod.value as QuarterlyRange)
-      : defaultQuarterlyRange ?? {
+      : {
           from: { quarter: currentQuarter, year: currentYear },
         }
   );
   const [yearlyRange, setYearlyRange] = React.useState<YearlyRange | undefined>(
     initialPeriod?.type === 'yearly'
       ? (initialPeriod.value as YearlyRange)
-      : defaultYearlyRange ?? { from: 2020, to: 2022 }
+      : { from: 2020, to: 2022 }
   );
 
   const [currentYearNav, setCurrentYearNav] = React.useState<number>(() => {
@@ -90,16 +81,19 @@ export function useDateRangeState({
     currentYearNav,
   };
 
-  const actions: DateRangeActions = {
-    setDailyRange,
-    setSingleBorderedDate,
-    setWeeklyRange,
-    setMonthlyRange,
-    setQuarterlyRange,
-    setYearlyRange,
-    setCalendarMonth,
-    setCurrentYearNav,
-  };
+  const actions: DateRangeActions = React.useMemo(
+    () => ({
+      setDailyRange,
+      setSingleBorderedDate,
+      setWeeklyRange,
+      setMonthlyRange,
+      setQuarterlyRange,
+      setYearlyRange,
+      setCalendarMonth,
+      setCurrentYearNav,
+    }),
+    []
+  );
 
   return [state, actions];
 }

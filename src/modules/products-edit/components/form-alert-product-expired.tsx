@@ -8,7 +8,7 @@ import { Label } from '@/components/label/label';
 import { RadioGroup, RadioGroupItem } from '@/components/radio-group/radio-group';
 import { Switch } from '@/components/switch/switch';
 import { useTrackStockProductStore } from '@/modules/products-edit/storing-data/track-stock-product/stores'; // ✅ Import store
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const optionsExpiredDay: OptionType[] = [
   { label: '1 Hari', value: 1 },
@@ -17,34 +17,71 @@ const optionsExpiredDay: OptionType[] = [
   { label: '10 Hari', value: 10 },
 ];
 
-export default function Index() {
-  const [selectedExpiredDay, setSelectedExpiredDay] = useState<OptionType | null>(null);
-  const [dayInputType, setDayInputType] = useState<'radio-day-select' | 'radio-day-input'>(
-    'radio-day-select'
+interface Props {
+  productId: number;
+}
+
+export default function Index({ productId }: Props) {
+  const trackStockStore = useTrackStockProductStore();
+  // Calculate derived values from store data directly
+  const storeData = trackStockStore.products[productId] ?? {
+    is_enable_expired_reminder: false,
+    expired_reminder_in_days: 1,
+  };
+  const isExpiredReminderEnabled = storeData.is_enable_expired_reminder;
+  const expiredReminderInDays = storeData.expired_reminder_in_days;
+
+  // Determine if current value matches predefined options
+  const matchingOption = expiredReminderInDays
+    ? optionsExpiredDay.find((option) => option.value === expiredReminderInDays) || null
+    : null;
+
+  // Determine input type based on whether value matches predefined options
+  const dayInputType: 'radio-day-select' | 'radio-day-input' = matchingOption
+    ? 'radio-day-select'
+    : 'radio-day-input';
+  const selectedExpiredDay: OptionType | null = matchingOption;
+
+  // For manual input, show the value if there's no matching option, or if we explicitly want manual input
+  const manualInputValue = expiredReminderInDays ? expiredReminderInDays.toString() : '';
+
+  // Local state for radio button selection only
+  const [currentInputType, setCurrentInputType] = useState<'radio-day-select' | 'radio-day-input'>(
+    dayInputType
   );
-  const { setTrackStock } = useTrackStockProductStore();
 
-  const handleEnableSwitch = (enabled: boolean) => {
-    setTrackStock({ is_enable_expired_reminder: enabled });
-  };
+  // Sync currentInputType when store data changes
+  useEffect(() => {
+    setCurrentInputType(dayInputType);
+  }, [dayInputType]);
 
-  const handleDropdownChange = (option: OptionType | null) => {
-    setSelectedExpiredDay(option);
-    setTrackStock({
-      expired_reminder_in_days: option?.value != null ? Number(option.value) : null,
-      expired_reminder_in_date: null,
-    });
-  };
+  const handleEnableSwitch = useCallback(
+    (enabled: boolean) => {
+      trackStockStore.setTrackStock(productId, { is_enable_expired_reminder: enabled });
+    },
+    [productId, trackStockStore.setTrackStock]
+  );
 
-  const handleManualInput = (
-    e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const value = Number(e.target.value);
-    setTrackStock({
-      expired_reminder_in_days: Number.isNaN(value) ? null : value,
-      expired_reminder_in_date: null,
-    });
-  };
+  const handleDropdownChange = useCallback(
+    (option: OptionType | null) => {
+      trackStockStore.setTrackStock(productId, {
+        expired_reminder_in_days: option?.value != null ? Number(option.value) : null,
+        expired_reminder_in_date: null,
+      });
+    },
+    [productId, trackStockStore.setTrackStock]
+  );
+
+  const handleManualInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = Number(e.target.value);
+      trackStockStore.setTrackStock(productId, {
+        expired_reminder_in_days: Number.isNaN(value) ? null : value,
+        expired_reminder_in_date: null,
+      });
+    },
+    [productId, trackStockStore.setTrackStock]
+  );
 
   return (
     <div className="pb-6">
@@ -54,13 +91,17 @@ export default function Index() {
       <InformationText text="Penentuan jumlah hari untuk peringatan sebelum kedaluwarsa" />
 
       <div className="flex items-center gap-2 mt-2">
-        <Switch id="alertProductExpired" defaultChecked onCheckedChange={handleEnableSwitch} />
+        <Switch
+          id="alertProductExpired"
+          checked={isExpiredReminderEnabled}
+          onCheckedChange={handleEnableSwitch}
+        />
         <Label htmlFor="alertProductExpired"> Peringatan Produk Kedaluwarsa </Label>
       </div>
 
       <RadioGroup
-        defaultValue="radio-day-select"
-        onValueChange={(val) => setDayInputType(val as 'radio-day-select' | 'radio-day-input')}
+        value={currentInputType}
+        onValueChange={(val) => setCurrentInputType(val as 'radio-day-select' | 'radio-day-input')}
         className="flex space-x-2 mb-4 mt-6"
       >
         <div className="flex items-center space-x-2">
@@ -73,7 +114,7 @@ export default function Index() {
         </div>
       </RadioGroup>
 
-      {dayInputType === 'radio-day-select' && (
+      {currentInputType === 'radio-day-select' && (
         <Dropdown
           label=""
           options={optionsExpiredDay}
@@ -84,11 +125,12 @@ export default function Index() {
         />
       )}
 
-      {dayInputType === 'radio-day-input' && (
+      {currentInputType === 'radio-day-input' && (
         <CustomInput
           currency
           className="border-[#C2C7D0]"
           placeholder="0"
+          value={manualInputValue}
           appendText="Hari"
           inputNumber
           onChange={handleManualInput}

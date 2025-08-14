@@ -11,13 +11,15 @@ export function BatchStockInput({ control, errors }: Props) {
   return (
     <Controller
       control={control}
-      name="batchStock"
+      name="batch_stock"
       render={({ field }) => (
         <div>
-          <label className="block mb-1 font-medium">Jumlah Batch</label>
+          <label className="block mb-1 font-medium">
+            Stok Batch <span className="text-red-500">*</span>
+          </label>
           <Input type="number" min={1} required className="w-full h-11 text-sm" {...field} />
-          {errors.batchStock?.message && (
-            <span className="text-red-500 text-xs mt-1">{errors.batchStock.message}</span>
+          {errors.batch_stock?.message && (
+            <span className="text-red-500 text-xs mt-1">{errors.batch_stock.message}</span>
           )}
         </div>
       )}

@@ -7,13 +7,40 @@ import UnitPicker, { UnitOptionType } from '@/components/unit-picker/unit-picker
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
 import { useProductDetailStore } from '@/modules/products-edit/storing-data/product-detail/stores';
 import { Refresh } from '@icon-park/react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean }) {
+export default function FormProductDetail({
+  isEdit = false,
+  productId = 1,
+}: { isEdit?: boolean; productId?: number }) {
   const [selectedUnit, setSelectedUnit] = useState<UnitOptionType | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const productDetailStore = useProductDetailStore(); // ✅ Init store
+  const productDetailStore = useProductDetailStore();
+  const productData = productDetailStore.products[productId] ?? {
+    unit_id: null,
+    unit_string: null,
+    content: '',
+    price: '',
+    stock: '',
+    description: '',
+    sku: '',
+    barcode: '',
+  };
+
+  // Update selectedUnit when store unit_id changes
+  useEffect(() => {
+    if (productData.unit_id && !selectedUnit) {
+      setSelectedUnit({
+        value: productData.unit_id,
+        label: productData.unit_string || '',
+        data: {
+          id: productData.unit_id,
+          unit_name: productData.unit_string || '',
+        },
+      });
+    }
+  }, [productData.unit_id, productData.unit_string, selectedUnit]);
 
   // Register field: Content
   const {
@@ -38,35 +65,29 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
     }
   );
 
-  // ✅ Update store on content change
   const onContentChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     originalOnContentChange();
-    productDetailStore.setProductDetail({ content: e.target.value });
+    productDetailStore.setProductDetail(productId, { content: e.target.value });
   };
 
-  // ✅ Update store on packaging change
   const onPackagingChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     originalOnPackagingChange();
-    productDetailStore.setProductDetail({ package: e.target.value });
+    productDetailStore.setProductDetail(productId, { package: e.target.value });
   };
 
-  // ✅ Update barcode on packaging change
   const onBarcodeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     originalOnPackagingChange();
-    productDetailStore.setProductDetail({ barcode: e.target.value });
+    productDetailStore.setProductDetail(productId, { barcode: e.target.value });
   };
-
-  // ✅ Update sku on packaging change
   const onSkuChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     originalOnPackagingChange();
-    productDetailStore.setProductDetail({ sku: e.target.value });
+    productDetailStore.setProductDetail(productId, { sku: e.target.value });
   };
 
-  // ✅ Update store on dropdown change
   const handleDropdownChange = (val: UnitOptionType | null) => {
     setSelectedUnit(val);
     onUnitChange(); // for validation
-    productDetailStore.setProductDetail({ unit_id: val ? val.data.id : null });
+    productDetailStore.setProductDetail(productId, { unit_id: val ? val.data.id : null });
   };
 
   return (
@@ -92,6 +113,7 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
             </label>
             <Input
               ref={contentRef as React.RefObject<HTMLInputElement>}
+              value={productData.content}
               onChange={onContentChange}
               type="text"
               placeholder="cth: 250"
@@ -124,6 +146,7 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
             </label>
             <Input
               ref={packagingRef as React.RefObject<HTMLInputElement>}
+              value={('package' in productData ? productData.package : '') || ''}
               onChange={onPackagingChange}
               type="text"
               placeholder="cth: Botol"
@@ -141,6 +164,7 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
             <label className="block mb-2"> Barcode </label>
             <Input
               type="text"
+              value={productData.barcode || ''}
               className="border-[#C2C7D0]"
               placeholder="cth: 1199922838920"
               onChange={onBarcodeChange}
@@ -152,6 +176,7 @@ export default function FormProductDetail({ isEdit = false }: { isEdit?: boolean
             <label className="block mb-2"> SKU </label>
             <Input
               type="text"
+              value={productData.sku || ''}
               className="border-[#C2C7D0]"
               placeholder="cth: 782217821"
               onChange={onSkuChange}

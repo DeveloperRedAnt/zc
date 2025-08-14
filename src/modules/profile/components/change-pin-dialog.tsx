@@ -11,7 +11,7 @@ import {
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/input-otp/input-otp';
 import { toast } from '@/components/toast/toast';
 import { useTranslation } from '@/libs/i18n';
-import AlertDialogAddOn from '@/modules/packages/components/alert-dialog-add-on';
+import AlertDialogAddOn from '@/modules/management-subscription/components/alert-dialog-add-on';
 import { Check } from '@icon-park/react';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';

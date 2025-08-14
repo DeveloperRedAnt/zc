@@ -38,7 +38,7 @@ const headerProductPaduan = [
 export default function Index({ data }: { data: CompositeData }) {
   const tableProductPaduan = useReactTable({
     data: data.components.map((item) => ({
-      name: item.product_name ?? '-',
+      name: item.name ?? '-',
       quantity: String(item.quantity),
     })),
     columns: headerProductPaduan,

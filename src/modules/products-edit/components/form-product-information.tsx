@@ -10,21 +10,36 @@ import { Switch } from '@/components/switch/switch';
 import TagPicker, { TagOptionType } from '@/components/tag-picker/tag-picker';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
 import { useProductInformationStore } from '@/modules/products-edit/storing-data/product-information/stores';
+import { ProductTag } from '@/modules/products-edit/storing-data/product-information/types';
 import { useState } from 'react';
 
-export default function FormProductInformation() {
+export default function FormProductInformation({ productId = 1 }: { productId?: number }) {
   // Zustand store
-  const {
-    productName,
-    isActiveProduct,
-    isFavorite,
-    // thumbnailFile,
-    setProductName,
-    setIsActiveProduct,
-    setIsFavorite,
-    setSelectedTags,
-    setThumbnailFile,
-  } = useProductInformationStore();
+  const store = useProductInformationStore();
+  const productData = store.products[productId] ?? {
+    thumbnailFile: null,
+    thumbnailUrl: null,
+    productName: '',
+    isActiveProduct: true,
+    isFavorite: false,
+    selectedTags: [],
+  };
+
+  // Extract actions that now require productId
+  const setProductName = (name: string) => store.setProductName(productId, name);
+  const setIsActiveProduct = (isActive: boolean) => store.setIsActiveProduct(productId, isActive);
+  const setIsFavorite = (isFavorite: boolean) => store.setIsFavorite(productId, isFavorite);
+  const setSelectedTags = (tags: ProductTag[]) => store.setSelectedTags(productId, tags);
+  const setThumbnailFile = (file: File | null) => store.setThumbnailFile(productId, file);
+
+  const mappedSelectedTags = productData.selectedTags.map((tag) => ({
+    label: tag.label,
+    value: tag.value.toString(),
+    data: {
+      id: tag.value,
+      name: tag.label,
+    },
+  }));
 
   // Local state untuk tag picker (karena tipe berbeda)
   const [selectedTagOptions, setSelectedTagOptions] = useState<TagOptionType[]>([]);
@@ -85,7 +100,7 @@ export default function FormProductInformation() {
             <Input
               ref={nameRef as React.RefObject<HTMLInputElement>}
               type="text"
-              value={productName}
+              value={productData.productName}
               onChange={handleProductNameChange}
               className={`w-[70%] border ${nameError ? '!border-[#F08181]' : 'border-[#C2C7D0]'}`}
               placeholder="cth: Kopi Arabica"
@@ -99,20 +114,24 @@ export default function FormProductInformation() {
           <div className="flex items-center gap-2">
             <Switch
               id="isActiveProduct"
-              checked={isActiveProduct}
+              checked={productData.isActiveProduct}
               onCheckedChange={setIsActiveProduct}
             />
             <Label htmlFor="isActiveProduct">Produk Aktif (Muncul di POS)</Label>
           </div>
           <div className="flex items-center gap-2">
-            <Switch id="isFavorite" checked={isFavorite} onCheckedChange={setIsFavorite} />
+            <Switch
+              id="isFavorite"
+              checked={productData.isFavorite}
+              onCheckedChange={setIsFavorite}
+            />
             <Label htmlFor="isFavorite">Favoritkan Produk</Label>
           </div>
           <div>
             <label className="text-sm flex items-center gap-1 mb-2"> Tag Produk </label>
             <InformationText text="Pengelompokan produk berdasarkan kata kunci (Opsional)" />
             <TagPicker
-              value={selectedTagOptions}
+              value={mappedSelectedTags}
               onChange={handleTagChange}
               placeholder="Pilih tag"
               className="mt-2 w-[70%]"

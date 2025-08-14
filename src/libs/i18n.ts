@@ -72,18 +72,27 @@ export function getLocalePreference(): Locale {
 export function useTranslation(namespace = 'common') {
   // Use a more specific type for translations
   const [translations, setTranslations] = useState<Record<string, unknown>>({});
-  const [locale, _setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const [_isLoaded, setIsLoaded] = useState(false);
 
-  // Initialize locale on client side
+  // Initialize locale and load translations once on mount
   useEffect(() => {
-    const savedLocale = getLocalePreference();
-    // setLocale(savedLocale);
+    let isMounted = true;
 
-    // Load translations
     (async () => {
+      const savedLocale = getLocalePreference();
       const trans = await getTranslations(savedLocale, namespace);
-      setTranslations(trans);
+
+      if (isMounted) {
+        setLocale(savedLocale);
+        setTranslations(trans);
+        setIsLoaded(true);
+      }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [namespace]);
 
   // Translation function

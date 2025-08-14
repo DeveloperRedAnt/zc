@@ -11,16 +11,17 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 type ProductVariant = {
-  id: number;
+  id: string;
   is_active: boolean;
   gtin?: string;
   sku_code?: string;
   thumbnail?: string;
   attributes?: { value: string }[];
   variant_units?: {
+    id: string;
     unit_name: string;
-    conversion_value: number;
-    price?: number;
+    conversion_value: string;
+    price: string;
   }[];
   package?: string;
 };
@@ -30,7 +31,7 @@ export default function Index({
   data,
 }: { isEdit?: boolean; data: ProductVariant[] }) {
   const router = useRouter();
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
 
   return (
     <>

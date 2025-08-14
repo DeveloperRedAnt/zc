@@ -1,55 +1,95 @@
+import * as DTO from '@/__generated__/api/dto/reports/sales-profit.dto';
+import { useProfitLoss } from '@/__generated__/api/hooks/reports/sales-profitloss.hook';
 import { PageLayout } from '@/components/page-layout/page-layout';
-import { Period } from '@/modules/reports/sales-payment/types';
-import ProfitLossChartCard from '@/modules/reports/sales-profit-loss/components/profit-loss-chart-card';
 import { SalesProfitLossTable } from '@/modules/reports/sales-profit-loss/components/sales-profit-loss-table';
+import { useQueryState } from 'nuqs';
+import ProfitLossChartCard from './profit-loss-card/ProfitLossChartCard';
 
-interface LaporanLabaRugiPageProps {
-  chartTitle: string;
-  chartDateRange: string;
-  hppValue: string;
-  revenueValue: string;
-  marginPercentage: string;
-  deviceId?: string;
-  storeId?: string;
-  dateRangePickerProps: {
-    onApply: (period: Period) => void;
-    defaultDailyRange: { from: Date; to: Date };
-    defaultMonthlyRange: { from: Date };
-    defaultQuarterlyRange: { from: { quarter: number; year: number } };
-    defaultYearlyRange: { from: number; to?: number };
+export function LaporanLabaRugiPage() {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const [pageIndex = 1, setPageIndex] = useQueryState('page', {
+    history: 'replace',
+    parse: Number,
+    serialize: String,
+  });
+  const [pageSize = 4, setPageSize] = useQueryState('per_page', {
+    history: 'replace',
+    parse: Number,
+    serialize: String,
+  });
+  const [sortBy = 'period', setSortBy] = useQueryState('sort_by', {
+    history: 'replace',
+  });
+  const [sortDirection = 'desc', setSortDirection] = useQueryState('sort_dir', {
+    history: 'replace',
+  });
+  const [startDate = todayStr, setStartDate] = useQueryState('start_date', {
+    history: 'replace',
+  });
+  const [endDate = todayStr, setEndDate] = useQueryState('end_date', {
+    history: 'replace',
+  });
+
+  const [grouping = 'daily', setGrouping] = useQueryState('grouping', {
+    history: 'replace',
+  });
+
+  const params: DTO.SalesProfitDto & { sort_by?: string; sort_dir?: string } = {
+    grouping: grouping ?? 'daily',
+    start_date: startDate ?? todayStr,
+    end_date: endDate ?? todayStr,
+    page: Number(pageIndex) + 1,
+    per_page: Number(pageSize),
+    sort_by: sortBy ?? 'period_start',
+    sort_dir: sortDirection ?? 'desc',
   };
-}
 
-export function LaporanLabaRugiPage({
-  chartTitle = 'Bar Chart Laporan Laba Rugi',
-  chartDateRange = '15 Januari 2025 - 21 Januari 2025',
-  hppValue = 'Rp 13.842.095',
-  revenueValue = 'Rp 15.123.668',
-  marginPercentage = '5%',
-  deviceId = '1',
-  storeId = '1',
-  dateRangePickerProps,
-}: LaporanLabaRugiPageProps) {
-  // const [selectedPeriod] = useState<Period>({
-  //   type: 'daily',
-  //   value: {
-  //     from: new Date(2025, 0, 15), // January 15, 2025
-  //     to: new Date(2025, 0, 21)    // January 21, 2025
-  //   }
-  // });
+  const { data, isLoading, error } = useProfitLoss(params);
+  const tableData: DTO.SalesProfitRow[] = Array.isArray(data?.data?.table?.data)
+    ? data?.data?.table?.data
+    : [];
+
+  const lastPage = data?.data?.table?.last_page ?? 1;
+
+  const graph = data?.data?.graph;
+  const presentaseHpp = graph?.gross_margin_percent ?? 0;
+  const presentaseRevenue = graph?.gross_profit ?? 0;
 
   return (
     <>
       <ProfitLossChartCard
-        title={chartTitle}
-        dateRange={chartDateRange}
-        hppValue={hppValue}
-        revenueValue={revenueValue}
-        marginPercentage={marginPercentage}
-        dateRangePickerProps={dateRangePickerProps}
+        presentaseHpp={presentaseHpp}
+        presentaseRevenue={presentaseRevenue}
+        hppValue={graph?.total_hpp ?? 0}
+        revenueValue={graph?.total_revenue ?? 0}
+        title={'Bar Chart Laporan Laba Rugi'}
+        startDate={startDate}
+        endDate={endDate}
+        setStartDate={setStartDate}
+        setEndDate={setEndDate}
+        setGrouping={setGrouping}
       />
       <PageLayout title="Laporan Laba Rugi">
-        <SalesProfitLossTable deviceId={deviceId} storeId={storeId} />
+        <SalesProfitLossTable
+          data={tableData}
+          isLoading={isLoading}
+          error={error}
+          last_page={lastPage}
+          sortBy={sortBy as keyof DTO.SalesProfitRow}
+          sortDirection={sortDirection as 'asc' | 'desc'}
+          onSortChange={(by, dir) => {
+            setSortBy(by);
+            setSortDirection(dir);
+            setPageIndex(0);
+          }}
+          pageIndex={Number(pageIndex)}
+          pageSize={Number(pageSize)}
+          onPaginationChange={(idx, size) => {
+            setPageIndex(idx);
+            setPageSize(size);
+          }}
+        />
       </PageLayout>
     </>
   );

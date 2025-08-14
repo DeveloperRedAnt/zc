@@ -5,21 +5,41 @@ import CustomInput from '@/components/input/custom-input';
 import { Label } from '@/components/label/label';
 import { Switch } from '@/components/switch/switch';
 import { useTrackStockProductStore } from '@/modules/products-edit/storing-data/track-stock-product/stores';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import FormAlertProductExpired from './form-alert-product-expired';
 
 interface Props {
+  productId: number;
   onTrackStockChange: (enabled: boolean) => void;
 }
 
-export default function Index({ onTrackStockChange }: Props) {
-  const [toggleStatusTracking, setToggleStatusTracking] = useState(true);
-  const { setTrackStock } = useTrackStockProductStore();
+export default function Index({ productId, onTrackStockChange }: Props) {
+  const trackStockStore = useTrackStockProductStore();
+  const productData = trackStockStore.products[productId] ?? {
+    is_track_stock: false,
+    minimum_stock: '',
+    stockAlertType: 'none',
+  };
 
-  useEffect(() => {
-    onTrackStockChange(toggleStatusTracking);
-    setTrackStock({ is_track_stock: toggleStatusTracking });
-  }, [toggleStatusTracking, onTrackStockChange, setTrackStock]);
+  // Handle toggle change
+  const handleToggleChange = useCallback(
+    (checked: boolean) => {
+      onTrackStockChange(checked);
+      trackStockStore.setTrackStock(productId, { is_track_stock: checked });
+    },
+    [productId, onTrackStockChange, trackStockStore.setTrackStock]
+  );
+
+  // Handle minimum stock change
+  const handleMinimumStockChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = Number(e.target.value);
+      trackStockStore.setTrackStock(productId, {
+        minimum_stock: Number.isNaN(value) ? null : value,
+      });
+    },
+    [productId, trackStockStore.setTrackStock]
+  );
 
   return (
     <>
@@ -35,13 +55,13 @@ export default function Index({ onTrackStockChange }: Props) {
         <div className="flex items-center gap-2 mt-2">
           <Switch
             id="isTrackStockProduct"
-            checked={toggleStatusTracking}
-            onCheckedChange={setToggleStatusTracking}
+            checked={productData.is_track_stock}
+            onCheckedChange={handleToggleChange}
           />
           <Label htmlFor="isTrackStockProduct"> Lacak Stok Produk </Label>
         </div>
 
-        {toggleStatusTracking && (
+        {productData.is_track_stock && (
           <div className="pl-6">
             <div className="pt-6 mb-2">
               <p> Peringatan Stok Minimum </p>
@@ -52,16 +72,14 @@ export default function Index({ onTrackStockChange }: Props) {
                 currency
                 className="border-[#C2C7D0]"
                 placeholder="0"
+                value={productData.minimum_stock?.toString() || ''}
                 appendText="Produk"
                 inputNumber
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setTrackStock({ minimum_stock: Number.isNaN(value) ? null : value });
-                }}
+                onChange={handleMinimumStockChange}
               />
             </div>
 
-            <FormAlertProductExpired />
+            <FormAlertProductExpired productId={productId} />
           </div>
         )}
       </div>

@@ -1,12 +1,12 @@
 'use client';
 
 import { PageLayout } from '@/components/page-layout/page-layout';
-import { SalesCashierTable } from '@/modules/reports/sales-cashier/components/sales-cashier-table';
+import { VoidReportTable } from '@/modules/reports/sales-cashier/components';
 
 export default function page() {
   return (
     <PageLayout title="Penjualan per Kasir">
-      <SalesCashierTable />
+      <VoidReportTable />
     </PageLayout>
   );
 }

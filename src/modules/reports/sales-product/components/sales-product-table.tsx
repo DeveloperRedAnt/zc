@@ -1,152 +1,188 @@
 'use client';
 
+import * as DTO from '@/__generated__/api/dto/reports/sales-product.dto';
+import { DataTable } from '@/components/table/data-table';
+import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import React from 'react';
+import { useSalesProductFilters } from '../hooks/use-sales-product-filter';
+import { SortableHeader } from './sortable-header';
 
-type SalesProduct = {
-  nama_produk: string;
-  jumlah_terjual: string;
-  nominal_penjualan: string;
-  hpp: string;
-  laba: string;
-  persentase_penjualan: string;
+const columnHelper = createColumnHelper<DTO.TableDataProduct>();
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 };
-const columnHelper = createColumnHelper<SalesProduct>();
 
-const mockData: SalesProduct[] = [
-  {
-    nama_produk: 'Papua New Guinea Organic Robusta 250 gr',
-    jumlah_terjual: '112 Zak',
-    nominal_penjualan: 'Rp 1.109.561',
-    hpp: 'Rp 752.102',
-    laba: 'Rp 357.459',
-    persentase_penjualan: '10,553%',
-  },
-  {
-    nama_produk: 'Aloe Vera Hydrating Gel 100 ml',
-    jumlah_terjual: '20 Jar',
-    nominal_penjualan: 'Rp 510.824',
-    hpp: 'Rp 337.920',
-    laba: 'Rp 172.904',
-    persentase_penjualan: '8,411%',
-  },
-  {
-    nama_produk: 'Rose Bloom Face Mist 60 ml',
-    jumlah_terjual: '156 Botol',
-    nominal_penjualan: 'Rp 1.144.466',
-    hpp: 'Rp 1.012.774',
-    laba: 'Rp 131.692',
-    persentase_penjualan: '12,134%',
-  },
-  {
-    nama_produk: 'Organic Oat Cookies 180 gr (Raisin & Chia - Big)',
-    jumlah_terjual: '255 Plastik',
-    nominal_penjualan: 'Rp 1.241.380',
-    hpp: 'Rp 1.077.740',
-    laba: 'Rp 163.640',
-    persentase_penjualan: '19,2%',
-  },
-  {
-    nama_produk: 'Raw Honey Sumbawa 500 ml',
-    jumlah_terjual: '50 Botol',
-    nominal_penjualan: 'Rp 1.618.929',
-    hpp: 'Rp 718.975',
-    laba: 'Rp 899.954',
-    persentase_penjualan: '13%',
-  },
-  {
-    nama_produk: 'Wedang Rempah Tradisional 1 gr (Coklat - Small)',
-    jumlah_terjual: '22 Sachet',
-    nominal_penjualan: 'Rp 609.479',
-    hpp: 'Rp 561.108',
-    laba: 'Rp 48.371',
-    persentase_penjualan: '13,912%',
-  },
-  {
-    nama_produk: 'Mini Ceramic Diffuser 1 pcs',
-    jumlah_terjual: '10 Box',
-    nominal_penjualan: 'Rp 535.012',
-    hpp: 'Rp 480.268',
-    laba: 'Rp 54.744',
-    persentase_penjualan: '19,201%',
-  },
-];
+interface SalesProductTableProps {
+  tableData: DTO.TableResponse | null;
+  isLoading?: boolean;
+}
 
-export function SalesProductTable() {
-  const columns = React.useMemo(
-    () => [
-      columnHelper.accessor('nama_produk', {
-        header: () => <div className="font-bold text-black">Nama Produk</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('jumlah_terjual', {
-        header: () => <div className="font-bold text-black">Jumlah Terjual</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('nominal_penjualan', {
-        header: () => <div className="font-bold text-black">Nominal Penjualan</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('hpp', {
-        header: () => <div className="font-bold text-black">HPP</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('laba', {
-        header: () => <div className="font-bold text-black">Laba</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('persentase_penjualan', {
-        header: () => <div className="font-bold text-black">Persentase Penjualan</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-    ],
-    []
+export function SalesProductTable({ tableData, isLoading }: SalesProductTableProps) {
+  const { filters, updatePagination, updateSorting } = useSalesProductFilters();
+
+  const handleSort = React.useCallback(
+    (column: string, direction: 'asc' | 'desc') => {
+      updateSorting(column, direction);
+    },
+    [updateSorting] // kalau updateSorting stabil (misalnya dari hook yang pakai useCallback juga)
   );
 
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor('product_name', {
+        header: () => (
+          <SortableHeader
+            label="Nama Produk"
+            sortKey="product_name"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="left"
+          />
+        ),
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+        enableSorting: false,
+      }),
+      columnHelper.accessor('total_sales', {
+        header: () => (
+          <SortableHeader
+            label="Jumlah Terjual"
+            sortKey="total_sales"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => <div className="text-center text-sm">{info.getValue()}</div>,
+        enableSorting: false,
+      }),
+      columnHelper.accessor('total_transaction', {
+        header: () => (
+          <SortableHeader
+            label="Nominal Penjualan"
+            sortKey="total_transaction"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => (
+          <div className="text-right text-sm font-medium">{formatCurrency(info.getValue())}</div>
+        ),
+        enableSorting: false,
+      }),
+      columnHelper.accessor('hpp', {
+        header: () => (
+          <SortableHeader
+            label="HPP"
+            sortKey="hpp"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => (
+          <div className="text-right text-sm font-medium">{formatCurrency(info.getValue())}</div>
+        ),
+        enableSorting: false,
+      }),
+      columnHelper.accessor('profit', {
+        header: () => (
+          <SortableHeader
+            label="Laba"
+            sortKey="profit"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => {
+          const profit = info.getValue();
+          return <div className={'text-right text-sm font-medium'}>{formatCurrency(profit)}</div>;
+        },
+        enableSorting: false,
+      }),
+      columnHelper.accessor('sales_transaction', {
+        header: () => (
+          <SortableHeader
+            label="Persentase Penjualan"
+            sortKey="sales_transaction"
+            currentSortColumn={filters.sort_column}
+            currentSortDirection={filters.sort_direction as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => <div className="text-center text-sm">{info.getValue()}</div>,
+        enableSorting: false,
+      }),
+    ],
+    [filters.sort_column, filters.sort_direction, handleSort]
+  );
+
+  const data = tableData?.data || [];
+
   const table = useReactTable({
-    data: mockData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    manualSorting: true,
+    pageCount: tableData?.last_page || 0,
+    state: {
+      pagination: {
+        pageIndex: filters.page,
+        pageSize: filters.per_page,
+      },
+      sorting: [],
+    },
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newState = updater({
+          pageIndex: filters.page,
+          pageSize: filters.per_page,
+        });
+        updatePagination(newState.pageIndex, newState.pageSize);
+      }
+    },
+    enableSorting: false,
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!data.length) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center text-muted-foreground">
+        Tidak ada data untuk ditampilkan
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-2">
-      {/* Replace with your DataTable component */}
-      {/* <DataTable table={table} /> */}
-      {/* <DataTablePagination table={table} isLoading={false} /> */}
-      <table className="min-w-full bg-white">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : typeof header.column.columnDef.header === 'function'
-                      ? header.column.columnDef.header(header.getContext())
-                      : header.column.columnDef.header}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                  {typeof cell.column.columnDef.cell === 'function'
-                    ? cell.column.columnDef.cell(cell.getContext())
-                    : cell.getValue()}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="py-2">
+      <div>
+        <DataTable table={table} />
+      </div>
+      <div className="mt-4">
+        <DataTablePagination table={table} isLoading={isLoading || false} />
+      </div>
     </div>
   );
 }

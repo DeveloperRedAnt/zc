@@ -1,26 +1,26 @@
 'use client';
 
 import { DateRangePicker } from '@/components/popup-datepicker/date-ranger-picker';
-import { SelectFilter } from '@/modules/reports/sales-void/components/select-filter';
-import React from 'react';
+import { getMonthRange } from '@/utils/dateRange';
+import dynamic from 'next/dynamic';
+import React, { useState } from 'react';
 import { useSalesDetailFilters } from '../hooks/use-sales-daily';
-import { Period } from '../types/sales-daily.types';
 
-interface FilterData {
-  period: Period | undefined;
-  productName: string;
-  variantName: string;
-  storeName: string;
-}
+const TokoDropdown = dynamic(
+  () => import('../../sales-cashier/shared-components/select-toko').then((mod) => mod.TokoDropdown),
+  { ssr: false }
+);
 
-export interface FilterCashierTableProps {
-  onFilterChange?: (filters: FilterData) => void;
-  responsiblePersonOptions: Array<{ label: string; value: string }>;
-  cashierOptions?: Array<{ label: string; value: string }>;
-}
-
-export function FilterSalesDailyTable({ responsiblePersonOptions }: FilterCashierTableProps) {
-  const { filters, updateSelectedPeriod, updateResponsiblePerson } = useSalesDetailFilters();
+export type Option = { value: string; label: string };
+export function FilterSalesDailyTable() {
+  const { filters, updateToko, updateStartDate, updateEndDate, updateGrouping } =
+    useSalesDetailFilters();
+  const { start, end } = getMonthRange();
+  const [selecttoko, setToko] = useState<Option | null>(null);
+  const handleTokoChange = (option: Option | null) => {
+    updateToko(option?.value ?? '');
+    setToko(option);
+  };
 
   return (
     <div className="flex flex-wrap items-end gap-4 mb-6">
@@ -29,35 +29,41 @@ export function FilterSalesDailyTable({ responsiblePersonOptions }: FilterCashie
           Periode
         </label>
         <DateRangePicker
-          initialPeriod={filters.selectedPeriod}
+          initialPeriod={{
+            type: 'weekly',
+            value: {
+              from: filters.start_date ? new Date(filters.start_date) : new Date(start),
+              to: filters.end_date ? new Date(filters.end_date) : new Date(end),
+            },
+          }}
           onApply={(period) => {
-            updateSelectedPeriod(period);
+            if (period?.type) {
+              updateGrouping(period?.type);
+            }
+            if (period?.value?.from)
+              updateStartDate(
+                period.value.from instanceof Date
+                  ? period.value.from.toISOString().slice(0, 10)
+                  : String(period.value.from)
+              );
+            if (period?.value?.to)
+              updateEndDate(
+                period.value.to instanceof Date
+                  ? period.value.to.toISOString().slice(0, 10)
+                  : String(period.value.to)
+              );
           }}
-          defaultDailyRange={{
-            from: new Date(2025, 6, 17),
-            to: new Date(2025, 6, 19),
-          }}
-          defaultMonthlyRange={{
-            from: new Date(2025, 6, 1),
-          }}
-          defaultQuarterlyRange={{
-            from: { quarter: 1, year: 2025 },
-          }}
-          defaultYearlyRange={{
-            from: 2020,
-            to: 2022,
-          }}
-          className="max-w-md h-12 bg-white w-[278px]"
+          className="max-w-md h-13 bg-white w-[278px]"
+          hideSidebar={true}
+          allowedViews={['weekly', 'monthly']}
+          defaultView="weekly"
         />
       </div>
-      <SelectFilter
-        value={filters.responsiblePerson}
-        onChange={updateResponsiblePerson}
-        options={responsiblePersonOptions}
+      <TokoDropdown
         label="Nama Toko"
-        placeholder="Semua Toko"
-        id="nama-produk-void"
-        allOptionValue="all-responsible"
+        value={selecttoko}
+        onChange={handleTokoChange}
+        className="w-[278px]"
       />
     </div>
   );

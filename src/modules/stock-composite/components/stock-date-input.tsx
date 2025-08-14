@@ -5,19 +5,23 @@ import { FormValues } from '../types/form-values';
 type Props = {
   control: Control<FormValues>;
   errors: FieldErrors<FormValues>;
-  name?: keyof FormValues;
+  name?: 'batch_stock' | 'other_cost' | 'store_id' | 'expired_date' | 'stock_date';
   label?: string;
 };
 
 export function StockDateInput({
   control,
   errors,
-  name = 'expiredDate',
+  name = 'expired_date',
   label = 'Tanggal Stok',
 }: Props) {
+  const isExpiredDate = name === 'expired_date' || label === 'Tanggal Kedaluwarsa';
   return (
     <div className="flex flex-col gap-1">
-      <label className="font-medium mb-1">{label}</label>
+      <label className="font-medium mb-1">
+        {label}
+        {isExpiredDate && <span className="text-red-500">*</span>}
+      </label>
       <Controller
         control={control}
         name={name}

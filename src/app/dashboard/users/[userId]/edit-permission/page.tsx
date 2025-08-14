@@ -74,7 +74,6 @@ export default function page() {
 
       await assignPermissionEmployee({
         id: employeeId,
-        'x-organization-id': '1',
         body,
       });
 

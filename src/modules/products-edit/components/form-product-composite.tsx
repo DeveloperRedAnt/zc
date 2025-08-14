@@ -32,9 +32,14 @@ const baseColumns = [
   }),
 ];
 
-const FormProductComposite = memo(function FormProductComposite() {
-  const composite = useProductCompositeStore((state) => state.data);
-
+const FormProductComposite = memo(function FormProductComposite({
+  productId = 0,
+}: { productId?: number }) {
+  const composite = useProductCompositeStore((state) => state.products[productId]) ?? {
+    components: [],
+    production_per_batch: 0,
+    current_stock: 0,
+  };
   // Memoize computed values to prevent unnecessary re-calculations
   const hasComposite = useMemo(() => {
     return composite?.components?.length || 0;
@@ -45,7 +50,7 @@ const FormProductComposite = memo(function FormProductComposite() {
     if (!composite?.components) return [];
 
     return composite.components.map((c) => ({
-      product: c.product_name || '',
+      product: c.name || '',
       quantity: `${c.quantity} pcs`,
     }));
   }, [composite?.components]);
@@ -60,7 +65,6 @@ const FormProductComposite = memo(function FormProductComposite() {
     getSortedRowModel: getSortedRowModel(),
     state: {},
   });
-
   return (
     <>
       {hasComposite > 0 && (
@@ -72,10 +76,14 @@ const FormProductComposite = memo(function FormProductComposite() {
             <InformationText text="Mengatur penggabungan beberapa produk yang dibutuhkan untuk menjadi produk ini. Jika Anda mengaktifkan Produk Paduan, maka <span className='font-semibold'>Anda tidak dapat membuat Produk Varian.</span>" />
             <div className="mt-4">
               <DataTable width="100%" table={table} isLoading={false} />
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-8">
                 <div className="flex flex-col gap-2">
                   <div className="font-semibold">Jumlah Produksi per Batch:</div>
                   {composite.production_per_batch}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="font-semibold">Stok produk saat ini:</div>
+                  {composite.current_stock ?? '-'}
                 </div>
               </div>
             </div>

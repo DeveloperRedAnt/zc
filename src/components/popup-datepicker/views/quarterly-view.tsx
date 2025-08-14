@@ -9,6 +9,9 @@ export function QuarterlyView({ state, actions }: ViewProps) {
   const { quarterlyRange, currentYearNav } = state;
   const { setQuarterlyRange, setCurrentYearNav } = actions;
 
+  // Track selection state for cross-year quarter selection
+  const [isSelectingRange, setIsSelectingRange] = React.useState(false);
+
   const quarters = [
     { id: 1, name: 'Q1 (Jan - Mar)' },
     { id: 2, name: 'Q2 (Apr - Jun)' },
@@ -37,20 +40,35 @@ export function QuarterlyView({ state, actions }: ViewProps) {
     return false;
   };
 
+  // Modified to support cross-year quarter selection
   const handleQuarterClick = (quarter: number, year: number) => {
     const clickedQuarter = { quarter, year };
-    setQuarterlyRange((prev) => {
-      if (!prev?.from) {
-        return { from: clickedQuarter };
+
+    // Check current state outside the state update function
+    if (!quarterlyRange?.from) {
+      // No selection yet, start a new one
+      setIsSelectingRange(true);
+      setQuarterlyRange({ from: clickedQuarter });
+    } else if (!quarterlyRange.to) {
+      // First selection already made, adding second point
+      setIsSelectingRange(false);
+
+      if (isQuarterAfter(clickedQuarter, quarterlyRange.from)) {
+        setQuarterlyRange({
+          from: quarterlyRange.from,
+          to: clickedQuarter,
+        });
+      } else {
+        setQuarterlyRange({
+          from: clickedQuarter,
+          to: quarterlyRange.from,
+        });
       }
-      if (!prev.to) {
-        if (isQuarterAfter(clickedQuarter, prev.from)) {
-          return { from: prev.from, to: clickedQuarter };
-        }
-        return { from: clickedQuarter, to: prev.from };
-      }
-      return { from: clickedQuarter };
-    });
+    } else {
+      // Already had a complete range, start a new selection
+      setIsSelectingRange(true);
+      setQuarterlyRange({ from: clickedQuarter });
+    }
   };
 
   return (
@@ -64,6 +82,13 @@ export function QuarterlyView({ state, actions }: ViewProps) {
         selectWidth="w-[100px]"
         placeholder="Tahun"
       />
+
+      {/* Show selection instructions */}
+      {isSelectingRange && quarterlyRange?.from && !quarterlyRange.to && (
+        <div className="text-xs text-blue-600 mb-2 mt-2 text-center">
+          Pilih kuarter kedua untuk menyelesaikan range
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {quarters.map((quarter) => {
           const currentQ = { quarter: quarter.id, year: currentYearNav };

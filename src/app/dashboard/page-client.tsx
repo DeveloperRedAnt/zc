@@ -1,13 +1,14 @@
 'use client';
 
 import { useGetDashboardOverview } from '@/__generated__/api/hooks';
+import { useSubscriptionOverview } from '@/__generated__/api/hooks/management-subscription/management-subscription.hooks';
 import { Card, CardContent } from '@/components/card/card';
 import { Link, Shop, User } from '@icon-park/react';
 import dynamic from 'next/dynamic';
 import React, { Suspense } from 'react';
 
 const PackageSubsSelection = dynamic(
-  () => import('@/modules/packages/components/package-subs-selection'),
+  () => import('@/modules/management-subscription/components/package-subs-selection'),
   {
     loading: () => (
       <Card className="bg-white rounded-lg shadow-sm">
@@ -120,6 +121,8 @@ const DashboardCardStats = dynamic(
 );
 
 export default function HomePage() {
+  const { data: subscriptionData } = useSubscriptionOverview();
+
   return (
     <div className="space-y-6">
       <Suspense
@@ -131,7 +134,7 @@ export default function HomePage() {
           </Card>
         }
       >
-        <PackageSubsSelection />
+        <PackageSubsSelection packageData={subscriptionData?.active.package} />
       </Suspense>
 
       <Suspense

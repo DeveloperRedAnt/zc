@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { z } from 'zod';
 import { getDataFromApi } from '../../../utils/url';
 import * as DTO from '../dto/product.dto';
@@ -273,13 +272,14 @@ export const createUnitProduct = async (params: {
       'id': number,
     }
   ) =>
-    getDataFromApi<typeof params, DTO.ApiProduct>({
+    getDataFromApi<typeof params, DTO.GetProductDetail>({
       type: 'get',
       url: `/api/dashboard/products/${params.id}`,
       injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
       params,
-      transformer: (data: Record<string, unknown>) => data as DTO.ApiProduct
+      transformer: (data: Record<string, unknown>) => data as DTO.GetProductDetail
     });
+    
 
   export const InitializeStock = async (params: {
     "x-device-id": string;
@@ -311,36 +311,6 @@ export const createUnitProduct = async (params: {
   }
 
 
-
-  /** 
-   *  Initialize Stock details
-   */
-  export const InitializeStockDetails = async ( 
-    params: {
-      product_id: string | number;
-      'x-device-id': string;
-        'x-store-id': string;
-        'x-organization-id': string;
-  }) => {
-        console.log('InitializeStockDetails called with params:', params);
-
-        let url = `http://localhost:3000/api/stock-detail?id=${params.product_id}`;
-
-        try   {
-          const headers = {
-            'x-device-id': params['x-device-id'],
-            'x-store-id': params['x-store-id'],
-            'x-organization-id': params['x-organization-id'],
-          };
-          const response = await axios.get(url, { headers });
-          return response.data;
-        } catch (error) 
-        { 
-          if (error instanceof ValidationError) throw error;
-          throw error;
-        }  
-  }
-
 /**
  * Create product
  */
@@ -364,5 +334,47 @@ export const getListProductStockOpnames = async (params: DTO.ProductStockOpnameR
   injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
   params,
   body: params,
-  transformer: (data: any) => data as DTO.ProductStockOpnameResponse
+  transformer: (data: any) => data as DTO.ProductStockOpnameResponse,
+  withPagination: true
 })
+
+
+/**
+ * Create product
+ */
+export const checkStockBaik = async (params: {
+  body: DTO.GetCheckStockBaikRequestSchema;
+}) => {
+  console.log(params.body);
+  return getDataFromApi<typeof params, DTO.CheckStockBaikItems>({
+  type: 'post',
+  url: '/api/dashboard/stock-takings/check',
+  injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
+  body: params.body,
+  transformer: (data: Record<string, unknown>) => {
+    return data as DTO.CheckStockBaikItems
+  }
+})};
+
+export const adjustStockOpname = async (params: DTO.PostInitStockRequestSchema): Promise<DTO.PostInitStockResponseSchema> => getDataFromApi<typeof params, DTO.PostInitStockResponseSchema>({
+  type: 'post',
+  url: `/api/dashboard/stock-takings`,
+  injectHeaders: ['x-device-id', 'x-organization-id', 'x-store-id'],
+  params,
+  body: params,
+  transformer: (data: Record<string, unknown>) => data as DTO.PostInitStockResponseSchema
+})
+
+export const updateProduct = async (
+  params: { body: DTO.UpdateProductRequestSchema }
+) => getDataFromApi<DTO.UpdateProductRequestSchema, DTO.UpdateProductResponseData>({
+    type: 'put',
+    url: `/api/products/${params.body.id}`,
+    injectHeaders: [
+      'x-device-id', 
+      'x-organization-id', 
+      'x-store-id'
+    ],
+    body: params.body,
+    transformer: (data: Record<string, unknown>) =>  data as DTO.UpdateProductResponseData
+});

@@ -1,211 +1,144 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/table/core/table';
-import {
-  SortingState,
-  createColumnHelper,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from 'lucide-react';
+import * as DTO from '@/__generated__/api/dto/reports/sales-variant.dto';
+import { DataTable } from '@/components/table/data-table';
+import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { SortableHeader } from '@/modules/reports/sales-product/components/sortable-header';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import React from 'react';
+import { useSalesVariantFilters } from '../hooks/use-sales-variant-filter';
 
-type SalesVariant = {
-  nama_produk_utama: string;
-  nama_varian: string;
-  jumlah_terjual: string;
-  persentase_penjualan: string;
-};
-const columnHelper = createColumnHelper<SalesVariant>();
+const columnHelper = createColumnHelper<DTO.TableData>();
 
-const mockData: SalesVariant[] = [
-  {
-    nama_produk_utama: 'Mini Ceramic Diffuser 1 pcs',
-    nama_varian: 'Paket - A',
-    jumlah_terjual: '10 Box',
-    persentase_penjualan: '19,201%',
-  },
-  {
-    nama_produk_utama: 'Organic Oat Cookies 180 gr',
-    nama_varian: 'Raisin & Chia - Big',
-    jumlah_terjual: '112 Plastik',
-    persentase_penjualan: '10,553%',
-  },
-  {
-    nama_produk_utama: 'Organic Oat Cookies 180 gr',
-    nama_varian: 'Raisin & Chia - Medium',
-    jumlah_terjual: '20 Plastik',
-    persentase_penjualan: '8,411%',
-  },
-  {
-    nama_produk_utama: 'Organic Oat Cookies 180 gr',
-    nama_varian: 'Chocochip - Small',
-    jumlah_terjual: '156 Plastik',
-    persentase_penjualan: '12,134%',
-  },
-  {
-    nama_produk_utama: 'Wedang Rempah Tradisional 1 gr',
-    nama_varian: 'Coklat - Small',
-    jumlah_terjual: '255 Pack',
-    persentase_penjualan: '19,2%',
-  },
-  {
-    nama_produk_utama: 'Wedang Rempah Tradisional 1 gr',
-    nama_varian: 'Coklat - Big',
-    jumlah_terjual: '50 Pack',
-    persentase_penjualan: '13%',
-  },
-  {
-    nama_produk_utama: 'Wedang Rempah Tradisional 1 gr',
-    nama_varian: 'Original - Small',
-    jumlah_terjual: '22 Pack',
-    persentase_penjualan: '13,912%',
-  },
-];
+interface SalesVariantTableProps {
+  tableData: DTO.VariantTableResponse | null;
+  isLoading?: boolean;
+}
 
-export function SalesVariantTable() {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [pageSize, setPageSize] = React.useState(5);
-  const [pageIndex, setPageIndex] = React.useState(0);
+export function SalesVariantTable({ tableData, isLoading }: SalesVariantTableProps) {
+  const { filters, updatePagination, updateSorting } = useSalesVariantFilters();
+
+  const handleSort = React.useCallback(
+    (column: string, direction: 'asc' | 'desc') => {
+      updateSorting(column, direction);
+    },
+    [updateSorting] // kalau updateSorting stabil (misalnya dari hook yang pakai useCallback juga)
+  );
 
   const columns = React.useMemo(
     () => [
-      columnHelper.accessor('nama_produk_utama', {
-        header: ({ column }) => (
-          <div
-            className="flex items-center gap-1 cursor-pointer"
-            onClick={() => column.toggleSorting()}
-          >
-            Nama Produk Utama
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-4 w-4" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-4 w-4" />
-            ) : (
-              <ArrowUpDown className="h-4 w-4" />
-            )}
-          </div>
+      columnHelper.accessor('product_name', {
+        header: () => (
+          <SortableHeader
+            label="Nama Produk Utama"
+            sortKey="product_name"
+            currentSortColumn={filters.sort_by}
+            currentSortDirection={filters.sort_dir as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="left"
+          />
         ),
-        cell: (info) => <span>{info.getValue()}</span>,
+        cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+        enableSorting: false,
       }),
-      columnHelper.accessor('nama_varian', {
-        header: () => <div className="font-bold text-black">Nama Varian</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
+      columnHelper.accessor('variant_name', {
+        header: () => (
+          <SortableHeader
+            label="Nama Varian"
+            sortKey="variant_name"
+            currentSortColumn={filters.sort_by}
+            currentSortDirection={filters.sort_dir as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="left"
+          />
+        ),
+        cell: (info) => <div className="text-left text-sm">{info.getValue()}</div>,
+        enableSorting: false,
       }),
-      columnHelper.accessor('jumlah_terjual', {
-        header: () => <div className="font-bold text-black">Jumlah Terjual</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
+      columnHelper.accessor('total_sold', {
+        header: () => (
+          <SortableHeader
+            label="Jumlah Terjual"
+            sortKey="total_sold"
+            currentSortColumn={filters.sort_by}
+            currentSortDirection={filters.sort_dir as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => <div className="text-center text-sm">{info.getValue()}</div>,
+        enableSorting: false,
       }),
-      columnHelper.accessor('persentase_penjualan', {
-        header: () => <div className="font-bold text-black">Persentase Penjualan</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
+      columnHelper.accessor('percentage', {
+        header: () => (
+          <SortableHeader
+            label="Persentase Penjualan"
+            sortKey="percentage"
+            currentSortColumn={filters.sort_by}
+            currentSortDirection={filters.sort_dir as 'asc' | 'desc'}
+            onSort={handleSort}
+            align="center"
+          />
+        ),
+        cell: (info) => <div className="text-center text-sm">{info.getValue()}</div>,
+        enableSorting: false,
       }),
     ],
-    []
+    [filters.sort_by, filters.sort_dir, handleSort]
   );
 
+  const data = tableData?.data || [];
+
   const table = useReactTable({
-    data: mockData,
+    data,
     columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    manualSorting: true,
+    pageCount: tableData?.last_page || 0,
     state: {
-      sorting,
       pagination: {
-        pageIndex,
-        pageSize,
+        pageIndex: filters.page,
+        pageSize: filters.per_page,
       },
+      sorting: [],
     },
-    onSortingChange: setSorting,
     onPaginationChange: (updater) => {
       if (typeof updater === 'function') {
         const newState = updater({
-          pageIndex,
-          pageSize,
+          pageIndex: filters.page,
+          pageSize: filters.per_page,
         });
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
+        updatePagination(newState.pageIndex, newState.pageSize);
       }
     },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    enableSorting: false,
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!data.length) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center text-muted-foreground">
+        Tidak ada data untuk ditampilkan
+      </div>
+    );
+  }
+
   return (
-    <>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : typeof header.column.columnDef.header === 'function'
-                        ? header.column.columnDef.header(header.getContext())
-                        : header.column.columnDef.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {typeof cell.column.columnDef.cell === 'function'
-                      ? cell.column.columnDef.cell(cell.getContext())
-                      : cell.getValue()}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+    <div className="py-2">
+      <div>
+        <DataTable table={table} />
       </div>
-      <div className="px-6 py-4 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Rows per page:</span>
-            <Select defaultValue="10">
-              <SelectTrigger className="w-[70px]" icon={<ChevronDown className="h-4 w-4" />}>
-                <SelectValue placeholder="10" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="30">30</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-4">
-            <button type="button" className="px-2 py-1 text-sm text-gray-600 disabled:opacity-50">
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">1</span>
-            <button type="button" className="px-2 py-1 text-sm text-gray-600">
-              Next
-            </button>
-          </div>
-        </div>
+      <div className="mt-4">
+        <DataTablePagination table={table} isLoading={isLoading || false} />
       </div>
-    </>
+    </div>
   );
 }

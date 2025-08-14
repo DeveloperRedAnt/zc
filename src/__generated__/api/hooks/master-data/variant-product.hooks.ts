@@ -5,6 +5,7 @@ import * as DTO from '../../dto/master-data/variant-product.dto';
 export type VariantProductListParams = {
   page?: number;
   per_page?: number;
+  search?: string;
 };
 
 export function useGetVariantProductList(

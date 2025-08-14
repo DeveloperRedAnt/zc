@@ -13,7 +13,7 @@ export function OtherCostInput({ control, errors }: Props) {
       <label className="font-medium mb-1">Biaya Lain-lain</label>
       <Controller
         control={control}
-        name="otherCost"
+        name="other_cost"
         render={({ field }) => (
           <CustomInput
             currency

@@ -1,5 +1,5 @@
 // DTOs for product domain
-import { BaseRequestPagination, BaseResponseSchemaPagination } from "./base.dto";
+import { BaseRequestPagination, BaseResponseSchema, BaseResponseSchemaPagination } from "./base.dto";
 
 export type UnitSchema = {
   data: Record<string, string>[];
@@ -111,6 +111,16 @@ export type CreateProductResponseSchema = {
   data: CreateProductResponseData;
 }
 
+export type UpdateProductResponseData = {
+  products: {
+    product_id: number;
+    product_variant_id: number;
+  }[],
+  product?: string;
+  type: string;
+}
+export type UpdateProductResponseSchema = BaseResponseSchema<UpdateProductResponseData>
+
 export type ProductsFirstStockSchema = {
   product_id: number;
   product_variant_id: number;
@@ -195,6 +205,7 @@ export type ProductSchema = {
 export type ApiProduct = {
   id: number;
   brand: string; // menggantikan 'name'
+  name: string; // menggantikan 'name'
   package?: string; // menggantikan 'packaging'
   content?: string; // menggantikan 'size'
   unit?: string;
@@ -206,7 +217,7 @@ export type ApiProduct = {
   barcode?: string;
   sku_code?: string;
   composite?: ProductComposite;
-  stock_taking?: {
+  stock_tracking?: {
     is_enabled: boolean;
     minimum_stock: number;
   };
@@ -223,6 +234,61 @@ export type ApiProduct = {
     name: string;
   }[];
 };
+
+export type GetProductDetailVariant = {
+    thumbnail: string;
+    attributes: [];
+    barcode: string;
+    id: string;
+    is_active: boolean;
+    is_wholesale: boolean;
+    minimum_stock: number;
+    sku_code: string;
+    variant_units: {
+      conversion_value: string;
+      id: string;
+      price: string;
+      unit_name: string;
+    }[]
+}
+
+export type GetProductDetail = {
+  id: number;
+  brand: string; // menggantikan 'name'
+  name: string; // menggantikan 'name'
+  package?: string; // menggantikan 'packaging'
+  content?: string; // menggantikan 'size'
+  unit?: {
+    id: number;
+    name: string;
+  }
+  price: string; // menggantikan 'het'
+  thumbnail?: string; // menggantikan 'image'
+  is_favorite?: boolean;
+  variants?: GetProductDetailVariant[];
+  is_active?: boolean;
+  barcode?: string;
+  sku_code?: string;
+  composite?: ProductComposite;
+  stock_tracking?: {
+    is_enabled: boolean;
+    minimum_stock: number;
+  };
+  expired_reminder?: {
+    is_enabled: boolean;
+    reminder_in_days: number;
+    reminder_in_date: string;
+    countdown: string;
+  };
+  current_stock?: number;
+  type?: 'variant' | 'composite' | 'simple';
+  tags: {
+    id: number;
+    name: string;
+  }[];
+};
+
+
 
 export type ApiVariant = {
   id: number;
@@ -241,6 +307,7 @@ export type ApiVariant = {
   thumbnail?: string;
   attributes?: { value: string }[];
   package?: string;
+  is_wholesale?: boolean;
 }
 
 export type ApiResponse = {
@@ -303,7 +370,10 @@ export type ProductComposite = {
       product_id: number | null;
       product_name: string | null;
       quantity: number;
+      name?: string;
+      product_variant_id?: number | null;
     }[],
+    purchase_price?: string;
     production_per_batch: number;
     current_stock: string;
 }
@@ -341,3 +411,143 @@ export type InitializeStockRequestSchema = {
     expired_at: string;
   }[];
 }
+
+export type CheckStockBaikItem = {
+  product_id: number;
+  product_variant_id: number;
+  physical_stock: number;
+}
+
+export type GetCheckStockBaikRequestSchema = {
+  note: string;
+  store_id: number;
+  items: CheckStockBaikItem[];
+}
+
+export type StockBaikDataItem = {
+    product_id: number;
+    product_variant_id: number;
+    physical_stock: number;
+    name: string;
+    stock: {
+      system_stock: number;
+      physical_stock: number;
+      difference: number;
+    };
+};
+
+export type CheckStockBaikItems = {
+  incoming_equal_to_system_stock?: StockBaikDataItem[];
+  incoming_greater_than_system_stock?: StockBaikDataItem[];
+  incoming_less_than_system_stock?: StockBaikDataItem[];
+  incoming_without_initial_stock?: StockBaikDataItem[];
+};
+
+
+export type GetCheckStockBaikResponseSchema = {
+  code: number;
+  status: string;
+  name: string;
+  message: string;
+  data: CheckStockBaikItems;
+}
+
+
+export type PostInitStockRequestSchema = {
+    note: string;
+    store_id: number;
+    incoming_equal_to_system_stock:       {
+      product_id: number;
+      product_variant_id: number;
+      stock: {
+        system_stock: number;
+        physical_stock: number;
+        difference: number
+      }
+    }[],
+    incoming_less_than_system_stock:       {
+      product_id: number,
+      product_variant_id: number,
+      stock: {
+          system_stock: number,
+          physical_stock: number,
+          difference: number,
+          reasons: {
+            stock: number,
+            reason: string
+          }[]
+        }
+      }[],
+}
+
+export type PostInitStockResponseSchema = BaseResponseSchema<unknown[]>
+
+export type UpdateProductRequestSchema = {
+  id: number;
+  name: string;
+  type: "composite" | "variant" | "single";
+  package: string;
+  thumbnail: string;
+  is_active: boolean;
+  is_favorite: boolean;
+  is_non_tax: boolean;
+  content: string;
+  unit_id: number;
+  current_stock: number;
+  tag_ids: number[];
+  is_stock_tracking: boolean;
+  is_enable_expired_reminder: boolean;
+  expired_reminder_in_days: number;
+  expired_reminder_in_date: string;
+  variants: GetProductDetailVariant[]
+  composites?: {
+    production_per_batch: number,
+    components: CompositesComponents[]
+  }
+}
+
+export type VariantUnitSchema = {
+  unit_name: string;
+  conversion_value: number;
+  price: number;
+}
+
+export type Variants = {
+  id: number;
+  thumbnail: string;
+  minimum_stock: number;
+  sku_code: string;
+  barcode: string;
+  is_active: boolean;
+  attributes: [],
+  is_wholesale: boolean,
+  variant_units: VariantUnitSchema[]
+}
+
+export type CompositesComponents = {
+  id: number,
+  quantity: number
+}
+
+
+
+export type VariantAttribute = {
+  attribute_id: number,
+  value_id: number,
+  other: string
+}
+export type AddVariantOptionsRequest = {
+    "id": string,
+    "store_id": number,
+    "product_id": number,
+    "thumbnail": string,
+    "sku_code": string,
+    "barcode": string,
+    "is_active": true,
+    "is_wholesale": true,
+    "variant_units": ProductVariantUnit[],
+    "attributes": VariantAttribute[]
+}
+
+export type VariantDataResponse = string[]
+export type AddVariantOptionsResponse = BaseResponseSchema<{VariantDataResponse}>

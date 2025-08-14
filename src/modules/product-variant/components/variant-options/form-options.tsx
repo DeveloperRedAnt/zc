@@ -4,13 +4,13 @@ import { Button } from '@/components/button/button';
 import { Text } from '@/components/text/text';
 import { toast } from '@/components/toast/toast';
 import { FormValidationProvider } from '@/hooks/use-form-validator/form-validation-context';
-import DetailVariantList from '@/modules/product-variant/components/detail-variant-list';
-import type { ProductCardValue } from '@/modules/product-variant/components/detail-variant-list';
 import { useProductVariantStore } from '@/modules/product-variant/store';
 import type {
   FormattedData as FormattedDataType,
   ProductVariants,
 } from '@/modules/product-variant/types';
+import DetailVariantList from '@/modules/products-edit/components/options/detail-variant-list-option';
+import type { ProductCardValue } from '@/modules/products-edit/components/options/detail-variant-list-option';
 import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
 import { Check } from '@icon-park/react';
 import React, { useRef, useState } from 'react';

@@ -3,26 +3,28 @@
 import React from 'react';
 
 import { Button } from '@/components/button/button';
-import Dropdown from '@/components/dropdown/dropdown';
 import CustomInput from '@/components/input/custom-input';
+import ProductPicker, { ProductOptionType } from '@/components/product-picker/product-picker';
 import { Delete } from '@icon-park/react';
 
 interface StockOpnameItemProps {
   onDelete?: () => void;
-  productOptions?: Array<{ label: string; value: string | number }>;
-  selectedProduct?: { label: string; value: string | number } | null;
-  onProductChange?: (product: { label: string; value: string | number } | null) => void;
+  selectedProduct?: ProductOptionType | null;
+  onProductChange?: (product: ProductOptionType | null) => void;
   stockValue?: string | number;
   onStockChange?: (value: string) => void;
+  productError?: string;
+  stockError?: string;
 }
 
 export default function StockOpnameItem({
   onDelete,
-  productOptions = [],
   selectedProduct = null,
   onProductChange,
   stockValue = '',
   onStockChange,
+  productError,
+  stockError,
 }: StockOpnameItemProps) {
   return (
     <>
@@ -31,14 +33,14 @@ export default function StockOpnameItem({
           <label className="text-sm font-medium text-gray-700 mb-2">
             Produk <span className="text-red-500">*</span>
           </label>
-          <Dropdown
-            options={productOptions}
+          <ProductPicker
             value={selectedProduct}
-            onChange={onProductChange || (() => {})}
+            onChange={onProductChange}
             placeholder="Papua New Guinea Organic Robusta 250 gr"
-            className="h-10 w-[24rem]"
+            className="w-[24rem]"
             required
           />
+          {productError && <p className="text-red-500 text-xs mt-1">{productError}</p>}
         </div>
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-2">
@@ -52,6 +54,7 @@ export default function StockOpnameItem({
             value={stockValue}
             onChange={(e) => onStockChange?.(e.target.value)}
           />
+          {stockError && <p className="text-red-500 text-xs mt-1">{stockError}</p>}
         </div>
       </div>
       <div className="flex justify-start mb-6">

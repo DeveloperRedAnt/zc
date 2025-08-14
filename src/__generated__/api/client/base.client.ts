@@ -81,11 +81,6 @@ export type TypeToZod<T> = Required<{
   
   export const apiClientWithHeadersWithoutContentType = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
-    headers: {
-      'x-device-id': '1',
-      'x-store-id': '1',
-      'x-organization-id': '1',
-    },
   });
   
   apiClientWithHeadersWithoutContentType.interceptors.response.use((response) => response, async (error) => {

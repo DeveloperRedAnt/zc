@@ -3,14 +3,16 @@ import { z } from 'zod';
 // Request schemas
 export const VoidReportRequestSchema = z.object({
   search: z.string().optional(),
-  responsiblePerson: z.string().optional(),
-  cashier: z.string().optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  page: z.number().int().min(0).optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  nota_number: z.string().optional(),
+  cashier_name: z.string().optional(),
+  void_by: z.string().optional(),
+  sort_by: z.string().optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
-  sortBy: z.string().optional(),
-  sortDirection: z.enum(['asc', 'desc']).optional(),
+  sort_dir: z.enum(['asc', 'desc']).optional(),
+  page: z.string().optional(),
+  per_page: z.number().optional(),
 });
 
 export const CreateTaxRequestSchema = z.object({

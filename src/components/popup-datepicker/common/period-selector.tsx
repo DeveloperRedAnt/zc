@@ -4,16 +4,23 @@ import { PeriodType } from '../types-datepircker-popup';
 interface PeriodSelectorProps {
   view: PeriodType;
   onViewChange: (view: PeriodType) => void;
+  allowedViews?: PeriodType[];
+  style?: React.CSSProperties;
 }
 
-export function PeriodSelector({ view, onViewChange }: PeriodSelectorProps) {
-  const periods = [
+export function PeriodSelector({ view, onViewChange, allowedViews }: PeriodSelectorProps) {
+  const allPeriods = [
     { value: 'daily', label: 'Harian' },
     { value: 'weekly', label: 'Mingguan' },
     { value: 'monthly', label: 'Bulanan' },
     { value: 'quarterly', label: 'Kuartal' },
     { value: 'yearly', label: 'Tahunan' },
   ] as const;
+
+  const periods =
+    allowedViews && allowedViews.length > 0
+      ? allPeriods.filter((period) => allowedViews.includes(period.value as PeriodType))
+      : allPeriods;
 
   return (
     <div className="flex flex-col border-r border-gray-200 bg-gray-50">

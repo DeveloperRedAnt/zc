@@ -27,10 +27,14 @@ export function MonthlyView({ state, actions }: ViewProps) {
       }
       if (!prev.to) {
         if (isBefore(month, prev.from)) {
+          // If selected month is before the start date, swap them
+          // We store the actual month date (1st day) for UI selection purposes
           return { from: month, to: prev.from };
         }
+        // Store the actual month date (1st day) for UI selection purposes
         return { from: prev.from, to: month };
       }
+      // Reset selection with new month
       return { from: month };
     });
   };
@@ -75,7 +79,7 @@ export function MonthlyView({ state, actions }: ViewProps) {
             monthlyRange?.from &&
             isSameMonth(month, monthlyRange.from) &&
             isSameYear(month, monthlyRange.from) &&
-            monthlyRange.to === undefined;
+            !monthlyRange.to;
 
           return (
             <Button
@@ -83,17 +87,17 @@ export function MonthlyView({ state, actions }: ViewProps) {
               variant="ghost"
               className={cn(
                 'w-full h-10 rounded-md text-sm font-medium border-0',
+                isInRange && 'bg-teal-100 text-teal-900 shadow-none',
                 (isSingleSelected || isStartOfRange || isEndOfRange) &&
                   'bg-[#0FA6C1] text-white shadow-none',
-                isInRange && 'bg-teal-100 text-teal-900 shadow-none',
                 isStartOfRange && 'rounded-r-none',
                 isEndOfRange && 'rounded-l-none',
-                isInRange && 'rounded-none',
+                isInRange && !isStartOfRange && !isEndOfRange && 'rounded-none',
                 !isSelected &&
                   !isInRange &&
                   'text-gray-600 hover:bg-gray-100 bg-gray-50 shadow-none',
                 (isSingleSelected || isStartOfRange || isEndOfRange) && 'hover:bg-teal-600',
-                isInRange && 'hover:bg-teal-200'
+                isInRange && !isStartOfRange && !isEndOfRange && 'hover:bg-teal-200'
               )}
               onClick={() => handleMonthClick(month)}
             >

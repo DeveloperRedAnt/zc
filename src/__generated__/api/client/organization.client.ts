@@ -59,8 +59,6 @@ export const GetOrganizationOfUser = async (params: DTO.GetOrganizationOfUserReq
   params,
   withPagination: true,
   transformer: (data: Record<string, unknown>) => {
-
-    console.log("data", data)
     // The API response has the format: { data: [...] }
     // Extract the data array from the response
     if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data)) {

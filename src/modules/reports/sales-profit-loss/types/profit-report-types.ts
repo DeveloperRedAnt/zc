@@ -1,4 +1,3 @@
-// Legacy types for backward compatibility
 export type SalesProfitLoss = {
   periode: string;
   nama_barang: string;
@@ -50,3 +49,11 @@ export type SalesProfitLossTableProps = {
   data: TableDataItem[];
   className?: string;
 };
+
+//  Profit loss
+export interface ProfitLossChartCardProps {
+  title: string;
+  presentaseHpp: number;
+  presentaseRevenue: number;
+  labeldateRange: string;
+}

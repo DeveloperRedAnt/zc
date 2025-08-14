@@ -291,7 +291,6 @@ export async function getDataFromApi<
     const responseData = withPagination
       ? response.data
       : (response.data as { data: ApiResponse }).data;
-
     // Apply transformer if provided
     if (transformer) {
       return transformer(responseData);

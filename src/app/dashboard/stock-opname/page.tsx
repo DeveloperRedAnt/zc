@@ -138,7 +138,7 @@ export default function StockOpnamePage() {
       <PageLayout
         title="Stock Opname"
         button={
-          <Button variant="primary" onClick={() => router.push('/dashboard/store/add')}>
+          <Button variant="primary" onClick={() => router.push('/dashboard/stock-opname/adjust')}>
             <Plus />
             Tambah Penyesuaian Stock Opname
           </Button>
@@ -225,7 +225,7 @@ export default function StockOpnamePage() {
             setSortBy={setSortBy}
             setSortOrder={setSortOrder}
             isLoading={isLoading}
-            totalPages={data?.pagination.last_page ?? 1}
+            totalPages={1}
           />
         </Suspense>
       </PageLayout>

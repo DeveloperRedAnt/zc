@@ -47,6 +47,12 @@ export interface Pagination {
   total: number;
 }
 
+export interface PaginationLink {
+  url: string | null;
+  label: string;
+  active: boolean;
+}
+
 export interface BaseResponseSchemaPagination<T> extends BaseResponseSchema<T> {
     pagination: Pagination;
 }

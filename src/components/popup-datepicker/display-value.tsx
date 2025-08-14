@@ -28,20 +28,23 @@ export function DisplayValue({
   let valueString = '';
 
   switch (view) {
-    case 'daily':
+    case 'daily': {
       prefix = 'Harian';
-      if (dailyRange?.from) {
-        valueString = dailyRange.to
-          ? `${format(dailyRange.from, 'dd/MM/yyyy', { locale: id })} - ${format(
-              dailyRange.to,
+      const isValidDate = (d: unknown): d is Date =>
+        d instanceof Date && !Number.isNaN(d.getTime());
+      if (isValidDate(dailyRange?.from)) {
+        valueString = isValidDate(dailyRange?.to)
+          ? `${format(dailyRange!.from, 'dd/MM/yyyy', { locale: id })} - ${format(
+              dailyRange!.to,
               'dd/MM/yyyy',
               { locale: id }
             )}`
-          : format(dailyRange.from, 'dd/MM/yyyy', { locale: id });
+          : format(dailyRange!.from, 'dd/MM/yyyy', { locale: id });
       } else {
         valueString = 'Pilih Tanggal';
       }
       break;
+    }
     case 'weekly':
       prefix = 'Mingguan';
       if (weeklyRange?.from && weeklyRange?.to) {

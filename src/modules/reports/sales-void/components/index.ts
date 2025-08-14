@@ -14,4 +14,3 @@ export { useVoidReportFilters } from '../hooks/use-void-report-filters';
 
 // Types and constants
 export * from '../types/void-report.types';
-export * from '../constants/mock-data';

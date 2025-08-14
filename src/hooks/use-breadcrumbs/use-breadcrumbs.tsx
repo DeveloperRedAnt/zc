@@ -52,26 +52,46 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
     { title: 'Tambah Produk', link: '/dashboard/products/add' },
     { title: 'Atur Stok Awal', link: '/dashboard/products/add/set-first-stock' },
   ],
+  '/dashboard/stock-opname/{id}/adjust': [
+    { title: 'List Produk', link: '/dashboard/stock-opname' },
+    { title: 'Penyesuaian Stok Opname', link: '' },
+  ],
+  '/dashboard/stock-opname/{id}/adjust/reason': [
+    { title: 'List Produk', link: '/dashboard/stock-opname' },
+    { title: 'Penyesuaian Stok Opname', link: '/dashboard/stock-opname/{id}/adjust' },
+    { title: 'Alasan Selish', link: '' },
+  ],
 };
 
 export function useBreadcrumbs(): BreadcrumbItem[] {
   const pathname = usePathname();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: routeMapping is a static constant
   const breadcrumbs = useMemo(() => {
     if (routeMapping[pathname]) {
       return routeMapping[pathname];
     }
 
-    // Coba matching dengan pola dinamis seperti '/dashboard/product/{id}'
+    // Dynamic route matching with param extraction, e.g. '/dashboard/stock-opname/{id}/adjust'
     for (const [pattern, items] of Object.entries(routeMapping)) {
-      const regexPattern = pattern.replace(/{[^}]+}/g, '[^/]+'); // ganti {id} menjadi wildcard regex
-      const regex = new RegExp(`^${regexPattern}$`);
-      if (regex.test(pathname)) {
-        // Ganti placeholder {id} dengan nilai asli dari pathname
-        const paramValue = pathname.split('/').pop();
+      // Collect param names in order of appearance
+      const paramNames: string[] = [];
+      const regexSource = pattern.replace(/\{([^}]+)\}/g, (_m, p1) => {
+        paramNames.push(p1);
+        return '([^/]+)';
+      });
+      const regex = new RegExp(`^${regexSource}$`);
+      const match = pathname.match(regex);
+      if (match) {
+        const params: Record<string, string> = {};
+        paramNames.forEach((name, idx) => {
+          params[name] = match[idx + 1] ?? '';
+        });
+        const replaceParams = (link: string) =>
+          link.replace(/\{([^}]+)\}/g, (_m, p1) => params[p1] ?? '');
         return items.map((item) => ({
           ...item,
-          link: item.link.replace('{id}', paramValue ?? ''),
+          link: replaceParams(item.link),
         }));
       }
     }
@@ -88,7 +108,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
         link: path,
       };
     });
-  }, [pathname, routeMapping[pathname]]);
+  }, [pathname]);
 
   return breadcrumbs;
 }

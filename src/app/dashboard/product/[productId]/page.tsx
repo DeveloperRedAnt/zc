@@ -251,13 +251,15 @@ export default function Index() {
                   <div className="text-[14px] w-1/2 mt-6">
                     <p className="font-semibold"> Lacak Stok Produk: </p>
                     <p className="font-[400] mt-1">
-                      {data?.stock_taking?.is_enabled ? 'Aktif' : 'Tidak Aktif'}
+                      {data?.stock_tracking?.is_enabled ? 'Aktif' : 'Tidak Aktif'}
                     </p>
                   </div>
                   {data?.type?.toLowerCase() !== 'variant' && (
                     <div className="text-[14px] w-1/2 mt-6">
                       <p className="font-semibold"> Peringatan Stok Minimum: </p>
-                      <p className="font-[400] mt-1">{data?.stock_taking?.minimum_stock} Produk</p>
+                      <p className="font-[400] mt-1">
+                        {data?.stock_tracking?.minimum_stock} Produk
+                      </p>
                     </div>
                   )}
                   <div className="text-[14px] w-1/2 mt-6">

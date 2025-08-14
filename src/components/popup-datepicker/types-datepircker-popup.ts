@@ -57,11 +57,9 @@ export interface DateRangeActions {
 export interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
   onApply: (period: Period) => void;
   initialPeriod?: Period;
-  defaultDailyRange?: DateRange;
-  defaultSingleBorderedDate?: Date;
-  defaultMonthlyRange?: MonthlyRange;
-  defaultQuarterlyRange?: QuarterlyRange;
-  defaultYearlyRange?: YearlyRange;
+  // New simplified API: control via a single initialPeriod. Optional helpers below
+  allowedViews?: PeriodType[];
+  defaultView?: PeriodType;
 }
 
 export interface ViewProps {

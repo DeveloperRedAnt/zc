@@ -1,103 +1,103 @@
+'use client';
+
 import { DateRangePicker } from '@/components/popup-datepicker/date-ranger-picker';
-import { Table } from '@tanstack/react-table';
-// import { Period } from "../../sales-payment/types";
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { useVoidReportFilters } from '../hooks/use-void-report-filters';
-import { FilterOption, VoidReport } from '../types/void-report.types';
+const SupplierDropdown = dynamic(
+  () =>
+    import('../../sales-cashier/shared-components/select-chasier').then(
+      (mod) => mod.SupplierDropdown
+    ),
+  { ssr: false }
+);
+import { getMonthRange } from '@/utils/dateRange';
+import dynamic from 'next/dynamic';
 import { SearchFilter } from './search-filter';
-import { SelectFilter } from './select-filter';
+export type Option = { value: string; label: string };
 
-interface VoidReportFiltersProps {
-  table: Table<VoidReport>;
-  responsiblePersonOptions: FilterOption[];
-  cashierOptions: FilterOption[];
-}
-
-export function VoidReportFilters({
-  table,
-  responsiblePersonOptions,
-  cashierOptions,
-}: VoidReportFiltersProps) {
-  const { filters, updateSearch, updateResponsiblePerson, updateCashier, updateSelectedPeriod } =
+export function VoidReportFilters() {
+  const { filters, updateStartDate, updateEndDate, updateVoidBy, updateNotaNumber } =
     useVoidReportFilters();
 
-  // Sync URL parameters with table filters
-  useEffect(() => {
-    table.setGlobalFilter(filters.search);
-  }, [filters.search, table]);
+  const [selectedKasir, setSelectedKasir] = useState<Option | null>(null);
+  const [selectVoid, setVoid] = useState<Option | null>(null);
+  const { start, end } = getMonthRange();
 
-  useEffect(() => {
-    if (filters.responsiblePerson === 'all-responsible') {
-      table.getColumn('penanggungjawab')?.setFilterValue('');
-    } else {
-      table.getColumn('penanggungjawab')?.setFilterValue(filters.responsiblePerson);
-    }
-  }, [filters.responsiblePerson, table]);
+  const handleKasirChange = (kasir: Option | null) => {
+    updateVoidBy(kasir?.value ?? '');
+    setSelectedKasir(kasir);
+  };
 
-  useEffect(() => {
-    if (filters.cashier === 'all-cashier') {
-      table.getColumn('kasir')?.setFilterValue('');
-    } else {
-      table.getColumn('kasir')?.setFilterValue(filters.cashier);
-    }
-  }, [filters.cashier, table]);
+  const handleChangeVoid = (voidOption: Option | null) => {
+    updateVoidBy(voidOption?.value ?? '');
+    setVoid(voidOption);
+  };
+
+  const handleNotaNumberChange = (nota_number: string) => {
+    updateNotaNumber(nota_number);
+  };
 
   return (
     <div className="flex flex-wrap items-end gap-4 mb-6">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-row gap-4 items-end">
         <label htmlFor="periode" className="text-sm font-medium text-gray-700">
           Periode
         </label>
         <DateRangePicker
-          initialPeriod={filters.selectedPeriod}
+          allowedViews={['daily', 'weekly', 'monthly', 'quarterly']}
+          initialPeriod={{
+            type: 'daily',
+            value: {
+              from: filters.start_date ? new Date(filters.start_date) : new Date(start),
+              to: filters.end_date ? new Date(filters.end_date) : new Date(end),
+            },
+          }}
           onApply={(period) => {
-            updateSelectedPeriod(period);
-          }}
-          defaultDailyRange={{
-            from: new Date(2025, 6, 17),
-            to: new Date(2025, 6, 19),
-          }}
-          defaultMonthlyRange={{
-            from: new Date(2025, 6, 1),
-          }}
-          defaultQuarterlyRange={{
-            from: { quarter: 1, year: 2025 },
-          }}
-          defaultYearlyRange={{
-            from: 2020,
-            to: 2022,
+            if (period?.value?.from)
+              updateStartDate(
+                period.value.from instanceof Date
+                  ? period.value.from.toISOString().slice(0, 10)
+                  : String(period.value.from)
+              );
+            if (period?.value?.to)
+              updateEndDate(
+                period.value.to instanceof Date
+                  ? period.value.to.toISOString().slice(0, 10)
+                  : String(period.value.to)
+              );
           }}
           className="max-w-md h-12 bg-white w-[278px]"
         />
       </div>
-      <SearchFilter
-        value={filters.search}
-        onChange={updateSearch}
-        placeholder="Cari..."
-        label="Cari No. Nota"
-        id="search-nota"
-        className="h-12"
-      />
 
-      <SelectFilter
-        value={filters.responsiblePerson}
-        onChange={updateResponsiblePerson}
-        options={responsiblePersonOptions}
-        label="Penanggungjawab Void"
-        placeholder="Semua Penanggungjawab"
-        id="penanggungjawab-void"
-        allOptionValue="all-responsible"
-      />
-
-      <SelectFilter
-        value={filters.cashier}
-        onChange={updateCashier}
-        options={cashierOptions}
-        label="Nama Kasir"
-        placeholder="Semua Kasir"
-        id="nama-kasir"
-        allOptionValue="all-cashier"
-      />
+      <div className={'flex flex-row gap-4 items-end'}>
+        <SearchFilter
+          value={filters.nota_number}
+          onChange={handleNotaNumberChange}
+          placeholder="Cari..."
+          label="Cari No. Nota"
+          id="search-nota"
+          className="h-12"
+        />
+      </div>
+      <div className={'flex flex-row gap-4 items-end'}>
+        <SupplierDropdown
+          label="Semua Penanggung jawab"
+          placholder="Semua Penanggung jawab"
+          value={selectVoid}
+          onChange={handleChangeVoid}
+          className="w-[278px]"
+        />
+      </div>
+      <div className={'flex flex-row gap-4 items-end'}>
+        <SupplierDropdown
+          label="Nama Kasir"
+          placholder="Semua kasir"
+          value={selectedKasir}
+          onChange={handleKasirChange}
+          className="w-[278px]"
+        />
+      </div>
     </div>
   );
 }

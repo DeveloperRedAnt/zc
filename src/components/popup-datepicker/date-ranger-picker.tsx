@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/popover/po
 import { cn } from '@/libs/utils';
 import { PeriodType } from './types-datepircker-popup';
 
+import { getQuarter } from 'date-fns';
 import { ActionButtons } from './common/action-buttons';
 import { PeriodSelector } from './common/period-selector';
 import { DisplayValue } from './display-value';
@@ -19,24 +20,15 @@ export function DateRangePicker({
   className,
   onApply,
   initialPeriod,
-  defaultDailyRange = {
-    from: new Date(2025, 6, 17),
-    to: new Date(2025, 6, 19),
-  },
-  defaultSingleBorderedDate = new Date(2025, 6, 5),
-  defaultMonthlyRange,
-  defaultQuarterlyRange,
-  defaultYearlyRange,
-}: DateRangePickerProps) {
-  const [view, setView] = React.useState<PeriodType>(initialPeriod?.type || 'daily');
+  allowedViews = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'],
+  defaultView = 'daily',
+}: DateRangePickerProps & {
+  hideSidebar?: boolean;
+}) {
+  const [view, setView] = React.useState<PeriodType>(initialPeriod?.type || defaultView);
 
   const [state, actions] = useDateRangeState({
     initialPeriod,
-    defaultDailyRange,
-    defaultSingleBorderedDate,
-    defaultMonthlyRange,
-    defaultQuarterlyRange,
-    defaultYearlyRange,
   });
 
   const { handleApply, handleReset } = useDateRangeLogic({
@@ -46,14 +38,60 @@ export function DateRangePicker({
     onApply,
   });
 
+  // Sync state from external initialPeriod (e.g., from nuqs/query params)
+  React.useEffect(() => {
+    if (!initialPeriod) return;
+    // Do not override the currently selected view when initialPeriod changes.
+    // We still sync the underlying ranges so external changes reflect in the picker state.
+    const val = initialPeriod.value as { from?: Date; to?: Date };
+    if (!val) return;
+
+    switch (initialPeriod.type) {
+      case 'daily':
+        if (val.from && val.to) {
+          actions.setDailyRange({ from: val.from, to: val.to });
+        }
+        actions.setSingleBorderedDate(val.from ?? undefined);
+        break;
+      case 'weekly':
+        if (val.from && val.to) {
+          actions.setWeeklyRange({ from: val.from, to: val.to });
+        }
+        break;
+      case 'monthly':
+        if (val.from && val.to) {
+          actions.setMonthlyRange({ from: val.from, to: val.to });
+        }
+        break;
+      case 'quarterly': {
+        // Convert dates to quarter objects for internal state
+        const fromQ = val.from ? getQuarter(val.from) : undefined;
+        const fromY = val.from ? val.from.getFullYear() : undefined;
+        const toQ = val.to ? getQuarter(val.to) : undefined;
+        const toY = val.to ? val.to.getFullYear() : undefined;
+        actions.setQuarterlyRange({
+          from: fromQ && fromY ? { quarter: fromQ, year: fromY } : undefined,
+          to: toQ && toY ? { quarter: toQ, year: toY } : undefined,
+        });
+        actions.setCurrentYearNav(fromY ?? new Date().getFullYear());
+        break;
+      }
+      case 'yearly':
+        actions.setYearlyRange({
+          from: val.from ? val.from.getFullYear() : undefined,
+          to: val.to ? val.to.getFullYear() : undefined,
+        });
+        actions.setCurrentYearNav(val.from ? val.from.getFullYear() : new Date().getFullYear());
+        break;
+      default:
+        break;
+    }
+  }, [initialPeriod, actions]);
+
   useDateRangeEffects({
     view,
     state,
     actions,
-    defaultDailyRange,
-    defaultMonthlyRange,
-    defaultQuarterlyRange,
-    defaultYearlyRange,
   });
 
   const renderView = () => {
@@ -75,8 +113,20 @@ export function DateRangePicker({
     }
   };
 
+  // Tentukan apakah sidebar perlu di-hide
+  const shouldHideSidebar = allowedViews && allowedViews.length === 1;
+
+  // Add state for controlling the popover open state
+  const [open, setOpen] = React.useState(false);
+
+  // Modified handleApply to prevent auto-closing the popover
+  const handleApplyClick = () => {
+    handleApply();
+    setOpen(false);
+  };
+
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           id="date"
@@ -106,10 +156,15 @@ export function DateRangePicker({
         className="w-auto p-0 flex bg-white shadow-lg border border-gray-200 rounded-lg"
         align="start"
       >
-        <PeriodSelector view={view} onViewChange={setView} />
+        <PeriodSelector
+          view={view}
+          onViewChange={setView}
+          allowedViews={allowedViews}
+          style={shouldHideSidebar ? { display: 'none' } : undefined}
+        />
         <div className="flex flex-col bg-white">
           <div className="p-4">{renderView()}</div>
-          <ActionButtons onReset={handleReset} onApply={handleApply} />
+          <ActionButtons onReset={handleReset} onApply={handleApplyClick} />
         </div>
       </PopoverContent>
     </Popover>

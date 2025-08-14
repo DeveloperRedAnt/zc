@@ -14,5 +14,14 @@ export * from './master-data/payment-method.client';
 export * from './master-data/service-charge.client';
 export * from './master-data/print-queue.client';
 export * from './master-data/tax-master.client';
-export * from './package.client';
+export * from './management-subscription/management-subscription.client';
 export * from './dashboard.client';
+export * from './device.client';
+export * from './management-subscription/package-confirmation.client';
+export * from './management-subscription/add-on-confirmation.client';
+export * from './management-subscription/checkout.client';
+export * from './reports/sales-product.client';
+export * from './reports/sales-variant.client';
+export * from './reports/sales-details.client';
+export * from './reports/sales-summary.client';
+

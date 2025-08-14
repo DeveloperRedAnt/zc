@@ -12,7 +12,7 @@ import { Label } from '@/components/label/label';
 import { toast } from '@/components/toast/toast';
 import { useLogout } from '@/hooks/use-logout';
 import { useTranslation } from '@/libs/i18n';
-import AlertDialogAddOn from '@/modules/packages/components/alert-dialog-add-on';
+import AlertDialogAddOn from '@/modules/management-subscription/components/alert-dialog-add-on';
 import { useOrganizationStore } from '@/store/organization-store';
 import { Check } from '@icon-park/react';
 import Cookies from 'js-cookie';

@@ -1,11 +1,13 @@
 export interface VoidReport {
-  id?: string; // Optional for backward compatibility with mock data
-  tglTransaksi: string;
-  noNota: string;
-  kasir: string;
-  nominalPenjualan: string;
-  tglVoid: string;
-  penanggungjawab: string;
+  start_date: string;
+  end_date: string;
+  nota_number: string;
+  cashier_name: string;
+  void_by: string;
+  sort_dir: 'asc' | 'desc';
+  page: number;
+  per_page: number;
+  sort_by: string;
 }
 
 export interface VoidReportFilters {

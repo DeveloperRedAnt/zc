@@ -1,29 +1,24 @@
-'use client';
-
+//table-sales-detail.tsx
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/select/select';
+  ApiTransactionData,
+  ApiTransactionItem,
+} from '@/__generated__/api/dto/reports/sales-details.dto';
+import { useGetDetailTransaction } from '@/__generated__/api/hooks/reports/sales-details.hooks';
+import { DataTable } from '@/components/table/data-table';
+import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { Pic, Right, SortAmountDown, SortAmountUp, SortThree } from '@icon-park/react';
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import React from 'react';
-
-type ProductDetail = {
-  nama_produk: string;
-  jumlah_penjualan: string;
-  nominal_penjualan: string;
-  image_url: string;
-};
+import React, { useMemo } from 'react';
 
 type TransactionDetail = {
+  id: string;
   tanggal: string;
   no_transaksi: string;
   kasir: string;
@@ -34,7 +29,60 @@ type TransactionDetail = {
   pajak: number;
   products: ProductDetail[];
 };
-const columnHelper = createColumnHelper<TransactionDetail>();
+
+type ProductDetail = {
+  nama_produk: string;
+  jumlah_penjualan: string;
+  nominal_penjualan: string;
+  image_url: string;
+  qty_unit: number;
+  qty: number;
+  variant_unit_name: string;
+  total_nominal: number;
+};
+
+type SalesDetailsTableProps = {
+  cashierFilter?: string;
+  productFilter?: string;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  startDate?: string;
+  endDate?: string;
+};
+
+type Pagination = {
+  page: number;
+  per_page: number;
+  start_date?: string;
+  end_date?: string;
+  cashier_id?: number;
+  product_id?: number;
+};
+
+// Function to transform API data to table format
+const transformApiDataToTableFormat = (apiData: ApiTransactionData[]): TransactionDetail[] => {
+  return apiData.map((transaction, index) => ({
+    id: `${transaction.code}-${index}`,
+    tanggal: transaction.transaction_date,
+    no_transaksi: transaction.code,
+    kasir: transaction.cashier,
+    total_transaksi: transaction.total_transaction,
+    tambahan_biaya: transaction.additional_fee,
+    potongan: transaction.discount,
+    service_charge: transaction.service_charge,
+    pajak: transaction.tax,
+    products: transaction.items.map((item: ApiTransactionItem) => ({
+      nama_produk: item.product_name,
+      jumlah_penjualan: `${item.qty} ${item.variant_unit_name}`,
+      nominal_penjualan: formatCurrency(item.total_nominal),
+      image_url: item.variant_product_image || '/assets/zycas/default-image-product.png',
+      qty_unit: item.qty_unit,
+      qty: item.qty,
+      variant_unit_name: item.variant_unit_name,
+      total_nominal: item.total_nominal,
+    })),
+  }));
+};
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -45,269 +93,322 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const mockData: TransactionDetail[] = [
-  {
-    tanggal: '21/01/2025',
-    no_transaksi: 'AA1992280',
-    kasir: 'Judith Ruth Rodriguez',
-    total_transaksi: 2968829,
-    tambahan_biaya: 59097,
-    potongan: 18602,
-    service_charge: 4000,
-    pajak: 296882,
-    products: [
-      {
-        nama_produk: 'Papua New Guinea Organic Robusta 250 gr',
-        jumlah_penjualan: '2 Botol',
-        nominal_penjualan: 'Rp 35,068',
-        image_url: '/path/to/coffee-image-1.jpg',
-      },
-      {
-        nama_produk: 'Kopi Gato 500 gr',
-        jumlah_penjualan: '3 Zak',
-        nominal_penjualan: 'Rp 42,243',
-        image_url: '/path/to/coffee-image-2.jpg',
-      },
-      {
-        nama_produk: 'Kaos Combed 34 cm (Merah - Small)',
-        jumlah_penjualan: '1 Plastik',
-        nominal_penjualan: 'Rp 31,954',
-        image_url: '/path/to/coffee-image-3.jpg',
-      },
-    ],
-  },
-  {
-    tanggal: '20/01/2025',
-    no_transaksi: 'AA1992280',
-    kasir: 'Stephanie Rain Nicol',
-    total_transaksi: 2861970,
-    tambahan_biaya: 39126,
-    potongan: 11965,
-    service_charge: 4000,
-    pajak: 286197,
-    products: [
-      {
-        nama_produk: 'Papua New Guinea Organic Robusta 250 gr',
-        jumlah_penjualan: '2 Botol',
-        nominal_penjualan: 'Rp 35,068',
-        image_url: '/path/to/coffee-image-1.jpg',
-      },
-    ],
-  },
-];
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
 
-export default function SalesDetailsTable() {
-  const [expandedRows, setExpandedRows] = React.useState<Record<string, boolean>>({});
-  const [pageSize, setPageSize] = React.useState(10);
+export default function SalesDetailsTable({
+  cashierFilter,
+  productFilter,
+  currentPage = 1,
+  onPageChange,
+  startDate,
+  endDate,
+}: SalesDetailsTableProps) {
+  // Build API parameters based on filters
+  const apiParams = useMemo(() => {
+    const params: Pagination = {
+      page: currentPage ?? 1,
+      per_page: 10,
+    };
 
-  const pageSizeOptions = [10, 20, 30, 40, 50];
+    // Add filters if they exist and are not empty strings
+    if (startDate?.trim()) params.start_date = startDate;
+    if (endDate?.trim()) params.end_date = endDate;
+    if (cashierFilter?.trim()) params.cashier_id = parseInt(cashierFilter);
+    if (productFilter?.trim()) params.product_id = parseInt(productFilter);
 
-  const toggleRow = (rowId: string) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [rowId]: !prev[rowId],
-    }));
-  };
+    return params;
+  }, [currentPage, startDate, endDate, cashierFilter, productFilter]);
 
-  const columns = React.useMemo(
-    () => [
-      columnHelper.accessor('tanggal', {
-        header: () => <div className="font-bold text-black">Tanggal</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('no_transaksi', {
-        header: () => <div className="font-bold text-black">No. Transaksi</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('kasir', {
-        header: () => <div className="font-bold text-black">Kasir</div>,
-        cell: (info) => <span>{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('total_transaksi', {
-        header: () => <div className="font-bold text-black">Total Transaksi</div>,
-        cell: (info) => <span>{formatCurrency(info.getValue())}</span>,
-      }),
-      columnHelper.accessor('tambahan_biaya', {
-        header: () => <div className="font-bold text-black">Tambahan Biaya</div>,
-        cell: (info) => <span>{formatCurrency(info.getValue())}</span>,
-      }),
-      columnHelper.accessor('potongan', {
-        header: () => <div className="font-bold text-black">Potongan</div>,
-        cell: (info) => <span>{formatCurrency(info.getValue())}</span>,
-      }),
-      columnHelper.accessor('service_charge', {
-        header: () => <div className="font-bold text-black">Service Charge</div>,
-        cell: (info) => <span>{formatCurrency(info.getValue())}</span>,
-      }),
-      columnHelper.accessor('pajak', {
-        header: () => <div className="font-bold text-black">Pajak</div>,
-        cell: (info) => <span>{formatCurrency(info.getValue())}</span>,
-      }),
-    ],
-    []
-  );
+  // Fetch transaction details with filters
+  const {
+    data: transactionResponse,
+    isLoading,
+    error,
+  } = useGetDetailTransaction({
+    body: apiParams,
+  });
+
+  // Transform API data to table format
+  const tableData = useMemo(() => {
+    if (!transactionResponse?.data) return [];
+    return transformApiDataToTableFormat(transactionResponse.data);
+  }, [transactionResponse?.data]);
+
+  const columnHelper = createColumnHelper<TransactionDetail>();
+
+  const baseColumns = [
+    columnHelper.accessor('tanggal', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Tanggal
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatDate(info.getValue()),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('no_transaksi', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            No. Transaksi
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => info.getValue(),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('kasir', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Kasir
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => info.getValue(),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('total_transaksi', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Total Transaksi
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatCurrency(info.getValue()),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('tambahan_biaya', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Tambahan Biaya
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatCurrency(info.getValue()),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('potongan', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Potongan
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatCurrency(info.getValue()),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('service_charge', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Service Charge
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatCurrency(info.getValue()),
+      enableSorting: true,
+    }),
+    columnHelper.accessor('pajak', {
+      header: ({ column }) => {
+        const isSorted = column.getIsSorted();
+        return (
+          <div
+            onClick={column.getToggleSortingHandler()}
+            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+          >
+            Pajak
+            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+            {!isSorted && <SortThree theme="outline" size="16" />}
+          </div>
+        );
+      },
+      cell: (info) => formatCurrency(info.getValue()),
+      enableSorting: true,
+    }),
+  ];
+
+  // Add accordion expander column
+  const accordionColumns = [
+    {
+      id: 'expander',
+      header: () => null,
+      cell: ({ row }) => {
+        const hasProducts = row.original.products?.length > 0;
+        if (!hasProducts) return null;
+
+        return (
+          <button
+            onClick={() => row.toggleExpanded()}
+            className="flex items-center justify-center w-8 h-8 cursor-pointer"
+            aria-label={row.getIsExpanded() ? 'Collapse' : 'Expand'}
+            type="button"
+          >
+            <div
+              className={`transform transition-transform duration-500 ${
+                row.getIsExpanded() ? 'rotate-90' : ''
+              }`}
+            >
+              <Right />
+            </div>
+          </button>
+        );
+      },
+      size: 32,
+    },
+    ...baseColumns,
+  ];
 
   const table = useReactTable({
-    data: mockData,
-    columns,
+    data: tableData,
+    columns: accordionColumns,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualPagination: true,
+    pageCount: transactionResponse?.pagination?.last_page || 0,
     state: {
       pagination: {
-        pageSize,
-        pageIndex: 0,
+        pageIndex: currentPage - 1,
+        pageSize: 10,
       },
     },
-    onPaginationChange: () => {}, // This is just to satisfy the type checking
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newPagination = updater({
+          pageIndex: currentPage - 1,
+          pageSize: 10,
+        });
+        onPageChange?.(newPagination.pageIndex + 1);
+      }
+    },
   });
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-2">
+        <div className="text-center py-8">
+          <p className="text-red-500">Error loading transaction details: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-2">
-      <table className="min-w-full bg-white">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              <th className="w-10 px-6 py-3" />
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : typeof header.column.columnDef.header === 'function'
-                      ? header.column.columnDef.header(header.getContext())
-                      : header.column.columnDef.header}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <React.Fragment key={row.id}>
-              <tr className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <button
-                    type="button"
-                    onClick={() => toggleRow(row.id)}
-                    className="p-1 hover:bg-gray-100 rounded"
-                  >
-                    {expandedRows[row.id] ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </button>
-                </td>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                    {typeof cell.column.columnDef.cell === 'function'
-                      ? cell.column.columnDef.cell(cell.getContext())
-                      : cell.getValue()}
-                  </td>
-                ))}
-              </tr>
-              {expandedRows[row.id] && row.original.products && (
-                <tr>
-                  <td colSpan={row.getVisibleCells().length + 1} className="bg-gray-50">
-                    <div className="px-8 py-4">
-                      <div className="text-sm mb-3 font-medium">Daftar Produk</div>
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-12" />
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
-                              Nama Produk
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
-                              Jumlah Penjualan
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">
-                              Nominal Penjualan
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {row.original.products.map((product) => (
-                            <tr
-                              key={`${row.original.no_transaksi}-${product.nama_produk}`}
-                              className="border-b border-gray-100"
-                            >
-                              <td className="py-2 pl-4">
-                                <div className="w-8 h-8 relative">
-                                  <img
-                                    src={product.image_url}
-                                    alt={product.nama_produk}
-                                    className="object-cover rounded-md w-full h-full"
-                                  />
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 text-sm">{product.nama_produk}</td>
-                              <td className="px-4 py-2 text-sm text-gray-600">
-                                {product.jumlah_penjualan}
-                              </td>
-                              <td className="px-4 py-2 text-sm font-medium">
-                                {product.nominal_penjualan}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </td>
+      <DataTable
+        table={table}
+        isLoading={isLoading}
+        renderDetailRow={(row) => {
+          const products = row.original.products;
+          if (!products || products.length === 0) return null;
+
+          return (
+            <table className="w-full">
+              <thead>
+                <tr className="text-left">
+                  <th className="flex justify-center p-2">
+                    <Pic theme="filled" />
+                  </th>
+                  <th className="px-6 py-2 border-b">Nama Produk</th>
+                  <th className="px-6 border-b text-center">Jumlah Penjualan</th>
+                  <th className="px-6 border-b text-right">Nominal Penjualan</th>
                 </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Pagination and Rows Per Page Controls */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Rows per page</span>
-          <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
-            <SelectTrigger
-              className="w-[70px] border-none"
-              icon={<ChevronDown className="h-4 w-4" />}
-            >
-              <SelectValue placeholder="10" />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-
-          <div className="min-w-[2rem] text-center">
-            <span className="text-sm">{table.getState().pagination.pageIndex + 1}</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="text-sm text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+              </thead>
+              <tbody>
+                {products.map((product, index) => (
+                  <tr key={`${row.original.id}-${index}`}>
+                    <td className="flex justify-center p-3">
+                      <div className="w-9 h-9 relative">
+                        <img
+                          src={product.image_url}
+                          alt={product.nama_produk}
+                          className="object-cover rounded-md w-full h-full"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/assets/zycas/default-image-product.png';
+                          }}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-6 py-[19px] border-b">{product.nama_produk}</td>
+                    <td className="px-6 py-[19px] border-b text-center">
+                      {product.qty} {product.variant_unit_name}
+                    </td>
+                    <td className="px-6 py-[19px] border-b text-right">
+                      {formatCurrency(product.total_nominal)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        }}
+      />
+      <DataTablePagination table={table} isLoading={isLoading} />
     </div>
   );
 }

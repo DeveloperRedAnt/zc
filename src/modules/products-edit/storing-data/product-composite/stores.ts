@@ -2,76 +2,129 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CompositeComponent, ProductComposite } from './types';
 
-interface ProductCompositeState {
-  data: ProductComposite;
-  setProductionPerBatch: (value: number) => void;
-  addComponent: () => void;
+// Initial state for a single product
+const getInitialState = (): ProductComposite => ({
+  production_per_batch: 0,
+  components: [],
+  current_stock: 0,
+});
+
+interface ProductCompositeStoreState {
+  products: Record<number, ProductComposite>;
+}
+
+interface ProductCompositeStoreActions {
+  setProductionPerBatch: (productId: number, value: number) => void;
+  addComponent: (productId: number) => void;
   updateComponent: <K extends keyof CompositeComponent>(
+    productId: number,
     id: string,
     field: K,
     value: CompositeComponent[K]
   ) => void;
-  removeComponent: (id: string) => void;
-  resetComposite: () => void;
+  removeComponent: (productId: number, id: string) => void;
+  resetComposite: (productId: number) => void;
+  getProductData: (productId: number) => ProductComposite;
+  setComposite: (productId: number, composite: ProductComposite) => void;
 }
 
-export const useProductCompositeStore = create<ProductCompositeState>()(
+type ProductCompositeStore = ProductCompositeStoreState & ProductCompositeStoreActions;
+
+export const useProductCompositeStore = create<ProductCompositeStore>()(
   persist(
-    (set) => ({
-      data: {
-        production_per_batch: 0,
-        components: [],
+    (set, get) => ({
+      // State
+      products: {},
+
+      // Helper to get product data with default values
+      getProductData: (productId: number) => {
+        const state = get();
+        return state.products[productId] || getInitialState();
       },
 
-      setProductionPerBatch: (value) =>
+      // Actions
+      setProductionPerBatch: (productId: number, value: number) =>
         set((state) => ({
-          data: {
-            ...state.data,
-            production_per_batch: value,
+          products: {
+            ...state.products,
+            [productId]: {
+              ...get().getProductData(productId),
+              production_per_batch: value,
+            },
           },
         })),
 
-      addComponent: () =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            components: [
-              ...state.data.components,
-              {
-                id: crypto.randomUUID(),
-                product_id: null,
-                product_name: null,
-                quantity: 0,
+      addComponent: (productId: number) =>
+        set((state) => {
+          const currentData = get().getProductData(productId);
+          return {
+            products: {
+              ...state.products,
+              [productId]: {
+                ...currentData,
+                components: [
+                  ...currentData.components,
+                  {
+                    id: crypto.randomUUID(),
+                    product_id: null,
+                    name: null,
+                    quantity: 0,
+                  },
+                ],
               },
-            ],
-          },
-        })),
-
-      updateComponent: (id, field, value) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            components: state.data.components.map((comp) =>
-              comp.id === id ? { ...comp, [field]: value } : comp
-            ),
-          },
-        })),
-
-      removeComponent: (id) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            components: state.data.components.filter((comp) => comp.id !== id),
-          },
-        })),
-
-      resetComposite: () =>
-        set({
-          data: {
-            production_per_batch: 0,
-            components: [],
-          },
+            },
+          };
         }),
+
+      updateComponent: <K extends keyof CompositeComponent>(
+        productId: number,
+        id: string,
+        field: K,
+        value: CompositeComponent[K]
+      ) =>
+        set((state) => {
+          const currentData = get().getProductData(productId);
+          return {
+            products: {
+              ...state.products,
+              [productId]: {
+                ...currentData,
+                components: currentData.components.map((comp) =>
+                  comp.id === id ? { ...comp, [field]: value } : comp
+                ),
+              },
+            },
+          };
+        }),
+      setComposite: (productId, composite) =>
+        set((state) => ({
+          products: {
+            ...state.products,
+            [productId]: composite,
+          },
+        })),
+
+      removeComponent: (productId: number, id: string) =>
+        set((state) => {
+          const currentData = get().getProductData(productId);
+          return {
+            products: {
+              ...state.products,
+              [productId]: {
+                ...currentData,
+                components: currentData.components.filter((comp) => comp.id !== id),
+              },
+            },
+          };
+        }),
+
+      resetComposite: (productId: number) =>
+        set((state) => ({
+          products: {
+            ...state.products,
+            [productId]: getInitialState(),
+          },
+        })),
     }),
     {
       name: 'product-composite-store', // nama key di localStorage

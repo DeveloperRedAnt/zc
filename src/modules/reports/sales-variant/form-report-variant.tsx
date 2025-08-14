@@ -39,20 +39,6 @@ export function FilterSalesVariantData({ onFilterChange }: FilterSalesVariantPro
             onApply={(period) => {
               setSelectedPeriod(period);
             }}
-            defaultDailyRange={{
-              from: new Date(2025, 6, 17),
-              to: new Date(2025, 6, 19),
-            }}
-            defaultMonthlyRange={{
-              from: new Date(2025, 6, 1),
-            }}
-            defaultQuarterlyRange={{
-              from: { quarter: 1, year: 2025 },
-            }}
-            defaultYearlyRange={{
-              from: 2020,
-              to: 2022,
-            }}
             className="max-w-md h-12 bg-white w-[278px]"
           />
         </div>

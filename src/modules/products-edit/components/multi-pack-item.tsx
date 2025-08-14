@@ -28,6 +28,7 @@ type PriceMultiPackItem = {
 type Props = {
   index: number;
   item: PriceMultiPackItem;
+  errors?: { [field: string]: string };
   onChange: (id: number, field: keyof PriceMultiPackItem, value: string | number) => void;
   onRemove?: () => void;
 };

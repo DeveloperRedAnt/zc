@@ -1,4 +1,5 @@
 import { getDataFromApi } from '../../../utils/url';
+import { CompositeStockRequest, ResponseInitStockFirstComposiste } from '../dto/inti-first-stock/composite.dto';
 import { ProductDetailResponse, StoreVariantRequest, StoreVariantResponse } from '../dto/set-variant-stock.dto';
 import { StoreRequestParams, StoreResponse, SupplierRequestParams, SupplierResponse } from '../dto/supplier.dto';
 
@@ -50,15 +51,15 @@ export const getProductDetail = async ( params: { id: number; store_id: number }
     transformer: (data: Record<string, unknown>) => data as unknown as ProductDetailResponse
 });
 
-export const postCompositeStock = async (data: Record<string, unknown>): Promise<Record<string, unknown>> =>
-  getDataFromApi<Record<string, unknown>, Record<string, unknown>>({
+export const postCompositeStock = async ({ body, store_id }: { body: CompositeStockRequest; store_id: number }): Promise<ResponseInitStockFirstComposiste> =>
+  getDataFromApi<CompositeStockRequest, ResponseInitStockFirstComposiste>({
     type: 'post',
-    url: '/api/stocks/composite',
+    url: `/api/stocks/batches?store_id=${store_id}`,
     injectHeaders: [
       'x-organization-id',
       'x-device-id',
       'x-store-id',
     ],
-    body: data,
-    transformer: (response: Record<string, unknown>) => response
-});
+    body,
+    transformer: (response: Record<string, unknown>) => response as unknown as ResponseInitStockFirstComposiste
+  });

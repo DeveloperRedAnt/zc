@@ -1,6 +1,5 @@
 'use client';
 
-import { ProfitLossReportItem } from '@/__generated__/api/dto/reports.dto';
 import {
   Table,
   TableBody,
@@ -16,176 +15,166 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
-import React, { useState, useMemo } from 'react';
-import { profitLossMockData } from '../contants/profit-loss-mock-data';
-import { SortableHeader } from './sortable-header';
-import { TablePagination } from './table-pagination';
+import React, { useMemo } from 'react';
+import { TablePagination } from '../../sales-cashier/components/sales-cashier-table-pagination';
+import { ProfitLossTableCell } from './profit-loss-table-cell';
+import { ProfitLossTableEmptyRow } from './profit-loss-table-empty-row';
+import { ProfitLossTableHeader } from './profit-loss-table-header';
 
-const columnHelper = createColumnHelper<ProfitLossReportItem>();
+type ProfitLossRow = {
+  period: string;
+  period_start: string;
+  period_end: string;
+  hpp: number;
+  total_revenue: number;
+  gross_profit: number;
+  gross_margin_percent: number;
+};
+
+const columnHelper = createColumnHelper<ProfitLossRow>();
 
 interface SalesProfitLossTableProps {
-  deviceId?: string;
-  storeId?: string;
+  data: ProfitLossRow[];
+  isLoading: boolean;
+  error: Error | null;
+  last_page: number;
+  sortBy: keyof ProfitLossRow;
+  sortDirection: 'asc' | 'desc';
+  onSortChange: (by: keyof ProfitLossRow, dir: 'asc' | 'desc') => void;
+  pageIndex: number;
+  pageSize: number;
+  onPaginationChange: (idx: number, size: number) => void;
 }
 
-// Helper functions outside component
-const parseCurrency = (value: string): number => {
-  return parseFloat(value.replace(/[^\d.-]/g, '')) || 0;
-};
-
-const parsePercentage = (value: string): number => {
-  return parseFloat(value.replace(/[^\d.-]/g, '')) || 0;
-};
-
-const parseDate = (dateStr: string): Date => {
-  const [day, month, year] = dateStr.split('/');
-  return new Date(parseInt(year || '2025'), parseInt(month || '1') - 1, parseInt(day || '1'));
-};
-
-export function SalesProfitLossTable(_props: SalesProfitLossTableProps) {
-  const [sortBy, setSortBy] = useState('tanggal');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-
-  // Simple sorting logic
+export function SalesProfitLossTable({
+  data,
+  isLoading,
+  error,
+  last_page,
+  sortBy,
+  sortDirection,
+  onSortChange,
+  pageIndex,
+  pageSize,
+  onPaginationChange,
+}: SalesProfitLossTableProps) {
   const sortedData = useMemo(() => {
-    const data = [...profitLossMockData];
+    const key = sortBy;
+    const direction = sortDirection;
 
-    return data.sort((a, b) => {
-      let valueA: number | Date;
-      let valueB: number | Date;
+    return [...data].sort((a, b) => {
+      let valueA = a[key] as string | number | Date;
+      let valueB = b[key] as string | number | Date;
 
-      switch (sortBy) {
-        case 'tanggal':
-          valueA = parseDate(a.tanggal);
-          valueB = parseDate(b.tanggal);
-          break;
-        case 'hpp':
-          valueA = parseCurrency(a.hpp);
-          valueB = parseCurrency(b.hpp);
-          break;
-        case 'pendapatanPenjualan':
-          valueA = parseCurrency(a.pendapatanPenjualan);
-          valueB = parseCurrency(b.pendapatanPenjualan);
-          break;
-        case 'labaRugiKotor':
-          valueA = parseCurrency(a.labaRugiKotor);
-          valueB = parseCurrency(b.labaRugiKotor);
-          break;
-        case 'persentaseMarginLabaKotor':
-          valueA = parsePercentage(a.persentaseMarginLabaKotor);
-          valueB = parsePercentage(b.persentaseMarginLabaKotor);
-          break;
-        default:
-          return 0;
+      if (key === 'period_start' || key === 'period_end') {
+        valueA = new Date(valueA);
+        valueB = new Date(valueB);
       }
 
-      // Handle Date comparison
-      if (valueA instanceof Date && valueB instanceof Date) {
-        return sortDirection === 'asc'
-          ? valueA.getTime() - valueB.getTime()
-          : valueB.getTime() - valueA.getTime();
-      }
-
-      // Handle number comparison
-      if (typeof valueA === 'number' && typeof valueB === 'number') {
-        return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-      }
-
+      if (valueA < valueB) return direction === 'asc' ? -1 : 1;
+      if (valueA > valueB) return direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [sortBy, sortDirection]);
-
-  const handleSort = (columnId: string) => {
-    if (sortBy === columnId) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(columnId);
-      setSortDirection('asc');
-    }
-  };
+  }, [data, sortBy, sortDirection]);
 
   const columns = [
-    columnHelper.accessor('tanggal', {
+    columnHelper.accessor('period', {
       header: () => (
-        <SortableHeader
-          columnId="tanggal"
+        <ProfitLossTableHeader
+          columnId="period"
           sortBy={sortBy}
           sortDirection={sortDirection}
-          onSort={handleSort}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
         >
-          Tanggal
-        </SortableHeader>
+          Periode
+        </ProfitLossTableHeader>
       ),
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      cell: (info) => <ProfitLossTableCell value={info.getValue()} />,
+    }),
+    columnHelper.accessor('period_start', {
+      header: () => (
+        <ProfitLossTableHeader
+          columnId="period_start"
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
+        >
+          Mulai
+        </ProfitLossTableHeader>
+      ),
+      cell: (info) => <ProfitLossTableCell value={info.getValue()} />,
+    }),
+    columnHelper.accessor('period_end', {
+      header: () => (
+        <ProfitLossTableHeader
+          columnId="period_end"
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
+        >
+          Selesai
+        </ProfitLossTableHeader>
+      ),
+      cell: (info) => <ProfitLossTableCell value={info.getValue()} />,
     }),
     columnHelper.accessor('hpp', {
       header: () => (
-        <SortableHeader
+        <ProfitLossTableHeader
           columnId="hpp"
           sortBy={sortBy}
           sortDirection={sortDirection}
-          onSort={handleSort}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
         >
           HPP
-        </SortableHeader>
+        </ProfitLossTableHeader>
       ),
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      cell: (info) => <ProfitLossTableCell value={info.getValue().toLocaleString()} />,
     }),
-    columnHelper.accessor('pendapatanPenjualan', {
+    columnHelper.accessor('total_revenue', {
       header: () => (
-        <SortableHeader
-          columnId="pendapatanPenjualan"
+        <ProfitLossTableHeader
+          columnId="total_revenue"
           sortBy={sortBy}
           sortDirection={sortDirection}
-          onSort={handleSort}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
         >
-          Pendapatan Penjualan
-        </SortableHeader>
+          Total Revenue
+        </ProfitLossTableHeader>
       ),
-      cell: (info) => <span className="text-sm">{info.getValue()}</span>,
+      cell: (info) => <ProfitLossTableCell value={info.getValue().toLocaleString()} />,
     }),
-    columnHelper.accessor('labaRugiKotor', {
+    columnHelper.accessor('gross_profit', {
       header: () => (
-        <SortableHeader
-          columnId="labaRugiKotor"
+        <ProfitLossTableHeader
+          columnId="gross_profit"
           sortBy={sortBy}
           sortDirection={sortDirection}
-          onSort={handleSort}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
         >
-          Laba/Rugi Kotor
-        </SortableHeader>
+          Gross Profit
+        </ProfitLossTableHeader>
       ),
       cell: (info) => {
         const value = info.getValue();
-        const isNegative = value.includes('-') || value.includes('Rp -');
-        return (
-          <span className={`text-sm ${isNegative ? 'text-red-500' : 'text-gray-900'}`}>
-            {value}
-          </span>
-        );
+        const isNegative = value < 0;
+        return <ProfitLossTableCell value={value.toLocaleString()} isNegative={isNegative} />;
       },
     }),
-    columnHelper.accessor('persentaseMarginLabaKotor', {
+    columnHelper.accessor('gross_margin_percent', {
       header: () => (
-        <div className="flex items-center gap-2">
-          <SortableHeader
-            columnId="persentaseMarginLabaKotor"
-            sortBy={sortBy}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          >
-            Persentase Margin Laba Kotor
-          </SortableHeader>
-        </div>
+        <ProfitLossTableHeader
+          columnId="gross_margin_percent"
+          sortBy={sortBy}
+          sortDirection={sortDirection}
+          onSort={(col) => onSortChange(col as keyof ProfitLossRow, sortDirection)}
+        >
+          Gross Margin (%)
+        </ProfitLossTableHeader>
       ),
       cell: (info) => {
         const value = info.getValue();
-        const isNegative = value.includes('-');
-        return (
-          <span className={`text-sm ${isNegative ? 'text-red-500' : 'text-gray-900'}`}>
-            {value}
-          </span>
-        );
+        const isNegative = value < 0;
+        return <ProfitLossTableCell value={`${value}%`} isNegative={isNegative} />;
       },
     }),
   ];
@@ -193,55 +182,66 @@ export function SalesProfitLossTable(_props: SalesProfitLossTableProps) {
   const table = useReactTable({
     data: sortedData,
     columns,
+    pageCount: last_page ?? 1,
+    state: {
+      sorting: [{ id: sortBy, desc: sortDirection === 'desc' }],
+      pagination: { pageIndex, pageSize },
+    },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualSorting: true,
+    manualPagination: true,
+    onSortingChange: (updater) => {
+      const next =
+        typeof updater === 'function'
+          ? updater([{ id: sortBy, desc: sortDirection === 'desc' }])
+          : updater;
+      if (next[0]) {
+        onSortChange(next[0].id as keyof ProfitLossRow, next[0].desc ? 'desc' : 'asc');
+      }
+    },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater;
+      onPaginationChange(next.pageIndex, next.pageSize);
+    },
   });
 
-  return (
-    <>
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className="min-w-[120px]">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
-      {/* Pagination */}
-      <TablePagination table={table} />
-    </>
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id} className="min-w-[120px]">
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <ProfitLossTableEmptyRow colSpan={columns.length} />
+          )}
+        </TableBody>
+      </Table>
+      <TablePagination table={table} totalPages={last_page ?? 1} />
+    </div>
   );
 }

@@ -35,9 +35,6 @@ export default function DialogFormResetPin({
 
     resetPinMutation.mutate(
       {
-        'x-device-id': '1',
-        'x-store-id': '1',
-        'x-organization-id': '1',
         body: {
           id_employee: selectedUserId,
         },

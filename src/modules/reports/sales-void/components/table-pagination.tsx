@@ -28,8 +28,8 @@ export function TablePagination<T>({
   }, [filters.page, table]);
 
   useEffect(() => {
-    table.setPageSize(filters.pageSize);
-  }, [filters.pageSize, table]);
+    table.setPageSize(filters.per_page);
+  }, [filters.per_page, table]);
 
   const handlePreviousPage = () => {
     const newPage = Math.max(0, filters.page - 1);
@@ -38,7 +38,7 @@ export function TablePagination<T>({
 
   const handleNextPage = () => {
     const totalRows = table.getFilteredRowModel().rows.length;
-    const maxPage = Math.max(0, Math.ceil(totalRows / filters.pageSize) - 1);
+    const maxPage = Math.max(0, Math.ceil(totalRows / filters.per_page) - 1);
     const newPage = Math.min(maxPage, filters.page + 1);
     updatePage(newPage);
   };
@@ -48,7 +48,7 @@ export function TablePagination<T>({
   };
 
   const totalRows = table.getFilteredRowModel().rows.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / filters.pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalRows / filters.per_page));
   const canPreviousPage = filters.page > 0;
   const canNextPage = filters.page < totalPages - 1;
 
@@ -56,12 +56,12 @@ export function TablePagination<T>({
     <div className="flex items-center justify-between py-4">
       <div className="flex items-center gap-2 text-sm text-gray-600">
         Rows per page
-        <Select value={`${filters.pageSize}`} onValueChange={handlePageSizeChange}>
+        <Select value={`${filters.per_page}`} onValueChange={handlePageSizeChange}>
           <SelectTrigger
             className="w-[70px] h-10"
             icon={<ChevronDown className="h-4 w-4 text-gray-400" />}
           >
-            <SelectValue placeholder={filters.pageSize} />
+            <SelectValue placeholder={filters.per_page} />
           </SelectTrigger>
           <SelectContent>
             {pageSizeOptions.map((pageSize) => (

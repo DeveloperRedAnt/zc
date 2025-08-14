@@ -120,6 +120,10 @@ html {
   color: #F08181;
 }
 
+.border-b-grey-500 {
+  border-bottom: 1px solid #C2C7D0;
+}
+
 /* Gray color variables */
 :root {
   --color-gray-50: oklch(98.5% 0.002 247.839);
