@@ -67,7 +67,7 @@ const transformApiDataToTableFormat = (apiData: ApiProduct[]): Product[] => {
       <Star theme="outline" fill="#D8D8D8" />
     ),
     image: product.thumbnail || '/assets/zycas/example-product.png',
-    name: product.brand,
+    name: product.name,
     packaging: product.package || '-',
     size: product.content || '-',
     stock: '-', // Data stok tidak tersedia, bisa diganti kalau field-nya ada
@@ -206,7 +206,10 @@ export default function TableProductList({
             </span>
           </div>
           <div className="relative group">
-            <Edit className="cursor-pointer" />
+            <Edit
+              className="cursor-pointer"
+              onClick={() => router.push(`/dashboard/products/${info.row.original.id}/edit`)}
+            />
             <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex bg-gray-700 text-white text-xs px-2 py-1 rounded shadow z-10 whitespace-nowrap">
               Ubah
             </span>

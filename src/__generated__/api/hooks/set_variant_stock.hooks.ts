@@ -29,16 +29,15 @@ export function usePostStoreVariant(
 
 export function useGetProductDetail(
   productId: number,
-  storeId: number,
-  options?: Omit<UseQueryOptions<DTO.ProductDetailResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<DTO.ProductDetail, Error>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: ['productDetail', productId, storeId],
+    queryKey: ['productDetail', productId],
     queryFn: async () => {
-      const response = await api.getProductDetail({ id: productId, store_id: storeId });
-      return response;
+      const response = await api.getProductDetail({ id: productId });
+      return response
     },
-    enabled: !!productId && !!storeId, 
+    enabled: !!productId, 
     staleTime: 5 * 60 * 1000, 
     ...options,
   });

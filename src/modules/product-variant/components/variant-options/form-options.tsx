@@ -1,101 +1,73 @@
+// form-options.tsx - Refactored with separated structure
 'use client';
 
 import { Button } from '@/components/button/button';
 import { Text } from '@/components/text/text';
 import { toast } from '@/components/toast/toast';
 import { FormValidationProvider } from '@/hooks/use-form-validator/form-validation-context';
-import { useProductVariantStore } from '@/modules/product-variant/store';
-import type {
-  FormattedData as FormattedDataType,
-  ProductVariants,
-} from '@/modules/product-variant/types';
 import DetailVariantList from '@/modules/products-edit/components/options/detail-variant-list-option';
-import type { ProductCardValue } from '@/modules/products-edit/components/options/detail-variant-list-option';
 import { usePriceMultiPackStore } from '@/modules/products/storing-data/product-multi-pack/stores';
 import { Check } from '@icon-park/react';
-import React, { useRef, useState } from 'react';
-import { ZodError, z } from 'zod';
+import { useParams } from 'next/navigation';
+import React, { useRef, useState, useEffect } from 'react';
 import { DeleteDialog } from './dialog-opsi-varian';
 
-// Dummy data untuk testing
-const sampleFormattedData: FormattedDataType[] = [
-  {
-    id: 'VAR001',
-    name: 'Kemeja Lengan Panjang - Biru',
-    thumbnail: 'https://example.com/images/kemeja-biru.jpg',
-    barcode: 'BR123456789',
-    sku: 'SKU-KMJ-BIRU',
-    minStock: 5,
-    prices: [],
-    typeprice: 'single',
-    isActive: true,
-    options: [
-      { id: 'OPT001', type: 'Warna', name: 'Biru', selected_id: 'SEL001' },
-      { id: 'OPT002', type: 'Ukuran', name: 'L', selected_id: 'SEL002' },
-    ],
-  },
-];
-
-const variantSchema = z.object({
-  name: z.string().min(1, 'Nama harus diisi'),
-  thumbnail: z.string().url('Thumbnail harus berupa URL').optional(),
-  barcode: z
-    .string()
-    .min(1, 'Barcode harus diisi')
-    .max(13, 'Barcode maksimal 13 karakter')
-    .optional(),
-  sku: z.string().min(1, 'SKU harus diisi').max(20, 'SKU maksimal 20 karakter').optional(),
-  minStock: z.number().min(1, 'Stok minimal harus lebih dari 0'),
-});
+import * as DTO from '@/__generated__/api/dto/products-edit.dto';
+// Import the separated structure
+import { useFieldValidation, useVariantForm } from '@/__generated__/api/hooks/products-edit.hooks';
 
 const FormOptions = () => {
+  const params = useParams();
+  const productId = params?.id as string;
+
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isLoading, _setIsLoading] = useState(false);
+
+  // Use the custom hook for managing variant form state
+  const {
+    formattedVariants,
+    isLoading: dataLoading,
+    error,
+    refetch,
+    handleSaveVariants,
+    isSaving,
+  } = useVariantForm(productId);
+
+  const { validateVariant } = useFieldValidation();
 
   // Ref untuk menyimpan data dari setiap DetailVariantList
-  const detailVariantRefs = useRef<{ [key: string]: ProductCardValue }>({});
-  // State untuk error per field per varian
-  const [fieldErrors, setFieldErrors] = useState<{
-    [variantId: string]: { [field: string]: string };
-  }>({});
+  const detailVariantRefs = useRef<{ [key: number]: DTO.ProductCardValue }>({});
 
-  const { formattedData, updateFormattedData } = useProductVariantStore() as {
-    productVariants: ProductVariants;
-    formattedData: FormattedDataType[];
-    updateFormattedData: (id: string, data: Partial<FormattedDataType>) => void;
-  };
+  // State untuk error per field per varian
+  const [fieldErrors, setFieldErrors] = useState<DTO.FieldErrors>({});
 
   // MultiPack hooks
   const { priceMultiPackList, multiPackErrors, setMultiPackErrors } = usePriceMultiPackStore();
 
-  // Use formattedData directly from store instead of creating it
-  const FormattedData = formattedData.length > 0 ? formattedData : sampleFormattedData;
+  // Initialize refs when data is loaded
+  useEffect(() => {
+    if (formattedVariants.length > 0) {
+      for (const variant of formattedVariants) {
+        if (!detailVariantRefs.current[variant.id]) {
+          detailVariantRefs.current[variant.id] = {
+            file: variant.thumbnail,
+            barcode: variant.barcode,
+            sku: variant.sku,
+            minStock: variant.minStock,
+          };
+        }
+      }
+    }
+  }, [formattedVariants]);
+
+  // console.log(formattedVariants, 'formattedVariants')
 
   // Callback untuk menerima data dari DetailVariantList
-  const handleDetailVariantChange = (id: string, values: ProductCardValue) => {
+  const handleDetailVariantChange = (id: number, values: DTO.ProductCardValue) => {
     detailVariantRefs.current[id] = values;
-    updateFormattedData(id, {
-      thumbnail: values.file,
-      barcode: values.barcode,
-      sku: values.sku,
-      minStock: values.minStock,
-    });
+
     // Clear error on change
     setFieldErrors((prev) => ({ ...prev, [id]: {} }));
   };
-
-  React.useEffect(() => {
-    for (const item of FormattedData) {
-      if (!detailVariantRefs.current[item.id]) {
-        detailVariantRefs.current[item.id] = {
-          file: item.thumbnail ?? '',
-          barcode: item.barcode ?? '',
-          sku: item.sku ?? '',
-          minStock: item.minStock ?? 0,
-        };
-      }
-    }
-  }, [FormattedData]);
 
   const handleSave = () => {
     // Validasi MultiPackItem
@@ -106,7 +78,7 @@ const FormOptions = () => {
       if (!newMultiPackErrors[item.id]) {
         newMultiPackErrors[item.id] = {};
       }
-      // Ensure newMultiPackErrors[item.id] is always an object
+
       const errorObj = newMultiPackErrors[item.id]!;
       if (!item.itemName) {
         errorObj.itemName = 'Nama satuan wajib diisi';
@@ -131,44 +103,32 @@ const FormOptions = () => {
       });
       return;
     }
+
     let isValid = true;
     let errorMsg = '';
-    const errors: { [variantId: string]: { [field: string]: string } } = {};
+    const errors: DTO.FieldErrors = {};
 
-    for (const formattedItem of FormattedData) {
-      const cardValue = detailVariantRefs.current[formattedItem.id];
-      try {
-        variantSchema.parse({
-          name: formattedItem.name,
-          thumbnail: cardValue?.file ?? '',
-          barcode: cardValue?.barcode ?? '',
-          sku: cardValue?.sku ?? '',
-          minStock: cardValue?.minStock ?? 0,
-        });
-      } catch (err) {
-        if (err instanceof ZodError) {
-          isValid = false;
-          errorMsg = err.errors?.[0]?.message || 'Validasi gagal';
-          if (!errors[formattedItem.id]) {
-            errors[formattedItem.id] = {};
-          }
-          for (const e of err.errors) {
-            if (!errors[formattedItem.id]) {
-              errors[formattedItem.id] = {};
-            }
-            // Ensure errors[formattedItem.id] is initialized
-            const variantErrors = errors[formattedItem.id] ?? {};
-            if (e.path && e.path.length > 0) {
-              const fieldName = e.path[0] as string;
-              variantErrors[fieldName] = e.message;
-            } else {
-              variantErrors.unknown = e.message;
-            }
-            errors[formattedItem.id] = variantErrors;
-          }
-        }
+    // Validate each variant using the validation hook
+    for (const variant of formattedVariants) {
+      const cardValue = detailVariantRefs.current[variant.id];
+
+      const validationData: DTO.ProductVariantValidationSchema = {
+        name: variant.name,
+        thumbnail: cardValue?.file ?? '',
+        barcode: cardValue?.barcode ?? '',
+        sku: cardValue?.sku ?? '',
+        minStock: cardValue?.minStock ?? 0,
+      };
+
+      const variantErrors = validateVariant(validationData);
+
+      if (Object.keys(variantErrors).length > 0) {
+        isValid = false;
+        errorMsg = Object.values(variantErrors)[0] || 'Validasi gagal';
+        errors[variant.id] = variantErrors;
       }
     }
+
     setFieldErrors(errors);
     if (!isValid) {
       toast.error('Validasi gagal', {
@@ -181,42 +141,53 @@ const FormOptions = () => {
     setDialogOpen(true);
   };
 
-  const handleConfirmSave = () => {
-    const payload: FormattedDataType[] = [];
-
-    for (const formattedItem of FormattedData) {
-      const cardValue = detailVariantRefs.current[formattedItem.id];
-      if (cardValue) {
-        payload.push({
-          id: formattedItem.id,
-          name: formattedItem.name,
-          thumbnail: cardValue.file,
-          barcode: cardValue.barcode,
-          sku: cardValue.sku,
-          minStock: cardValue.minStock,
-          prices: [],
-          typeprice: '',
-          isActive: true,
-          options: formattedItem.options,
-        });
-        updateFormattedData(formattedItem.id, {
-          name: formattedItem.name,
-          thumbnail: cardValue.file,
-          barcode: cardValue.barcode,
-          sku: cardValue.sku,
-          minStock: cardValue.minStock,
-          prices: [],
-          typeprice: '',
-        });
-      }
+  const handleConfirmSave = async () => {
+    try {
+      await handleSaveVariants(formattedVariants, detailVariantRefs.current);
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving variants:', error);
+      // Error handling is done in the hook
     }
-
-    setDialogOpen(false);
-    toast.success('Data berhasil disimpan!', {
-      description: 'Semua detail varian telah berhasil disimpan',
-      className: 'bg-[#16a34a]',
-    });
   };
+
+  if (dataLoading) {
+    return (
+      <div className="p-[10px] flex justify-center items-center min-h-[200px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
+          <Text size="sm">Memuat data produk...</Text>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-[10px] flex justify-center items-center min-h-[200px]">
+        <div className="text-center">
+          <Text size="sm" className="text-red-500 mb-2">
+            {error}
+          </Text>
+          <Button type="button" variant="outline" onClick={() => refetch()}>
+            Muat Ulang
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (formattedVariants.length === 0) {
+    return (
+      <div className="p-[10px] flex justify-center items-center min-h-[200px]">
+        <div className="text-center">
+          <Text size="sm" className="text-gray-500">
+            Tidak ada varian ditemukan untuk produk ini
+          </Text>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <FormValidationProvider>
@@ -232,31 +203,42 @@ const FormOptions = () => {
           </div>
         </div>
       </div>
-      {FormattedData.map((data) => (
-        <React.Fragment key={data.id}>
+
+      {formattedVariants.map((variant) => (
+        <React.Fragment key={variant.id}>
           <DetailVariantList
-            formattedData={data || []}
-            onChange={(values) => handleDetailVariantChange(data.id, values)}
-            errors={fieldErrors?.[data.id] ?? {}} // error varian
+            formattedData={{
+              id: variant.id,
+              name: variant.name,
+              thumbnail: variant.thumbnail,
+              barcode: variant.barcode,
+              sku: variant.sku,
+              minStock: variant.minStock,
+              variantUnits: variant.variantUnits,
+            }}
+            onChange={(values) => handleDetailVariantChange(variant.id, values)}
+            errors={fieldErrors?.[variant.id] ?? {}}
           />
         </React.Fragment>
       ))}
+
       <div className="mt-2 flex justify-between items-center">
         <div />
         <div className="flex gap-2">
           <Button type="button" variant="outline">
             Kembali ke Edit Produk
           </Button>
-          <Button type="button" variant="success" onClick={handleSave}>
-            Simpan Varian <Check />
+          <Button type="button" variant="success" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Menyimpan...' : 'Simpan Varian'} <Check />
           </Button>
         </div>
       </div>
+
       <DeleteDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onRemove={handleConfirmSave}
-        loading={isLoading}
+        loading={isSaving}
         title="Anda akan menyimpan Varian Produk"
         description="Apakah Anda yakin akan menyimpan data Opsi Varian Produk tersebut?"
         buttonText="Ya, Saya Yakin"

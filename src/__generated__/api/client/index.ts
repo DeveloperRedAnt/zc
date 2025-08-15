@@ -17,6 +17,7 @@ export * from './master-data/tax-master.client';
 export * from './management-subscription/management-subscription.client';
 export * from './dashboard.client';
 export * from './device.client';
+export * from './products-edit.client';
 export * from './management-subscription/package-confirmation.client';
 export * from './management-subscription/add-on-confirmation.client';
 export * from './management-subscription/checkout.client';

@@ -17,7 +17,7 @@ export const getEmployee = async (params: {
   body?: Partial<DTO.GetEmployeePayloadSchema>;
 }): Promise<DTO.EmployeeListResponse[]> => getDataFromApi<Record<string, unknown>, DTO.EmployeeListResponse[]>({
   type: 'get',
-  url: '/api/employees',
+  url: '/api/user-list',
   injectHeaders: ['x-device-id', 'x-organization-id'],
   params: params.body || {},
   withPagination: true,
@@ -55,8 +55,8 @@ export const createEmployee = async (params: {
   body: DTO.CreateEmployeePayload
 }): Promise<DTO.CreateEmployeeResponse> => getDataFromApi<typeof params, DTO.CreateEmployeeResponse, DTO.CreateEmployeePayload>({
   type: 'post',
-  url: '/api/employees',
-  injectHeaders: ['x-device-id', 'x-organization-id'],
+  url: '/api/v2/employees',
+  injectHeaders: ['x-device-id', 'x-organization-id', ''],
   params,
   body: params.body,
   transformer: (data: Record<string, unknown>) => data as DTO.CreateEmployeeResponse

@@ -41,16 +41,26 @@ export function mapFormDataToApiPayload(formData: FormDataInput): DTO.UpdateProd
 
   const variants =
     formData.variants?.map((variant) => {
+      const variantUnits =
+        Array.isArray(variant.variant_units) && variant.variant_units.length > 0
+          ? variant.variant_units.map((unit) => ({
+              ...unit,
+              price: unit.price,
+              conversion_value: unit.conversion_value,
+            }))
+          : Array.isArray(formData.priceMultiPackList)
+            ? formData.priceMultiPackList.map((unit, idx) => ({
+                id: unit.id ?? `vu_${Date.now()}_${idx}`,
+                unit_name: unit.itemName || unit.unit_name || null,
+                conversion_value: unit.quantity ? unit.quantity.toString() : 1,
+                price: unit.price ? unit.price.toString() : 0,
+              }))
+            : [];
       return {
         ...variant,
-        variant_units: variant.variant_units?.map((unit) => ({
-          ...unit,
-          price: unit.price,
-          conversion_value: unit.conversion_value,
-        })),
+        variant_units: variantUnits,
       };
     }) || [];
-
   const composites =
     productType === 'composite' && formData.composite && formData.composite.components
       ? {

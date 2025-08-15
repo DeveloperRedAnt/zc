@@ -16,6 +16,7 @@ export * from './master-data/tax-master.hooks';
 export * from './management-subscription/management-subscription.hooks';
 export * from './dashboard.hooks';
 export * from './device.hooks';
+export * from './products-edit.hooks';
 export * from './management-subscription/package-confirmation.hooks';
 export * from './management-subscription/add-on-confirmation.hooks';
 export * from './management-subscription/checkout.hooks';

@@ -177,7 +177,7 @@ const AddDetailVariant: React.FC<AddDetailVariantProps> = ({ onBack, onSaveDetai
         return (
           <DetailVariantList
             key={data.id}
-            formattedData={data || []}
+            formattedData={data as any || []}
             onChange={(values) => handleDetailVariantChange(data.id, values)}
           />
         );

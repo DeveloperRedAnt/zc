@@ -40,10 +40,11 @@ export default function Index({ productId }: Props) {
   const dayInputType: 'radio-day-select' | 'radio-day-input' = matchingOption
     ? 'radio-day-select'
     : 'radio-day-input';
-  const selectedExpiredDay: OptionType | null = matchingOption;
+
+  // const selectedExpiredDay: OptionType | null = matchingOption;
 
   // For manual input, show the value if there's no matching option, or if we explicitly want manual input
-  const manualInputValue = expiredReminderInDays ? expiredReminderInDays.toString() : '';
+  // const manualInputValue = expiredReminderInDays ? expiredReminderInDays.toString() : '';
 
   // Local state for radio button selection only
   const [currentInputType, setCurrentInputType] = useState<'radio-day-select' | 'radio-day-input'>(
@@ -54,6 +55,16 @@ export default function Index({ productId }: Props) {
   useEffect(() => {
     setCurrentInputType(dayInputType);
   }, [dayInputType]);
+
+  const selectedExpiredDay =
+    currentInputType === 'radio-day-select'
+      ? optionsExpiredDay.find((option) => option.value === expiredReminderInDays) || null
+      : null;
+
+  const manualInputValue =
+    currentInputType === 'radio-day-input' && expiredReminderInDays
+      ? expiredReminderInDays.toString()
+      : '';
 
   const handleEnableSwitch = useCallback(
     (enabled: boolean) => {

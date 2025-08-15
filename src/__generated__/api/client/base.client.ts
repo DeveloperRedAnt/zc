@@ -42,8 +42,8 @@ export type TypeToZod<T> = Required<{
         // Handle 401 unauthorized errors by logging out
         if (status === 401 && typeof window !== 'undefined') {
           try {
-            const { signOut } = await import('next-auth/react');
-            await signOut({ redirect: true, callbackUrl: '/sign-in' });
+            // const { signOut } = await import('next-auth/react');
+            // await signOut({ redirect: true, callbackUrl: '/sign-in' });
             console.log('Unauthorized', error);
           } catch (logoutError) {
             console.error('Error during automatic logout:', logoutError);

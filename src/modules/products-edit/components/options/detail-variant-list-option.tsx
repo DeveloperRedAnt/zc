@@ -1,13 +1,16 @@
+// detail-variant-list-option.tsx
 'use client';
 
+import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader } from '@/components/card/card';
 import { InformationText } from '@/components/information-text/information-text';
 import CustomInput from '@/components/input/custom-input';
 import InputFile from '@/components/input/input-file';
 import { Text } from '@/components/text/text';
 import { MultiUnitPrice } from '@/modules/product-variant/components/variant-options/multi-unit-price';
-import React, { useState, useEffect } from 'react';
-import type { FormattedData } from '../../../product-variant/types';
+import type { FormattedData } from '@/modules/products-edit/storing-data/product-variant-edit-option/types';
+import { Refresh } from '@icon-park/react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export type ProductCardValue = {
   file: string;
@@ -18,7 +21,7 @@ export type ProductCardValue = {
 
 type ProductCardListProps = {
   formattedData: FormattedData;
-  onChange?: (values: ProductCardValue) => void; // Changed from array to single value
+  onChange?: (values: ProductCardValue) => void;
   errors?: { [field: string]: string };
 };
 
@@ -30,22 +33,36 @@ const DetailVariantList = ({ formattedData, onChange, errors = {} }: ProductCard
     minStock: formattedData.minStock ?? 0,
   });
 
-  // Sync cardValue with formattedData changes (without triggering onChange)
+  // Simpan data awal di ref supaya tidak berubah walau state berubah
+  const initialValueRef = useRef<ProductCardValue>({
+    file: formattedData.thumbnail || '',
+    barcode: formattedData.barcode || '',
+    sku: formattedData.sku || '',
+    minStock: formattedData.minStock ?? 0,
+  });
+
+  // Sync state jika formattedData berubah (misal karena reload data)
   useEffect(() => {
-    setCardValue({
+    const newVal = {
       file: formattedData.thumbnail || '',
       barcode: formattedData.barcode || '',
       sku: formattedData.sku || '',
       minStock: formattedData.minStock ?? 0,
-    });
+    };
+    setCardValue(newVal);
+    initialValueRef.current = newVal; // update nilai awal ketika data baru masuk
   }, [formattedData.thumbnail, formattedData.barcode, formattedData.sku, formattedData.minStock]);
 
   const handleCardChange = (value: ProductCardValue) => {
     setCardValue(value);
-    // Only call onChange when user actually changes values
     onChange?.(value);
   };
 
+  const handleReset = () => {
+    const initial = initialValueRef.current;
+    setCardValue(initial);
+    onChange?.(initial);
+  };
   return (
     <>
       <ProductCard
@@ -53,6 +70,8 @@ const DetailVariantList = ({ formattedData, onChange, errors = {} }: ProductCard
         value={cardValue}
         onChange={handleCardChange}
         errors={errors}
+        isEdit={true}
+        onReset={handleReset}
       />
     </>
   );
@@ -63,15 +82,23 @@ type ProductCardProps = {
   value: ProductCardValue;
   onChange: (value: ProductCardValue) => void;
   errors?: { [field: string]: string };
+  isEdit: boolean;
+  onReset?: () => void;
 };
 
-const ProductCard = ({ option, value, onChange, errors = {} }: ProductCardProps) => {
+const ProductCard = ({
+  option,
+  value,
+  onChange,
+  errors = {},
+  isEdit = false,
+  onReset,
+}: ProductCardProps) => {
   const [file, setFile] = useState<string>(value.file);
   const [barcode, setBarcode] = useState<string>(value.barcode);
   const [sku, setSKU] = useState<string>(value.sku);
   const [minStock, setMinStock] = useState<number>(value.minStock);
 
-  // Update local state when value prop changes
   useEffect(() => {
     setFile(value.file);
     setBarcode(value.barcode);
@@ -106,6 +133,7 @@ const ProductCard = ({ option, value, onChange, errors = {} }: ProductCardProps)
         setMinStock(newMinStock);
         break;
     }
+
     const updatedValue = {
       file: newFile,
       barcode: newBarcode,
@@ -120,6 +148,13 @@ const ProductCard = ({ option, value, onChange, errors = {} }: ProductCardProps)
     <Card className="m-4">
       <CardHeader className="text-lg font-semibold border-b border-gray-300 group flex flex-row justify-between items-center text-[#555555]">
         {option.name}
+
+        {isEdit && (
+          <Button type="button" variant="outline" onClick={onReset}>
+            <Refresh />
+            Reset
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-4 pt-3">
         <div className="flex gap-2">
@@ -194,7 +229,7 @@ const ProductCard = ({ option, value, onChange, errors = {} }: ProductCardProps)
             </div>
           </div>
         </div>
-        <MultiUnitPrice />
+        <MultiUnitPrice variantUnits={option.variantUnits} variantId={option.id} />
       </CardContent>
     </Card>
   );

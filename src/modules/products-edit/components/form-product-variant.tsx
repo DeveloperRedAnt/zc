@@ -15,6 +15,7 @@ import { useProductVariantStore } from '@/modules/product-variant/store';
 export default function Index() {
   const router = useRouter();
   const finalData = useProductVariantStore((state) => state.finalData);
+
   const setFinalData = useProductVariantStore((state) => state.setFinalData);
   const [toggleVariantTableAccordion, setToggleVariantTableAccordion] = useState(false);
 

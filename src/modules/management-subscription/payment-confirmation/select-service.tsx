@@ -1,3 +1,21 @@
+import {
+  ApiAddOnForAddonMode,
+  // ApiActivePackage
+} from '@/__generated__/api/dto/management-subscription/add-on-confirmation.dto';
+import {
+  ApiAddOn,
+  ApiPackage,
+} from '@/__generated__/api/dto/management-subscription/package-confirmation.dto';
+import { useGetAddOnConfirmation } from '@/__generated__/api/hooks/management-subscription/add-on-confirmation.hooks';
+import { useSubscriptionOverview } from '@/__generated__/api/hooks/management-subscription/management-subscription.hooks';
+import { useGetManagementSubscription } from '@/__generated__/api/hooks/management-subscription/package-confirmation.hooks';
+import { Button } from '@/components/button/button';
+import { Card } from '@/components/card/card';
+import { Stepper as NumberStepper } from '@/components/number-stepper/number-stepper';
+import { Skeleton } from '@/components/skeleton/skeleton'; // Add this import
+import { CheckCorrect, CloseSmall as DeleteIcon, EfferentThree } from '@icon-park/react';
+import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 // select-service.tsx
 import React, {
   useState,
@@ -5,27 +23,9 @@ import React, {
   // useCallback,
   useRef,
 } from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/button/button';
-import { CloseSmall as DeleteIcon, EfferentThree, CheckCorrect } from '@icon-park/react';
-import { Card } from '@/components/card/card';
-import { Skeleton } from '@/components/skeleton/skeleton'; // Add this import
+import { FeatureComparisonModal } from '../components/popup-feature-comparison';
 import ZycasPlusLogo from './../../../../public/assets/images/zycas-plus-logo.svg';
 import ZycasMaxLogo from './../../../../public/assets/images/zycasmax-logo.svg';
-import { Stepper as NumberStepper } from '@/components/number-stepper/number-stepper';
-import { useSearchParams } from 'next/navigation';
-import { useGetManagementSubscription } from '@/__generated__/api/hooks/management-subscription/package-confirmation.hooks';
-import { useGetAddOnConfirmation } from '@/__generated__/api/hooks/management-subscription/add-on-confirmation.hooks';
-import {
-  ApiPackage,
-  ApiAddOn,
-} from '@/__generated__/api/dto/management-subscription/package-confirmation.dto';
-import {
-  ApiAddOnForAddonMode,
-  // ApiActivePackage
-} from '@/__generated__/api/dto/management-subscription/add-on-confirmation.dto';
-import { FeatureComparisonModal } from '../components/popup-feature-comparison';
-import { useSubscriptionOverview } from '@/__generated__/api/hooks/management-subscription/management-subscription.hooks';
 
 interface SelectedAddon {
   id: number;

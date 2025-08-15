@@ -23,6 +23,7 @@ import { usePriceMultiPackStore } from '@/modules/products-edit/storing-data/pro
 import { useProductVariantStore } from '@/modules/products-edit/storing-data/product-variant/store';
 import { useTrackStockProductStore } from '@/modules/products-edit/storing-data/track-stock-product/stores';
 import { mapFormDataToApiPayload } from '@/modules/products-edit/utils/apiHelper';
+import { format } from 'date-fns';
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 
@@ -148,11 +149,16 @@ export default function FormProductForm({
       if (productDetailData.expired_reminder) {
         trackStockUpdateData.is_enable_expired_reminder =
           productDetailData.expired_reminder.is_enabled;
-        trackStockUpdateData.expired_reminder_in_days = Number(
-          productDetailData.expired_reminder.countdown
-        );
-        trackStockUpdateData.expired_reminder_in_date =
-          productDetailData.expired_reminder.countdown.toString();
+        const countdown = productDetailData.expired_reminder.countdown;
+        let expiredDays: number | null = null;
+        if (typeof countdown === 'number') {
+          expiredDays = countdown;
+        } else if (typeof countdown === 'string') {
+          const match = countdown.match(/(\d+)/);
+          expiredDays = match ? Number(match[1]) : null;
+        }
+        trackStockUpdateData.expired_reminder_in_days = expiredDays;
+        trackStockUpdateData.expired_reminder_in_date = format(new Date(), 'yyyy-MM-dd');
       }
 
       // Set all track stock data at once to avoid overwriting
@@ -210,7 +216,6 @@ export default function FormProductForm({
   const toast = useToast();
 
   const { getRegisteredFields, setErrors } = useFormValidationContext();
-  // const { mutate: createProduct, isPending } = useCreateProduct();
 
   const { mutate: updateProduct, isPending } = useUpdateProduct();
 
@@ -260,25 +265,23 @@ export default function FormProductForm({
         body: mappedData,
       },
       {
-        onSuccess: (data) => {
-          const productId =
-            data.products && data.products.length > 0 ? data.products[0]?.product_id : null;
+        onSuccess: () => {
           toast.showSuccess('Tersimpan', 'Produk Paduan Anda telah berhasil disimpan');
-          if (productId) {
-            router.push(`/dashboard/products/${productId}/create/set-first-stock`);
-          }
+          router.push('/dashboard/products');
         },
         onError: (error) => {
           toast.showError('Gagal', `Produk Anda gagal disimpan karena ${error.message}`);
         },
       }
     );
+  };
 
-    //
+  const handleOutPage = () => {
+    router.push('/dashboard/products');
   };
 
   return (
-    <Card className="my-[1rem] text-[#555555] px-2 text-[#555555] font-normal">
+    <Card className="my-[1rem] text-[#555555] px-2 font-normal">
       <CardHeader className="border-b-gray-200">
         <CardTitle className="text-[1rem]"> Edit Produk </CardTitle>
       </CardHeader>
@@ -286,11 +289,14 @@ export default function FormProductForm({
         <form>
           <p> Silahkan isikan Informasi Produk Anda </p>
           <p className="text-danger"> Form bertanda (*) harus diisi </p>
-
-          {/* Subform-modular yang masing-masing terhubung ke validation context */}
           <FormProductInformation productId={productId} />
-          <FormProductComposite productId={productId} />
-          <FormProductVariant />
+
+          {productDetailData?.type === 'composite' ? (
+            <FormProductComposite productId={productId} />
+          ) : (
+            <FormProductVariant />
+          )}
+
           <FormProductDetail productId={productId} />
           <FormPriceMultiPack productId={productId} />
           <FormTrackStockProduct productId={productId} onTrackStockChange={onTrackStockChange} />
@@ -298,7 +304,12 @@ export default function FormProductForm({
           {/* Footer */}
           <div className="mt-10 border-t-gray-200 pt-4">
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" className="mt-2 ml-[1px] flex items-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-2 ml-[1px] flex items-center"
+                onClick={handleOutPage}
+              >
                 Batal
               </Button>
               <Button

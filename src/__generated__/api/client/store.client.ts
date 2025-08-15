@@ -70,20 +70,17 @@ export const detailStore = async (params: {
   'x-organization-id' : string;
   'x-device-id': string;
   body: { id: string; }
-}) => {
-  try {
-    let url = `/api/store/${params.body.id}`;
-    const headers = {
-      'x-organization-id': params['x-organization-id'],
-      'x-device-id': params['x-device-id'],
-      'x-store-id': undefined,
-    };
-    const response = await apiClientWithHeaders.get(url, { headers });
-    return response.data;
-  } catch (error) {
-    throw error;
+}) => getDataFromApi<typeof params, DTO.StoreSchema>({
+  type: 'get',
+  url: `/api/stores/${params.body.id}`,
+  injectHeaders: ['x-device-id', 'x-organization-id'],
+  transformer: (data: Record<string, unknown>) => {
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data as DTO.StoreSchema;
+    }
+    return data as DTO.StoreSchema;
   }
-};
+});
 
 export const onStoreStockFirstVariant = async (params: {
     "x-device-id": string;

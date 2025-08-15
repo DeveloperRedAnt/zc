@@ -1,6 +1,6 @@
 'use client';
 import { useGetProductDetail } from '@/__generated__/api/hooks/set_variant_stock.hooks';
-import { StockVariantPage } from '@/modules/stock-variant/stock-variant-page';
+import { StockVariantPage } from '@/modules/products-edit/components/options/stock-variant/stock-variant-edit-product-page';
 import { useParams } from 'next/navigation';
 
 export default function MainStockPage() {

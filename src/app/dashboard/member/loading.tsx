@@ -1,6 +1,6 @@
 import { Button } from '@/components/button/button';
+import { Plus } from '@/components/icons/icon-wrapper';
 import { PageLayout } from '@/components/page-layout/page-layout';
-import { Plus } from '@icon-park/react';
 
 export default function MemberLoading() {
   return (

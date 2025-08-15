@@ -1,3 +1,5 @@
+import { BaseResponseSchemaPagination } from "./base.dto";
+
 export interface DeviceOwner {
   id: number;
   name: string;
@@ -37,12 +39,17 @@ export interface DeviceData {
   code: string;
   store: DeviceStore;
   organization: DeviceOrganization;
+  created_at: string;
 }
 
 export interface DeviceResponse {
   data: DeviceData;
 }
 
-export interface DeviceListResponse {
-  data: DeviceData[];
+export interface DeviceListRequest {
+    page?: number;
+    per_page?: number;
+    [key: string]: unknown;
 }
+
+export interface DeviceListResponse extends BaseResponseSchemaPagination<{data: DeviceData[]}> {}

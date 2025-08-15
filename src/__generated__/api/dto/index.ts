@@ -19,6 +19,7 @@ export * from './master-data/tax-master.dto';
 export * from './management-subscription/management-subscription.dto';
 export * from './dashboard.dto';
 export * from './device.dto';
+export * from './products-edit.dto';
 export * from './management-subscription/package-confirmation.dto';
 export * from './management-subscription/add-on-confirmation.dto';
 export * from './management-subscription/checkout.dto';

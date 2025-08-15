@@ -41,7 +41,9 @@
       "**/*.yaml",
       "src/__generated__",
       "__generated__",
-      "src/components/information-text/information-text.tsx"
+      "src/components/information-text/information-text.tsx",
+      "src/modules/management-subscription/payment-confirmation/select-service.tsx",
+      "src/modules/product-variant/components/step-2-detail-variant.tsx"
     ]
   },
   "formatter": {
@@ -49,7 +51,16 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "ignore": ["node_modules", ".next", "dist", "public", "src/__generated__", "__generated__"]
+    "ignore": [
+      "node_modules",
+      ".next",
+      "dist",
+      "public",
+      "src/__generated__",
+      "__generated__",
+      "src/modules/management-subscription/payment-confirmation/select-service.tsx",
+      "src/modules/product-variant/components/step-2-detail-variant.tsx"
+    ]
   },
   "javascript": {
     "formatter": {

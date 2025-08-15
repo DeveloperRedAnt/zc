@@ -1,6 +1,6 @@
 // Device domain React Query hooks
 
-import { UseMutationOptions, UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
+import { UseInfiniteQueryOptions, UseMutationOptions, UseQueryOptions, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import * as api from '../client';
 import * as DTO from '../dto';
 
@@ -8,11 +8,33 @@ import * as DTO from '../dto';
  * Get list of devices
  */
 export function useGetDeviceList(
-  options?: UseQueryOptions<DTO.DeviceListResponse, Error>
+    params: DTO.DeviceListRequest,
+    options?: UseQueryOptions<DTO.DeviceListResponse, Error>
 ) {
   return useQuery({
-    queryKey: ['deviceList'],
-    queryFn: () => api.getDeviceList(),
+    queryKey: ['deviceList', params.page, params.per_page],
+    queryFn: () => api.getDeviceList(params),
+    ...options,
+  });
+}
+
+/**
+ * Get list of devices with infinite scroll
+ */
+export function useGetDeviceListInfinite(
+  params: Omit<DTO.DeviceListRequest, 'page'>,
+  options?: UseInfiniteQueryOptions<DTO.DeviceListResponse, Error, DTO.DeviceListResponse, readonly unknown[], number>
+) {
+  return useInfiniteQuery({
+    queryKey: ['deviceListInfinite', params.per_page],
+    queryFn: ({ pageParam = 1 }) => api.getDeviceList({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination && lastPage.pagination.current_page < lastPage.pagination.last_page) {
+        return lastPage.pagination.current_page + 1;
+      }
+      return undefined;
+    },
     ...options,
   });
 }
@@ -51,6 +73,19 @@ export function useUpdateDevice(
 ) {
   return useMutation({
     mutationFn: (params) => api.updateDevice(params),
+    ...options,
+  });
+}
+
+
+/**
+ * Get list of devices
+ */
+export function useUnlinkDevice(
+  options?: UseMutationOptions<DTO.DeviceResponse, Error, { id: number }>
+) {
+  return useMutation({
+    mutationFn: (params) => api.unlinkDevice({ id: params.id }),
     ...options,
   });
 }

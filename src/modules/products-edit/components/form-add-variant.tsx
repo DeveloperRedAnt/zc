@@ -235,7 +235,7 @@ const ProductCard = ({ value, onChange, errors = {} }: ProductCardProps) => {
         onChange={(_variantId, _selectedValue, _customValue) => {}}
       />
 
-      <MultiUnitPrice />
+      <MultiUnitPrice variantId={1} />
     </div>
   );
 };
