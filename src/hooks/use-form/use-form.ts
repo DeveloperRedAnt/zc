@@ -2,9 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
-import type { DefaultValues, FieldValues, UseFormReturn } from 'react-hook-form';
+import type { DefaultValues, UseFormReturn } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
-import type * as z from 'zod';
+import { z } from 'zod';
 
 export type FormMessage = {
   type: 'error' | 'success';
@@ -15,19 +15,19 @@ type MessageResponse = {
   success: boolean;
 };
 
-export type FormSubmitProps<T extends z.ZodSchema<FieldValues>> = {
+export type FormSubmitProps<T extends z.ZodTypeAny> = {
   schema: T;
-  defaultValues: DefaultValues<z.infer<T>>; // Change to DefaultValues type
+  defaultValues: DefaultValues<z.infer<T>>;
   onSubmitAction: (data: z.infer<T>) => Promise<MessageResponse>;
   onError: (error: unknown) => boolean;
 };
 
-export const useFormAction = <T extends z.ZodSchema<FieldValues>>(props: FormSubmitProps<T>) => {
+export const useFormAction = <T extends z.ZodTypeAny>(props: FormSubmitProps<T>) => {
   const { schema, defaultValues, onSubmitAction, onError } = props;
 
   const form: UseFormReturn<z.infer<T>> = useForm<z.infer<T>>({
     resolver: zodResolver(schema),
-    defaultValues, // Now defaults are correctly typed
+    defaultValues,
   });
 
   const [message, setMessage] = useState<FormMessage | null>(null);
