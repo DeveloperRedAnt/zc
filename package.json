@@ -1,6 +1,6 @@
 {
   "name": "@rac/zycas-dashboard",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "scripts": {
     "dev": "next dev",
     "prelint": "biome check --apply-unsafe src",
