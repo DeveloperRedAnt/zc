@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // Definisikan tipe dasar yang digunakan
 export type OptionType = {
@@ -92,6 +92,81 @@ function Dropdown<Multi extends boolean = false>({
   // Pilih komponen yang tepat berdasarkan isCreatable
   const SelectComponent = isCreatable ? CreatableSelect : Select;
 
+  // Memoize styles untuk mencegah re-computation di setiap render
+  const selectStyles = useMemo(
+    () => ({
+      container: (base: Record<string, unknown>) => ({
+        ...base,
+        width: '100%',
+        fontSize: '14px',
+      }),
+      control: (base: Record<string, unknown>, state: { isFocused?: boolean }) => ({
+        ...base,
+        minHeight: '38px',
+        height: '38px',
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        borderColor: state?.isFocused ? 'var(--color-zycas-primary)' : 'var(--color-gray-300)',
+        boxShadow: state?.isFocused ? '0 0 0 1px var(--color-zycas-primary)' : 'none',
+        '&:hover': {
+          borderColor: state?.isFocused ? 'var(--color-zycas-primary)' : 'var(--color-gray-300)',
+        },
+        fontSize: '14px',
+      }),
+      valueContainer: (base: Record<string, unknown>) => ({
+        ...base,
+        padding: '0 8px',
+        marginTop: '-2px',
+        fontSize: '14px',
+      }),
+      input: (base: Record<string, unknown>) => ({
+        ...base,
+        margin: '0px',
+        color: 'black',
+        fontSize: '14px',
+      }),
+      indicatorsContainer: (base: Record<string, unknown>) => ({
+        ...base,
+        height: '38px',
+      }),
+      dropdownIndicator: (base: Record<string, unknown>) => ({
+        ...base,
+        padding: '0 8px',
+      }),
+      menu: (base: Record<string, unknown>) => ({
+        ...base,
+        fontSize: '14px',
+        zIndex: 50,
+      }),
+      option: (base: Record<string, unknown>) => ({
+        ...base,
+        fontSize: '14px',
+        padding: '8px 12px',
+      }),
+      singleValue: (base: Record<string, unknown>) => ({
+        ...base,
+        fontSize: '14px',
+      }),
+      multiValue: (base: Record<string, unknown>) => ({
+        ...base,
+        fontSize: '14px',
+      }),
+      multiValueLabel: (base: Record<string, unknown>) => ({
+        ...base,
+        fontSize: '14px',
+      }),
+    }),
+    []
+  );
+
+  // Memoize components untuk mencegah re-creation
+  const selectComponents = useMemo(
+    () => ({
+      IndicatorSeparator: () => null,
+    }),
+    []
+  );
+
   // Tampilkan skeleton loader saat pertama kali mount
   if (!isMounted) {
     return (
@@ -131,76 +206,8 @@ function Dropdown<Multi extends boolean = false>({
         onCreateOption={isCreatable ? handleCreateOption : undefined}
         formatCreateLabel={(inputValue: string) => `Tambah "${inputValue}"`}
         classNamePrefix="react-select"
-        components={{
-          IndicatorSeparator: () => null,
-        }}
-        styles={{
-          container: (base) => ({
-            ...base,
-            width: '100%',
-            fontSize: '14px',
-          }),
-          control: (base, state) => ({
-            ...base,
-            minHeight: '38px',
-            height: '38px',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
-            borderColor: state?.isFocused ? 'var(--color-zycas-primary)' : 'var(--color-gray-300)',
-            // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
-            boxShadow: state?.isFocused ? '0 0 0 1px var(--color-zycas-primary)' : 'none',
-            '&:hover': {
-              // @ts-ignore - state mungkin tidak sesuai tipe secara tepat tapi aman digunakan
-              borderColor: state?.isFocused
-                ? 'var(--color-zycas-primary)'
-                : 'var(--color-gray-300)',
-            },
-            fontSize: '14px',
-          }),
-          valueContainer: (base) => ({
-            ...base,
-            padding: '0 8px',
-            marginTop: '-2px',
-            fontSize: '14px',
-          }),
-          input: (base) => ({
-            ...base,
-            margin: '0px',
-            color: 'black',
-            fontSize: '14px',
-          }),
-          indicatorsContainer: (base) => ({
-            ...base,
-            height: '38px',
-          }),
-          dropdownIndicator: (base) => ({
-            ...base,
-            padding: '0 8px',
-          }),
-          menu: (base) => ({
-            ...base,
-            fontSize: '14px',
-            zIndex: 50,
-          }),
-          option: (base) => ({
-            ...base,
-            fontSize: '14px',
-            padding: '8px 12px',
-          }),
-          singleValue: (base) => ({
-            ...base,
-            fontSize: '14px',
-          }),
-          multiValue: (base) => ({
-            ...base,
-            fontSize: '14px',
-          }),
-          multiValueLabel: (base) => ({
-            ...base,
-            fontSize: '14px',
-          }),
-        }}
+        components={selectComponents}
+        styles={selectStyles}
       />
     </div>
   );

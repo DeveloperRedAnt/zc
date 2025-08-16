@@ -19,4 +19,8 @@ export type Member = {
   yearly_formatted: string;
   all_time_formatted: string;
   registered_formatted: string;
+  store: {
+    id: number;
+    name: string;
+  };
 };

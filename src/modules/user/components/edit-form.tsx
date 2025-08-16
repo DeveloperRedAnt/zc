@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { updateEmployee } from '@/__generated__/api/client';
+import { useGetEmployeeDetail } from '@/__generated__/api/hooks/user.hooks';
+import { useUpdateEmployee } from '@/__generated__/api/hooks/user.hooks';
 // TODO: Implement the correct mutation hook for updating employees. See user.hooks.ts for available hooks.
 import { Button } from '@/components/button/button';
 import {
@@ -23,16 +24,34 @@ import { toast } from '@/components/toast/toast';
 import { useRefreshUserListStore } from '@/modules/user/store';
 import { useUserEditStore } from '@/modules/user/user-edit-store';
 import { Check, Refresh } from '@icon-park/react';
+import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function EditForm() {
   // TODO: Add mutation hook for updating employees here when available.
-  // const { mutateAsync: updateEmployee } = useUpdateEmployee();
+  const { mutateAsync: updateEmployee } = useUpdateEmployee();
 
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { id, name, whatsapp, ktp, email, isActive, setUserData, resetToOriginal } =
-    useUserEditStore();
+  const params = useParams();
+  const userId = Number(params?.userId);
+
+  const { name, whatsapp, ktp, email, isActive, setUserData, resetToOriginal } = useUserEditStore();
+
+  const { data: user, isPending } = useGetEmployeeDetail(userId as number);
+
+  useEffect(() => {
+    if (user) {
+      setUserData({
+        name: user.name,
+        whatsapp: user.phone,
+        ktp: user.id_number,
+        email: user.email,
+        isActive: user.is_active,
+      });
+    }
+  }, [user, setUserData]);
 
   const handleChange = (field: string, value: string | boolean) => {
     setUserData({
@@ -61,15 +80,23 @@ export default function EditForm() {
         is_active: isActive,
       };
 
-      await updateEmployee({
-        id: id as number,
-        body: basePayload,
-      });
-
-      toast.success('Tersimpan!', {
-        description: 'User Anda telah berhasil disimpan',
-        className: 'bg-[#16a34a]',
-      });
+      await updateEmployee(
+        {
+          id: userId as number,
+          body: basePayload,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Tersimpan!', {
+              description: 'User Anda telah berhasil disimpan',
+              className: 'bg-[#16a34a]',
+            });
+          },
+          onError: () => {
+            toast.error('Gagal menyimpan user');
+          },
+        }
+      );
 
       useRefreshUserListStore.getState().triggerRefresh();
       router.push('/dashboard/users');
@@ -185,7 +212,12 @@ export default function EditForm() {
                 <DialogClose asChild>
                   <Button variant="ghost">Tidak</Button>
                 </DialogClose>
-                <Button variant="info" disabled={isSubmitting} onClick={handleSubmit}>
+                <Button
+                  variant="info"
+                  disabled={isSubmitting}
+                  onClick={handleSubmit}
+                  isLoading={isPending}
+                >
                   Ya, Saya Yakin
                 </Button>
               </DialogFooter>

@@ -1,17 +1,22 @@
+import Cookies from 'js-cookie';
 import { z } from 'zod';
 import * as DTO from '../dto';
 import { apiClientWithHeaders } from './base.client';
 import { ValidationError } from './base.client';
 
 export const getVoucher = async (
-  params: DTO.BaseRequestSchema,
   body: DTO.GetVoucherListRequest,
 ) => {
   try {
     let url = '/api/vouchers';
+    const organization_id = Cookies.get('x-device-id') || '1';
+    const store_id = Cookies.get('x-store-id') || '1';
+    const device_id = Cookies.get('x-device-id') || '1';
+    
     const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-organization-id': params['x-organization-id']
+      'x-device-id': device_id,
+      'x-organization-id': organization_id,
+      'x-store-id': store_id
     };
 
     var urlencoded = new URLSearchParams();
@@ -41,18 +46,18 @@ export const getVoucher = async (
   }
 };
 
+
 export const createVoucher = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: DTO.createVoucherRequest,
 }) => {
   try {
     let url = `/api/vouchers`;
+    const organization_id = Cookies.get('x-device-id') || '1';
+    const device_id = Cookies.get('x-device-id') || '1';
+
     const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
+      'x-device-id': device_id,
+      'x-organization-id': organization_id,
     };
     const response = await apiClientWithHeaders.post(url, params.body, { headers });
     return response.data;
@@ -64,17 +69,16 @@ export const createVoucher = async (params: {
 
 export const updateVoucher = async (params: {
   id: number;
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: DTO.createVoucherRequest,
 }) => {
   try {
     let url = `/api/vouchers/${params.id}`;
+    const organization_id = Cookies.get('x-device-id') || '1';
+    const device_id = Cookies.get('x-device-id') || '1';
+
     const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
+      'x-device-id': device_id,
+      'x-organization-id': organization_id,
     };
     const response = await apiClientWithHeaders.put(url, params.body, { headers });
     return response.data;

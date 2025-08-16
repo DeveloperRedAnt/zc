@@ -17,7 +17,7 @@ export const getProductDetail = async (
     { store_id: string }
   >({
     type: 'get',
-    url: `/api/dashboard/products/${productId}`,
+    url: `/api/products/${productId}`,
     injectHeaders: ['x-device-id', 'x-store-id', 'x-organization-id'],
     params: { store_id: storeId },
     transformer: (data: Record<string, unknown>) => data as DTO.ApiProductDetailData
@@ -94,10 +94,10 @@ export const transformApiDataToFormattedVariants = (
     const minStockMatch = apiData.stock_tracking.minimum_stock?.match(/\d+/);
     const minStock = minStockMatch ? parseInt(minStockMatch[0]) : 0;
 
-    console.log(`Variants: ${JSON.stringify(variant)}`); // Debug log
+    // console.log(`Variants: ${JSON.stringify(variant)}`); // Debug log
 
     // console.log(`Variant ${variant.id}: ${variantName}`); // Debug log
-    console.log(`Variant Unit: ${JSON.stringify(variant.variant_units)}`); // Debug log
+    // console.log(`Variant Unit: ${JSON.stringify(variant.variant_units)}`); // Debug log
 
     return {
       id: variant.id,

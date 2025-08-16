@@ -7,7 +7,7 @@ import { InformationText } from '@/components/information-text/information-text'
 import CustomInput from '@/components/input/custom-input';
 import InputFile from '@/components/input/input-file';
 import { Text } from '@/components/text/text';
-import { MultiUnitPrice } from '@/modules/product-variant/components/variant-options/multi-unit-price';
+import { MultiUnitPrice } from '@/modules/products-edit/components/options/multi-unit-price';
 import type { FormattedData } from '@/modules/products-edit/storing-data/product-variant-edit-option/types';
 import { Refresh } from '@icon-park/react';
 import React, { useState, useEffect, useRef } from 'react';
@@ -63,6 +63,7 @@ const DetailVariantList = ({ formattedData, onChange, errors = {} }: ProductCard
     setCardValue(initial);
     onChange?.(initial);
   };
+
   return (
     <>
       <ProductCard
@@ -229,7 +230,7 @@ const ProductCard = ({
             </div>
           </div>
         </div>
-        <MultiUnitPrice variantUnits={option.variantUnits} variantId={option.id} />
+        <MultiUnitPrice variantUnits={option.variantUnits || []} variantId={option.id} />
       </CardContent>
     </Card>
   );

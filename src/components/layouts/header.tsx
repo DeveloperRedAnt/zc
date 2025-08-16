@@ -9,26 +9,12 @@ import { Breadcrumbs } from './breadcrumbs';
 export default function Header({ isLoading = false }: { isLoading?: boolean }) {
   const pathname = usePathname();
 
-  // Includes dynamic stock-opname routes:
-  // - /dashboard/stock-opname/:id
-  // - /dashboard/stock-opname/:id/adjust
-  // - /dashboard/stock-opname/:id/adjust/reason
-  const isStockOpnameDetail = pathname
-    ? /^\/dashboard\/stock-opname\/[^/]+(?:$|\/adjust(?:$|\/reason$))/.test(pathname)
-    : false;
-
-  const shouldHideFilter =
-    isStockOpnameDetail ||
-    [
-      '/dashboard/users',
-      '/dashboard/organization',
-      '/dashboard/stores',
-      '/dashboard/master-data',
-      '/dashboard/packages',
-      '/dashboard/products/add',
-      '/dashboard/products/edit',
-      '/dashboard/management-subscription',
-    ].some((path) => pathname?.startsWith(path));
+  const showFilter = [
+    '/dashboard/member',
+    '/dashboard/products',
+    '/dashboard/vouchers',
+    '/dashboard/users',
+  ].some((path) => pathname?.startsWith(path));
 
   return (
     <header
@@ -41,7 +27,7 @@ export default function Header({ isLoading = false }: { isLoading?: boolean }) {
         <Breadcrumbs isLoading={isLoading} />
       </div>
 
-      {!shouldHideFilter && (
+      {showFilter && (
         <div className="px-6">
           <StoreFilter />
         </div>

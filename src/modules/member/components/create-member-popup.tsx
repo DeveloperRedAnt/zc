@@ -1,5 +1,7 @@
 'use client';
 
+import { listStore } from '@/__generated__/api/client';
+import type { StoreItem } from '@/__generated__/api/dto';
 import { useCreateMember, useEditMember } from '@/__generated__/api/hooks';
 import { Button } from '@/components/button/button';
 import { DatePicker } from '@/components/datepicker/date-picker';
@@ -16,13 +18,20 @@ import FormFieldError from '@/components/form-field-error/form-field-error';
 import CustomInput from '@/components/input/custom-input';
 import { toast } from '@/components/toast/toast';
 import { Member } from '@/modules/member/types/member';
+import { zeroPad } from '@/utils/pad-start';
 import { ArrowRight } from '@icon-park/react';
 import { useQueryClient } from '@tanstack/react-query';
-import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { AsyncPaginate } from 'react-select-async-paginate';
 
 // Using imported Member type from '@/modules/member/types/member'
+
+type StoreOption = {
+  value: string;
+  label: string;
+  data: StoreItem;
+};
 
 type MemberFormData = {
   name: string;
@@ -30,25 +39,21 @@ type MemberFormData = {
   phone: string;
   identity_number: string;
   address: string;
+  store_id: string;
 };
 
 type CreateMemberParams = {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: {
     name: string;
     birth_date: string;
     phone: string;
     identity_number: string;
     address: string;
+    store_id: string;
   };
 };
 
 type EditMemberParams = {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   id: string;
   body: {
     name: string;
@@ -56,6 +61,7 @@ type EditMemberParams = {
     phone: string;
     identity_number: string;
     address: string;
+    store_id: string;
   };
 };
 
@@ -65,6 +71,7 @@ const INITIAL_FORM_STATE: MemberFormData = {
   phone: '',
   identity_number: '',
   address: '',
+  store_id: '',
 };
 
 interface CreateMemberPopupProps {
@@ -91,6 +98,7 @@ export default function CreateMemberPopup({
   const [formData, setFormData] = useState<MemberFormData>(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<StoreOption | null>(null);
   // Populate form data when member data is available (edit mode)
   useEffect(() => {
     if (isEditMode && member) {
@@ -100,17 +108,91 @@ export default function CreateMemberPopup({
         phone: member.phone,
         identity_number: member.identity_number,
         address: member.address,
+        store_id: member.store.id.toString(),
+      });
+
+      // Set selected store for dropdown
+      setSelectedStore({
+        value: member.store.id.toString(),
+        label: `#${zeroPad(member.store.id, 4)} - ${member.store.name}`,
+        data: {
+          id: member.store.id,
+          name: member.store.name,
+          address: '',
+          phone: '',
+          email: '',
+          lat: 0,
+          lng: 0,
+          image: '',
+        },
       });
     } else {
       setFormData(INITIAL_FORM_STATE);
+      setSelectedStore(null);
     }
   }, [isEditMode, member]);
+
+  // Load stores function for dropdown
+  const loadStores = useCallback(async (search: string) => {
+    try {
+      const response = await listStore({
+        page: 1,
+        per_page: 50,
+        search: search || undefined,
+        sort_by: 'name',
+        sort_direction: 'asc' as const,
+      });
+
+      let storeData: StoreItem[];
+      if (Array.isArray(response)) {
+        storeData = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        storeData = response.data;
+      } else {
+        storeData = [];
+      }
+
+      const options: StoreOption[] = storeData.map((store: StoreItem) => ({
+        value: store.id.toString(),
+        label: `#${zeroPad(store.id, 4)} - ${store.name}`,
+        data: store,
+      }));
+
+      return {
+        options,
+        hasMore: false,
+      };
+    } catch (error) {
+      console.error('Error loading stores:', error);
+      return {
+        options: [],
+        hasMore: false,
+      };
+    }
+  }, []);
+
+  const handleStoreChange = useCallback(
+    (option: StoreOption | null) => {
+      setSelectedStore(option);
+      setFormData((prev) => ({
+        ...prev,
+        store_id: option ? option.value : '',
+      }));
+
+      // Clear error when store is selected
+      if (errors.store_id) {
+        setErrors((prev) => ({ ...prev, store_id: '' }));
+      }
+    },
+    [errors.store_id]
+  );
 
   const handleDialogClose = () => {
     props.onOpenChange(false);
     setFormData(INITIAL_FORM_STATE);
     setErrors({});
     setShowConfirm(false);
+    setSelectedStore(null);
     router.refresh();
   };
 
@@ -151,6 +233,10 @@ export default function CreateMemberPopup({
       newErrors.address = 'Alamat wajib diisi';
     }
 
+    if (!formData.store_id.trim()) {
+      newErrors.store_id = 'Toko wajib dipilih';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -175,18 +261,11 @@ export default function CreateMemberPopup({
       phone: formData.phone,
       identity_number: formData.identity_number,
       address: formData.address,
+      store_id: formData.store_id,
     };
-
-    // Get headers from cookies or context
-    const deviceId = Cookies.get('x-device-id') || '1';
-    const storeId = Cookies.get('x-store-id') || '1';
-    const organizationId = Cookies.get('x-organization-id') || '1';
 
     if (isEditMode && member) {
       const editParams: EditMemberParams = {
-        'x-device-id': deviceId,
-        'x-store-id': storeId,
-        'x-organization-id': organizationId,
         id: member.id.toString(),
         body: payload,
       };
@@ -227,9 +306,6 @@ export default function CreateMemberPopup({
       });
     } else {
       const createParams: CreateMemberParams = {
-        'x-device-id': deviceId,
-        'x-store-id': storeId,
-        'x-organization-id': organizationId,
         body: payload,
       };
 
@@ -338,6 +414,41 @@ export default function CreateMemberPopup({
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+              {/* Toko Dropdown */}
+              {!isEditMode && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pilih Toko *
+                  </label>
+                  <AsyncPaginate
+                    value={selectedStore}
+                    loadOptions={loadStores}
+                    onChange={handleStoreChange}
+                    placeholder="Pilih Toko"
+                    isClearable
+                    className={`w-[278px] ${errors.store_id ? 'border-red-500' : ''}`}
+                    classNamePrefix="react-select"
+                    debounceTimeout={300}
+                    styles={{
+                      control: (provided, state) => ({
+                        ...provided,
+                        minHeight: '42px',
+                        borderRadius: '8px',
+                        borderColor: errors.store_id
+                          ? '#F08181'
+                          : state.isFocused
+                            ? '#3B82F6'
+                            : '#C2C7D0',
+                        boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : 'none',
+                        '&:hover': {
+                          borderColor: errors.store_id ? '#F08181' : '#3B82F6',
+                        },
+                      }),
+                    }}
+                  />
+                  <FormFieldError message={errors.store_id} />
+                </div>
+              )}
               {/* Input Nama Member */}
               <div>
                 <CustomInput

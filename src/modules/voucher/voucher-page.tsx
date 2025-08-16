@@ -18,7 +18,7 @@ import VoucherConfirmDialog from '@/modules/voucher/components/voucher-confirm-d
 import VoucherDialog from '@/modules/voucher/components/voucher-dialog';
 import { Plus } from '@icon-park/react';
 import { format } from 'date-fns';
-import { useCallback, useMemo, useState } from 'react';
+import { startTransition, useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from './hooks/use-search-params';
 import { Range, defaultVoucherData } from './types/voucher-types';
 
@@ -64,14 +64,9 @@ export default function VoucherPage() {
     setSearch,
   } = useSearchParams();
 
-  // Prepare request params (don't over-optimize here)
+  // Prepare request params with dynamic store ID
   const requestParams = useMemo(
     () => ({
-      params: {
-        'x-device-id': '1',
-        'x-organization-id': '1',
-        'x-store-id': '1', // Adding required x-store-id parameter
-      },
       body: {
         search,
         page,
@@ -90,13 +85,20 @@ export default function VoucherPage() {
   const { isLoading, data: respVoucher } = useGetVoucher(requestParams);
 
   const handleAddVoucher = useCallback(() => {
-    setIsEditMode(false);
-    setSelectedVoucher(null);
-    setFormData(defaultVoucherData);
-    setDialogVoucherOpen(true);
-    setSelectedStatus({ label: 'Pilih Tipe', value: '' });
-    setSelectedRange(undefined);
-    setSelectedStoreVoucher(null);
+    // Batch state updates to prevent multiple re-renders
+    startTransition(() => {
+      setIsEditMode(false);
+      setSelectedVoucher(null);
+      setFormData(defaultVoucherData);
+      setSelectedStatus({ label: 'Pilih Tipe', value: '' });
+      setSelectedRange(undefined);
+      setSelectedStoreVoucher(null);
+    });
+
+    // Open dialog separately to avoid rendering dialog with stale state
+    setTimeout(() => {
+      setDialogVoucherOpen(true);
+    }, 0);
   }, []);
 
   const handleSelectVoucher = useCallback((voucher: TableVoucher) => {
@@ -168,10 +170,15 @@ export default function VoucherPage() {
   }, [isEditMode, selectedVoucher]);
 
   const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: field === 'amount' ? (value !== '' ? Number(value) : 0) : value,
-    }));
+    setFormData((prev) => {
+      const newValue = field === 'amount' ? (value !== '' ? Number(value) : 0) : value;
+      // Prevent unnecessary re-renders if value hasn't changed
+      if (prev[field] === newValue) return prev;
+      return {
+        ...prev,
+        [field]: newValue,
+      };
+    });
   }, []);
 
   const handleDialogSuccess = useCallback(async () => {
@@ -186,21 +193,16 @@ export default function VoucherPage() {
         start_at: selectedRange?.from ? format(selectedRange.from, 'yyyy-MM-dd') : undefined,
         end_at: selectedRange?.to ? format(selectedRange.to, 'yyyy-MM-dd') : undefined,
         store: Number(selectedStoreVoucher?.value),
+        store_id: 1,
       };
 
       if (isEditMode && selectedVoucher) {
         await updateVoucher({
           id: Number(selectedVoucher.id),
-          'x-device-id': '1',
-          'x-store-id': String(voucherPayload.store),
-          'x-organization-id': '1',
           body: voucherPayload,
         });
       } else {
         await createVoucher({
-          'x-device-id': '1',
-          'x-store-id': String(voucherPayload.store),
-          'x-organization-id': '1',
           body: voucherPayload,
         });
       }
@@ -332,8 +334,6 @@ export default function VoucherPage() {
                   formData={formData}
                   onInputChange={handleInputChange}
                   onReset={handleResetForm}
-                  selectedStoreVoucher={selectedStoreVoucher}
-                  setSelectedStoreVoucher={setSelectedStoreVoucher}
                   selectedRange={selectedRange}
                   setSelectedRange={setSelectedRange}
                   onConfirm={() => {

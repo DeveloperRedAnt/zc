@@ -23,9 +23,11 @@ const DialogContent = ({
   ref,
   className,
   children,
+  hideCloseButton = false,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   ref?: React.RefObject<React.ComponentRef<typeof DialogPrimitive.Content> | null>;
+  hideCloseButton?: boolean;
 }) => {
   const styles = dialogStyles();
   return (
@@ -33,10 +35,12 @@ const DialogContent = ({
       <DialogOverlay />
       <DialogPrimitive.Content ref={ref} className={styles.content({ className })} {...props}>
         {children}
-        <DialogPrimitive.Close className={styles.close()}>
-          <Lucide.XIcon className={styles.closeIcon()} strokeWidth={2} />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
+        {!hideCloseButton && (
+          <DialogPrimitive.Close className={styles.close()}>
+            <Lucide.XIcon className={styles.closeIcon()} strokeWidth={2} />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );

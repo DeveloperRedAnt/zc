@@ -22,34 +22,29 @@ export const authOptions: NextAuthOptions = {
         try {
           const whatsapp = credentials?.whatsapp ?? '';
           const password = credentials?.password ?? '';
-
           if (!whatsapp || !password) return null;
 
-          const body = JSON.stringify({
-            phone: whatsapp,
-            password: password,
-          });
-
-          const config = {
-            method: 'post',
-            maxBodyLength: Infinity,
-            url: `${API_URL}/api/v2/employee/token`,
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+          const response = await axios.post(
+            `${API_URL}/api/employee/token`,
+            {
+              phone: whatsapp,
+              password: password,
             },
-            data: body,
-          };
-
-          const response = await axios.request(config);
+            {
+              headers: {
+                accept: 'application/json',
+                'x-device-id': '1',
+                'x-store-id': '1',
+                'x-organization-id': '1',
+                'Content-Type': 'application/json',
+              },
+            }
+          );
           const data = response.data;
           if (data?.token) {
             return {
               id: data.user.id,
-              employee_id: data.employee.id,
               whatsapp: whatsapp,
-              name: data.employee.name,
-              email: data.employee.email,
               token: data.token,
               role: data.role || 'admin',
               organizations: data.organizations,
@@ -75,14 +70,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         const customUser = user as {
           id: string;
-          employee_id?: string;
           role?: string;
           name?: string;
           token?: string;
           organizations: Organizations;
         };
         token.id = customUser.id;
-        if (customUser.employee_id) token.employee_id = customUser.employee_id;
         if (customUser.role) token.role = customUser.role;
         if (customUser.name) token.name = customUser.name;
         if (customUser.token) token.token = customUser.token;
@@ -97,7 +90,6 @@ export const authOptions: NextAuthOptions = {
         type UserWithCustomProps = typeof session.user & {
           organizations?: Organizations;
           id?: string;
-          employee_id?: string;
           role?: string;
           name?: string;
         };
@@ -108,7 +100,6 @@ export const authOptions: NextAuthOptions = {
         // Assign properties
         user.organizations = token.organizations as Organizations;
         user.id = token.id as string;
-        user.employee_id = token.employee_id as string;
         user.role = (token as { role?: string }).role as string;
         user.name = (token as { name?: string }).name as string;
 

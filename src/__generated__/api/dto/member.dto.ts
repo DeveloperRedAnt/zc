@@ -42,6 +42,7 @@ export type CreateMemberPayloadSchema = {
   phone: string;
   identity_number: string;
   address: string;
+  store_id: string;
 }
 
 export type CreateMemberResponse = {
@@ -69,6 +70,7 @@ export type EditMemberPayloadSchema = {
   phone: string;
   identity_number: string;
   address: string;
+  store_id: string;
 }
 
 export type EditMemberResponse = {

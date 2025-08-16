@@ -8,7 +8,10 @@ import {
   useStoreFilter,
 } from '@/hooks/use-store-filter/use-store-filter';
 import { zeroPad } from '@/utils/pad-start';
-import { useEffect, useState } from 'react';
+import { invalidateStoreQueries } from '@/utils/store-query-invalidation';
+import { useQueryClient } from '@tanstack/react-query';
+import { useQueryState } from 'nuqs';
+import { useCallback, useEffect, useState } from 'react';
 import type { GroupBase, OptionsOrGroups } from 'react-select';
 import { AsyncPaginate } from 'react-select-async-paginate';
 
@@ -73,6 +76,28 @@ const createLoadOptions = (
         };
       });
 
+      // Add "Semua Toko" option at the beginning if it's the first page and no search
+      if (currentPage === 1 && !search) {
+        options.unshift({
+          label: 'Semua Toko',
+          value: 0,
+          data: {
+            id: 0,
+            name: 'Semua Toko',
+            // Add other required properties with default values
+            address: '',
+            phone: '',
+            email: '',
+            lat: 0,
+            lng: 0,
+            image: '',
+            is_active: true,
+            created_at: '',
+            updated_at: '',
+          } as StoreItem,
+        });
+      }
+
       // Save to Zustand store - handle pagination
       let paginationState: {
         current_page: number;
@@ -124,39 +149,136 @@ export type StoreFilterProps = {
 };
 
 export default function StoreFilter({ disabled }: StoreFilterProps) {
-  const { setSelectedStore, addLoadedOptions } = useStoreFilter();
+  const { setSelectedStore, addLoadedOptions, selectedStore } = useStoreFilter();
+  const queryClient = useQueryClient();
+
+  // Use nuqs for URL query state management
+  const [_page, setPage] = useQueryState('page', { defaultValue: '1' });
 
   const [value, onChange] = useState<StoreOptionType | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Helper function to get cookie value
+  const getCookie = useCallback((name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  }, []);
 
   // Set required headers in localStorage for API calls and handle client-side hydration
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Load selected store from cookies/localStorage on mount
+  useEffect(() => {
+    if (!isMounted) return;
+
+    // First, try to get from Zustand store (which persists to localStorage)
+    if (selectedStore) {
+      onChange(selectedStore);
+      return;
+    }
+
+    // If not in Zustand store, try to get from cookies
+    const cookieStoreId = getCookie('x-store-id');
+    const localStorageStoreId = localStorage.getItem('x-store-id');
+
+    const storeIdToLoad = cookieStoreId || localStorageStoreId;
+
+    if (storeIdToLoad && storeIdToLoad !== '1') {
+      // Handle "Semua Toko" option (ID 0)
+      if (storeIdToLoad === '0') {
+        const semuaTokoOption: StoreOptionType = {
+          label: 'Semua Toko',
+          value: 0,
+          data: {
+            id: 0,
+            name: 'Semua Toko',
+            address: '',
+            phone: '',
+            email: '',
+            lat: 0,
+            lng: 0,
+            image: '',
+            is_active: true,
+            created_at: '',
+            updated_at: '',
+          } as StoreItem,
+        };
+
+        onChange(semuaTokoOption);
+        setSelectedStore(semuaTokoOption);
+        return;
+      }
+
+      // Load the store data from API to reconstruct the option
+      const loadStoreFromId = async (storeId: string) => {
+        try {
+          const response = await listStore({
+            page: 1,
+            per_page: 100,
+            sort_by: 'name',
+            sort_direction: 'asc' as const,
+          });
+
+          let storeData: StoreItem[];
+          if (Array.isArray(response)) {
+            storeData = response;
+          } else if (response?.data && Array.isArray(response.data)) {
+            storeData = response.data;
+          } else {
+            return;
+          }
+
+          const foundStore = storeData.find((store) => store.id.toString() === storeId);
+          if (foundStore) {
+            const storeOption: StoreOptionType = {
+              label: `#${zeroPad(foundStore.id, 4)} - ${foundStore.name}`,
+              value: foundStore.id,
+              data: foundStore,
+            };
+
+            onChange(storeOption);
+            setSelectedStore(storeOption);
+          }
+        } catch (error) {
+          console.error('Error loading store from cookie:', error);
+        }
+      };
+
+      loadStoreFromId(storeIdToLoad);
+    }
+  }, [isMounted, selectedStore, setSelectedStore, getCookie]);
+
   // Create loadOptions function with Zustand integration
   const loadOptions = createLoadOptions(addLoadedOptions);
 
-  // Handle selection change
-  const handleChange = (option: StoreOptionType | null) => {
-    onChange(option);
-    setSelectedStore(option);
+  // Handle selection change with useCallback to prevent rerenders
+  const handleChange = useCallback(
+    (option: StoreOptionType | null) => {
+      onChange(option);
+      setSelectedStore(option);
 
-    // Set x-store-id in both localStorage and cookies when store is selected
-    if (isMounted && option) {
-      const storeId = option.value.toString();
+      if (!isMounted) return;
 
-      // Set in localStorage
+      // Determine store ID
+      const storeId = option ? option.value.toString() : '1';
+
+      // Set in localStorage and cookies
       localStorage.setItem('x-store-id', storeId);
+      document.cookie = `x-store-id=${storeId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
 
-      // Set in cookies
-      document.cookie = `x-store-id=${storeId}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days;
-    } else if (isMounted && !option) {
-      // Clear x-store-id when no store is selected
-      localStorage.setItem('x-store-id', '1'); // Default value
-      document.cookie = `x-store-id=1; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days;
-    }
-  };
+      // Reset page to 1 via nuqs
+      setPage('1');
+
+      // Simple query invalidation
+      invalidateStoreQueries(queryClient, storeId);
+    },
+    [isMounted, setSelectedStore, setPage, queryClient]
+  );
 
   return (
     <>

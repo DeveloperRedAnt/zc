@@ -5,10 +5,18 @@ import { Card, CardContent } from '@/components/card/card';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import { Input } from '@/components/input/input';
 import { Label } from '@/components/label/label';
-
-import Cookies from 'js-cookie';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/dialog/dialog';
+
+import { signIn } from 'next-auth/react';
 import { useRef, useState } from 'react';
 
 export default function SignInPage() {
@@ -21,6 +29,8 @@ export default function SignInPage() {
   const [errors, setErrors] = useState<{ whatsapp?: string; password?: string }>({});
   const [globalError, setGlobalError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const [errorDialog, setErrorDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +45,11 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
+        if (result.error === 'error_has_no_organization') {
+          setErrorDialog(true);
+          setIsLoading(false);
+          return;
+        }
         const errorMessage = 'Nomor WhatsApp atau password salah';
         setErrors({ whatsapp: errorMessage, password: errorMessage });
 
@@ -43,7 +58,7 @@ export default function SignInPage() {
         return;
       }
 
-      Cookies.set('flex', 'select-organization');
+      // Cookies.set('flex', 'select-organization');
       router.push('/login/select-organization');
     } catch (error) {
       setGlobalError(`Terjadi kesalahan. Silakan coba lagi. ${String(error)}`);
@@ -181,6 +196,23 @@ export default function SignInPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Dialog open={errorDialog} onOpenChange={() => setErrorDialog(false)}>
+          <DialogContent className="w-[500px]" hideCloseButton={true}>
+            <DialogHeader>
+              <DialogTitle className="text-danger"> Anda belum memiliki Organisasi</DialogTitle>
+              <DialogDescription className="pt-4">
+                Akun Anda terdeteksi belum memiliki Organisasi! Silahkan membuat Organisasi terlebih
+                dahulu melalui <b>ZYCAS App Mobile</b>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setErrorDialog(false)} className="text-danger">
+                Ok, Saya Mengerti
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {/* Terms and Privacy */}
         <div className="text-center text-[0.8rem] text-[#555555] space-y-1 mt-4">
           <p>

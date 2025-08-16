@@ -11,6 +11,7 @@ type MemberListApiResponse = {
     yearly_formatted: string;
     all_time_formatted: string;
     registered_formatted: string;
+    store_name: string;
   })[];
   pagination: any;
 }
@@ -58,9 +59,6 @@ export function useCreateMember(
     DTO.CreateMemberResponse,
     Error,
     {
-      'x-device-id': string;
-      'x-store-id': string;
-      'x-organization-id': string;
       body: DTO.CreateMemberPayloadSchema;
     }
   >
@@ -88,9 +86,6 @@ export function useEditMember(
     DTO.EditMemberResponse,
     Error,
     {
-      'x-device-id': string;
-      'x-store-id': string;
-      'x-organization-id': string;
       id: string;
       body: DTO.EditMemberPayloadSchema;
     }

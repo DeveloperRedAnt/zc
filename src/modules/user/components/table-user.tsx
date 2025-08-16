@@ -10,6 +10,7 @@ import {
 } from '@/components/dropdown-menu/dropdown-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { useStoreId } from '@/hooks/use-store-aware-queries';
 import { useUserEditStore } from '@/modules/user/user-edit-store';
 import {
   Edit,
@@ -111,6 +112,9 @@ export default function TableUser({
   setSortOrder,
   status,
 }: TableUserProps) {
+  // Use the store-aware hook
+  const currentStoreId = useStoreId();
+
   // Memoize callback functions to prevent unnecessary rerenders
   const setSort = useCallback(
     (field: string, direction: string) => {
@@ -151,19 +155,33 @@ export default function TableUser({
     [search, status, page, sortBy, sortDirection, perPage]
   );
 
-  const { data = [], isLoading } = useGetEmployee({
-    'x-device-id': '1',
-    'x-store-id': '1',
-    'x-organization-id': '1',
-    body: {
+  // Memoize the query parameters to prevent unnecessary rerenders
+  const queryParams = useMemo(
+    () => ({
+      'x-device-id': '1',
+      'x-store-id': currentStoreId,
+      'x-organization-id': '1',
+      body: {
+        search,
+        page: params.body.page,
+        per_page: params.body.per_page,
+        search_by_status: params.body.search_by_status || 'all',
+        sort_by: params.body.sort_by || 'name',
+        sort_direction: params.body.sort_direction || 'asc',
+      },
+    }),
+    [
+      currentStoreId,
       search,
-      page: params.body.page,
-      per_page: params.body.per_page,
-      search_by_status: params.body.search_by_status || 'all',
-      sort_by: params.body.sort_by || 'name',
-      sort_direction: params.body.sort_direction || 'asc',
-    },
-  });
+      params.body.page,
+      params.body.per_page,
+      params.body.search_by_status,
+      params.body.sort_by,
+      params.body.sort_direction,
+    ]
+  );
+
+  const { data = [], isLoading, isRefetching } = useGetEmployee(queryParams);
 
   const [toggleResetPassModal, setToggleResetPassModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -344,7 +362,7 @@ export default function TableUser({
         onPage={setPage}
         onPageSize={setPerPage}
         table={table}
-        isLoading={isLoading}
+        isLoading={isLoading || isRefetching}
         page={page}
         pageSize={perPage}
       />

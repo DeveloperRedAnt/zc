@@ -1,4 +1,5 @@
 import * as DTO from '../dto';
+import { getEssentialCookies } from '../utils';
 import { ValidationError, apiClientWithHeaders } from './base.client';
 
 /**
@@ -12,12 +13,10 @@ export const listMembers = async (params: {
 }) => {
   try {
     let url = '/api/members';
-    const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
-    };
-    const response = await apiClientWithHeaders.get(url, { headers, params: params.body });
+     
+    const { store_id, device_id, organization_id } = getEssentialCookies();
+    const response = await apiClientWithHeaders.get(url, { 
+      headers: { 'x-device-id': device_id, 'x-organization-id': organization_id, 'x-store-id': store_id }, params: params.body });
 
     const members = response.data.data.map((member: DTO.MemberListResponse) => ({
       ...member,
@@ -43,17 +42,16 @@ export const listMembers = async (params: {
  * Create Member
  */
 export const createMember = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: DTO.CreateMemberPayloadSchema;
 }): Promise<DTO.CreateMemberResponse> => {
   try {
     const url = '/api/members';
+    
+    const { device_id, organization_id } = getEssentialCookies();
     const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
+      'x-device-id': device_id,
+      'x-organization-id': organization_id,
+      'x-store-id': params.body.store_id,
     };
     
     const response = await apiClientWithHeaders.post(url, params.body, { headers });
@@ -69,18 +67,17 @@ export const createMember = async (params: {
  * Edit Member
  */
 export const editMember = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;  
-  'x-organization-id': string;
   id: string;
   body: DTO.EditMemberPayloadSchema;
 }): Promise<DTO.EditMemberResponse> => {
   try {
     const url = `/api/members/${params.id}`;
+    
+    const { device_id, organization_id } = getEssentialCookies();
     const headers = {
-      'x-device-id': params['x-device-id'],
-      'x-store-id': params['x-store-id'],
-      'x-organization-id': params['x-organization-id'],
+      'x-device-id': device_id,
+      'x-organization-id': organization_id,
+      'x-store-id': params.body.store_id,
     };
     
     const response = await apiClientWithHeaders.put(url, params.body, { headers });

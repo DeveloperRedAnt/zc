@@ -106,7 +106,7 @@ export type PriceCardValue = {
 
 // types.ts
 export type VariantUnit = {
-  id?: number;
+  id: number;
   unitName: string;
   conversionValue: number;
   price: number;

@@ -3,17 +3,15 @@ import { createVoucher, getVoucher, updateVoucher } from '../client/voucher.clie
 import * as DTO from '../dto';
 
 export function useGetVoucher({
-  params,
   body,
   options
 }: {
-  params: DTO.BaseRequestSchema;
   body: DTO.GetVoucherListRequest;
   options?: UseQueryOptions<DTO.GetVoucherListRequest, Error, DTO.GetVoucherListResponse>;
 }) {
   return useQuery({
-    queryKey: ['getVoucher', params, body],
-    queryFn: () => getVoucher(params, body),
+    queryKey: ['getVoucher', body],
+    queryFn: () => getVoucher(body),
     ...options,
   });
 }
@@ -23,9 +21,6 @@ export function useCreateVoucher(
     DTO.VoucherItem,
     Error,
     {
-      'x-device-id': string;
-      'x-organization-id': string;
-      'x-store-id': string;
       body: DTO.createVoucherRequest;
     }
   >
@@ -42,9 +37,6 @@ export function useUpdateVoucher(
     Error,
     {
       id: number;
-      'x-organization-id': string;
-      'x-store-id': string;
-      'x-device-id': string;
       body: DTO.createVoucherRequest;
     }
   >

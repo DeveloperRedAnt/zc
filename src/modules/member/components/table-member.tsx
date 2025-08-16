@@ -10,6 +10,7 @@ import {
 } from '@/components/dropdown-menu/dropdown-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { useStoreId } from '@/hooks/use-store-aware-queries';
 import { Member } from '@/modules/member/types/member';
 import {
   Edit,
@@ -98,6 +99,9 @@ export default function TableMember({
   onEditMember,
   onDetailMember,
 }: TableMemberProps) {
+  // Get current store ID from localStorage
+  const currentStoreId = useStoreId();
+
   const setSort = (field: string, direction: string) => {
     switch (field) {
       case 'name':
@@ -125,7 +129,7 @@ export default function TableMember({
     () => ({
       'x-device-id': '1',
       'x-organization-id': '1',
-      'x-store-id': '1',
+      'x-store-id': currentStoreId,
       body: {
         search: search || '',
         page: page || 1,
@@ -135,7 +139,7 @@ export default function TableMember({
         sort_direction: sortDirection || 'asc',
       },
     }),
-    [search, status, page, sortBy, sortDirection, perPage]
+    [currentStoreId, search, status, page, sortBy, sortDirection, perPage]
   );
 
   const { data, isLoading } = useGetMember(params);
@@ -173,6 +177,14 @@ export default function TableMember({
         header: () => <div className="font-semibold text-[#555555]">Pembelian Tahunan</div>,
         cell: (info) => (
           <span className={getTextClass(info.row.original.is_active)}>{info.getValue()}</span>
+        ),
+      }),
+      columnHelper.accessor('store', {
+        header: () => <div className="font-semibold text-[#555555]">Toko</div>,
+        cell: (info) => (
+          <span className={getTextClass(info.row.original.is_active)}>
+            {info.getValue()?.name || '-'}
+          </span>
         ),
       }),
       columnHelper.accessor('all_time_formatted', {
@@ -241,7 +253,7 @@ export default function TableMember({
   );
 
   const table = useReactTable({
-    data: dataMembers,
+    data: dataMembers as unknown as Member[],
     columns: baseColumns,
     manualSorting: true,
     manualPagination: true,

@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card
 import SkeletonCardContent from '@/components/card/skeleton-card-content';
 import SkeletonPreset from '@/components/skeleton/skeleton-preset';
 import { usePageLoading } from '@/hooks/use-page-loading/use-page-loading';
+import { useStoreSelectorPopupStore } from '@/stores/store-selector-popup';
 import { DownloadOne, Plus } from '@icon-park/react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 
 const FilterProductList = dynamic(
@@ -92,7 +92,6 @@ const TableProductList = dynamic(() => import('@/modules/product/components/tabl
 });
 
 export default function Index() {
-  const router = useRouter();
   const [filters, setFilters] = useState<ProductSchema>({
     page: 1,
     per_page: 10,
@@ -106,6 +105,18 @@ export default function Index() {
     autoStart: false,
     initialDelay: 0,
   });
+
+  // Store selector popup state from Zustand
+  const { openPopup } = useStoreSelectorPopupStore();
+
+  // Handle edit product action
+  const handleEditProduct = useCallback(
+    (productId: number) => {
+      const editPath = `/dashboard/products/${productId}/edit`;
+      openPopup({ type: 'edit', targetPath: editPath });
+    },
+    [openPopup]
+  );
 
   // API call untuk mendapatkan data products
   const {
@@ -178,7 +189,9 @@ export default function Index() {
                   type="button"
                   variant="info"
                   className="flex items-center"
-                  onClick={() => router.push('/dashboard/products/add')}
+                  onClick={() => {
+                    openPopup({ type: 'add', targetPath: '/dashboard/products/add' });
+                  }}
                 >
                   <Plus />
                   Tambah Produk
@@ -280,6 +293,7 @@ export default function Index() {
                   onPageSizeChange={handlePageSizeChange}
                   currentPage={filters.page || 1}
                   currentPageSize={filters.per_page || 10}
+                  onEditProduct={handleEditProduct}
                 />
               </Suspense>
             </>
