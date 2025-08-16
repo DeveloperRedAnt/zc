@@ -16,7 +16,7 @@ import {
 } from '@/components/dialog/dialog';
 import type { OptionType } from '@/components/dropdown/dropdown';
 import SkeletonPreset from '@/components/skeleton/skeleton-preset';
-import { toast } from '@/components/toast/toast';
+import { useToast } from '@/components/toast/toast';
 import { FormValidationProvider } from '@/hooks/use-form-validator/form-validation-context';
 import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
 import { useFormValidator } from '@/hooks/use-form-validator/use-form-validator';
@@ -77,6 +77,8 @@ type ApiPayload = {
 };
 
 function PageContent() {
+  const { showSuccess, showError } = useToast();
+
   const router = useRouter();
   const [loadingDataStore, setLoadingDataStore] = useState(true);
 
@@ -84,6 +86,8 @@ function PageContent() {
     autoStart: false,
     initialDelay: 0,
   });
+
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -139,7 +143,6 @@ function PageContent() {
     const fields = getRegisteredFields();
     const { isValid, errors } = validateFields(fields);
     setErrors(errors);
-
     if (!isValid) {
       return;
     }
@@ -159,15 +162,15 @@ function PageContent() {
 
   const { mutate: createStore } = useCreateStore({
     onSuccess: (_data) => {
-      toast.success('Tersimpan!', {
-        description: 'Toko Anda berhasil tersimpan',
-      });
+      setSaving(false);
+      showSuccess('Tersimpan!', 'Toko Anda telah berhasil tersimpan');
       setOpenDialogConfirm(false);
       setTimeout(() => {
         router.push('/dashboard/store');
       }, 2000);
     },
     onError: (error) => {
+      setSaving(false);
       setOpenDialogConfirm(false);
       let errorMessage = 'Terjadi kesalahan';
 
@@ -187,7 +190,7 @@ function PageContent() {
       } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
-      toast.error(errorMessage);
+      showError('Gagal!', typeof errorMessage === 'string' ? errorMessage : 'Gagal menyimpan data');
     },
   });
 
@@ -260,12 +263,21 @@ function PageContent() {
               Kembali ke List Toko
             </Button>
             <Button
-              variant="primary"
-              className="flex items-center gap-2"
+              variant="outline"
+              className="flex items-center gap-2 btn-succes"
               onClick={handleOpenConfirmDialog}
+              disabled={saving}
             >
-              Simpan Toko
-              <Check size={16} />
+              {saving ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span> Menyimpan...
+                </>
+              ) : (
+                <>
+                  Simpan Toko
+                  <Check size={16} />
+                </>
+              )}
             </Button>
 
             <Dialog open={openDialogConfirm} onOpenChange={setOpenDialogConfirm}>

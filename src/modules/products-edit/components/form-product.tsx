@@ -13,8 +13,7 @@ import FormTrackStockProduct from '@/modules/products-edit/components/form-track
 import { Check } from '@icon-park/react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
-import { useUpdateProduct } from '@/__generated__/api/hooks/product.hooks';
-import { useGetProductDetail } from '@/__generated__/api/hooks/product.hooks';
+import { useGetProductDetail, useUpdateProduct } from '@/__generated__/api/hooks/product.hooks';
 import { useToast } from '@/components/toast/toast';
 import { useFormValidationContext } from '@/hooks/use-form-validator/form-validation-context';
 import { useProductCompositeStore } from '@/modules/products-edit/storing-data/product-composite/stores';
@@ -23,7 +22,10 @@ import { useProductInformationStore } from '@/modules/products-edit/storing-data
 import { usePriceMultiPackStore } from '@/modules/products-edit/storing-data/product-multi-pack/stores';
 import { useProductVariantStore } from '@/modules/products-edit/storing-data/product-variant/store';
 import { useTrackStockProductStore } from '@/modules/products-edit/storing-data/track-stock-product/stores';
-import { mapFormDataToApiPayload } from '@/modules/products-edit/utils/apiHelper';
+import {
+  createEnhancedFormDataInput,
+  mapFormDataToApiPayload,
+} from '@/modules/products-edit/utils/apiHelper';
 import { format } from 'date-fns';
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -43,7 +45,9 @@ export default function FormProductForm({
   const params = useParams();
   const productId = Number(params?.id);
 
+  // Use the enhanced hook that includes localStorage integration
   const { data: productDetailData } = useGetProductDetail({ id: productId });
+
   // Get product data for current product ID with proper selectors to avoid infinite loops
   const productInfo = useProductInformationStore((state) => state.products[productId]) ?? {
     thumbnailFile: null,
@@ -71,131 +75,118 @@ export default function FormProductForm({
   const setTrackStock = useTrackStockProductStore((state) => state.setTrackStock);
   const setWholesale = usePriceMultiPackStore((state) => state.setWholesale);
   const setMultiPackList = usePriceMultiPackStore((state) => state.setMultiPackList);
-  // const defaultPrices = usePriceMultiPackStore((state) => state.products[productId]);
   const setComposite = useProductCompositeStore((state) => state.setComposite);
   const setProductVariants = useProductVariantStore((state) => state.setProductVariants);
+
   // Map productDetailData to stores when data is available
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Zustand setters are stable
   useEffect(() => {
-    if (productDetailData) {
-      // Map to Product Information Store
-      setProductName(productId, productDetailData.name || '');
-      setIsActiveProduct(productId, productDetailData.is_active ?? true);
-      setIsFavorite(productId, productDetailData.is_favorite ?? false);
-      setThumbnailUrl(productId, productDetailData.thumbnail || null);
+    if (!productDetailData) return;
 
-      // Map tags
-      if (
-        productDetailData.tags &&
-        Array.isArray(productDetailData.tags) &&
-        productDetailData.tags.length > 0
-      ) {
-        const mappedTags = productDetailData.tags.map((tag) => ({
-          label: tag.name,
-          value: tag.id,
-        }));
-        setSelectedTags(productId, mappedTags);
-      }
+    // Map to Product Information Store
+    setProductName(productId, productDetailData.name || '');
+    setIsActiveProduct(productId, productDetailData.is_active ?? true);
+    setIsFavorite(productId, productDetailData.is_favorite ?? false);
+    setThumbnailUrl(productId, productDetailData.thumbnail || null);
 
-      // Map barcode and sku based on First Product Variant
-      let barcode = '';
-      let sku = '';
-      if (productDetailData.variants && productDetailData.variants.length > 0) {
-        barcode = productDetailData.variants[0]?.barcode || '';
-      }
-      if (productDetailData.variants && productDetailData.variants.length > 0) {
-        sku = productDetailData.variants[0]?.sku_code || '';
-      }
+    // Map tags
+    if (Array.isArray(productDetailData.tags) && productDetailData.tags.length > 0) {
+      const mappedTags = productDetailData.tags.map((tag) => ({
+        label: tag.name,
+        value: tag.id,
+      }));
+      setSelectedTags(productId, mappedTags);
+    }
 
-      if (productDetailData.variants && productDetailData.variants.length > 0) {
-        setWholesale(productId, productDetailData.variants[0]?.is_wholesale ?? false);
-      }
+    // Map barcode, sku, wholesale, multipack dari variant pertama
+    const firstVariant = productDetailData.variants?.[0];
+    if (firstVariant) {
+      const barcode = firstVariant.barcode || '';
+      const sku = firstVariant.sku_code || '';
+      setWholesale(productId, firstVariant.is_wholesale ?? false);
 
-      if (productDetailData.variants && productDetailData.variants.length > 0) {
-        const multiPackList =
-          productDetailData.variants[0]?.variant_units?.map((unit) => ({
-            id: Number(Date.now()),
-            itemName: unit.unit_name,
-            quantity: Number(unit.conversion_value),
-            price: Number(
-              typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price
-            ),
-          })) ?? [];
-        setMultiPackList(productId, multiPackList);
-      }
+      const multiPackList =
+        firstVariant.variant_units?.map((unit) => ({
+          id: Number(unit.id) || Number(Date.now()),
+          itemName: unit.unit_name,
+          quantity: Number(unit.conversion_value),
+          price: Number(
+            typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price
+          ),
+        })) ?? [];
+      setMultiPackList(productId, multiPackList);
 
       // Map to Product Detail Store
       setProductDetailAction(productId, {
         content: productDetailData.content || '',
         package: productDetailData.package || '',
-        barcode: barcode,
-        sku: sku,
+        barcode,
+        sku,
         unit_id: productDetailData.unit?.id || null,
         unit_string: productDetailData.unit?.name || '',
       });
+    }
 
-      // Map to Track Stock Store - combine both stock_tracking and expired_reminder
-      const trackStockUpdateData: Partial<{
-        is_track_stock: boolean;
-        current_stock: number;
-        is_enable_expired_reminder: boolean;
-        expired_reminder_in_days: number | null;
-        expired_reminder_in_date: string | null;
-      }> = {};
-      trackStockUpdateData.current_stock = productDetailData.current_stock;
+    // Track stock
+    const trackStockUpdateData: Partial<{
+      is_track_stock: boolean;
+      current_stock: number;
+      is_enable_expired_reminder: boolean;
+      expired_reminder_in_days: number | null;
+      expired_reminder_in_date: string | null;
+    }> = { current_stock: productDetailData.current_stock };
 
-      if (productDetailData.stock_tracking) {
-        trackStockUpdateData.is_track_stock = productDetailData.stock_tracking.is_enabled;
+    if (productDetailData.stock_tracking) {
+      trackStockUpdateData.is_track_stock = productDetailData.stock_tracking.is_enabled;
+    }
+
+    if (productDetailData.expired_reminder) {
+      trackStockUpdateData.is_enable_expired_reminder =
+        productDetailData.expired_reminder.is_enabled;
+
+      const countdown = productDetailData.expired_reminder.countdown;
+      let expiredDays: number | null = null;
+      if (typeof countdown === 'number') expiredDays = countdown;
+      else if (typeof countdown === 'string') {
+        const match = countdown.match(/(\d+)/);
+        expiredDays = match ? Number(match[1]) : null;
       }
 
-      if (productDetailData.expired_reminder) {
-        trackStockUpdateData.is_enable_expired_reminder =
-          productDetailData.expired_reminder.is_enabled;
-        const countdown = productDetailData.expired_reminder.countdown;
-        let expiredDays: number | null = null;
-        if (typeof countdown === 'number') {
-          expiredDays = countdown;
-        } else if (typeof countdown === 'string') {
-          const match = countdown.match(/(\d+)/);
-          expiredDays = match ? Number(match[1]) : null;
-        }
-        trackStockUpdateData.expired_reminder_in_days = expiredDays;
-        trackStockUpdateData.expired_reminder_in_date = format(new Date(), 'yyyy-MM-dd');
-      }
+      trackStockUpdateData.expired_reminder_in_days = expiredDays;
+      trackStockUpdateData.expired_reminder_in_date = format(new Date(), 'yyyy-MM-dd');
+    }
 
-      // Set all track stock data at once to avoid overwriting
-      if (Object.keys(trackStockUpdateData).length > 0) {
-        setTrackStock(productId, trackStockUpdateData);
-      }
+    if (Object.keys(trackStockUpdateData).length > 0) {
+      setTrackStock(productId, trackStockUpdateData);
+    }
 
-      // Map variants if available
-      if (productDetailData.variants && productDetailData.variants.length > 0) {
-        const cleanedVariants = productDetailData.variants.map((variant) => ({
-          ...variant,
-          variant_units: variant.variant_units?.map((unit) => ({
-            ...unit,
-            price:
-              typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price,
-          })),
-        }));
-        setProductVariants(productId.toString(), cleanedVariants);
-      }
+    // Variants list (semua variant, bukan cuma pertama)
+    if (productDetailData.variants?.length) {
+      const cleanedVariants = productDetailData.variants.map((variant) => ({
+        ...variant,
+        variant_units: variant.variant_units?.map((unit) => ({
+          ...unit,
+          price: typeof unit.price === 'string' ? unit.price.replace(/[Rp.,\s]/g, '') : unit.price,
+        })),
+      }));
+      setProductVariants(productId.toString(), cleanedVariants);
+    }
 
-      // Map composite data if available
-      if (productDetailData.composite) {
-        // Convert current_stock to number if needed before setting composite
-        const compositeData = {
-          ...productDetailData.composite,
-          current_stock: +productDetailData.composite.current_stock || 0,
-          components: (productDetailData.composite.components || []).map(({ name, ...rest }) => ({
-            name: name ?? null,
-            ...rest,
-          })),
-        };
-        setComposite(productId, compositeData);
-      }
+    // Composite
+    if (productDetailData.composite) {
+      const compositeData = {
+        ...productDetailData.composite,
+        current_stock: +productDetailData.composite.current_stock || 0,
+        components: (productDetailData.composite.components || []).map(({ name, ...rest }) => ({
+          name: name ?? null,
+          ...rest,
+        })),
+      };
+      setComposite(productId, compositeData);
     }
   }, [
     productDetailData,
+    productDetailData?.variants, // tambahin ini biar aman
     productId,
     setProductName,
     setIsActiveProduct,
@@ -207,11 +198,6 @@ export default function FormProductForm({
     setWholesale,
     setMultiPackList,
     setComposite,
-    setProductVariants,
-    productDetailData?.variants?.[0]?.barcode,
-    productDetailData?.variants?.[0]?.sku_code,
-    productDetailData?.variants?.[0]?.is_wholesale,
-    productDetailData?.variants?.[0]?.variant_units,
   ]);
 
   const toast = useToast();
@@ -221,7 +207,7 @@ export default function FormProductForm({
   const { mutate: updateProduct, isPending } = useUpdateProduct();
 
   const finalPayload = useMemo(() => {
-    return {
+    const payload = {
       ...productInfo,
       ...productDetail,
       ...trackStockData,
@@ -238,8 +224,11 @@ export default function FormProductForm({
       variants: variants,
       id: productId,
       priceMultiPackList: multiPackData.priceMultiPackList ?? [],
-      type: productDetailData?.type,
+      type: productDetailData?.type === 'simple' ? 'single' : productDetailData?.type, // Convert 'simple' to 'single'
     };
+
+    // Use the enhanced form data input creator for proper typing
+    return createEnhancedFormDataInput(payload);
   }, [
     productInfo,
     productDetail,
@@ -268,6 +257,10 @@ export default function FormProductForm({
       {
         onSuccess: () => {
           toast.showSuccess('Tersimpan', 'Produk Paduan Anda telah berhasil disimpan');
+          // Clear localStorage after successful save
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('Single-variant-edit-data');
+          }
           router.push('/dashboard/products');
         },
         onError: (error) => {

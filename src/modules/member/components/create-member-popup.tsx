@@ -122,8 +122,10 @@ export default function CreateMemberPopup({
           phone: '',
           email: '',
           lat: 0,
-          lng: 0,
+          long: 0,
           image: '',
+          type: '',
+          category: '',
         },
       });
     } else {

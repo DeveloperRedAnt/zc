@@ -2,7 +2,7 @@
 import { useGetStore } from '@/__generated__/api/hooks';
 import { DataTable } from '@/components/table/data-table';
 import { DataTablePagination } from '@/components/table/data-table-pagination';
-import { Edit, FileDisplayOne, SortAmountDown, SortAmountUp, SortThree } from '@icon-park/react';
+import { Edit, SortAmountDown, SortAmountUp, SortThree } from '@icon-park/react';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -17,10 +17,12 @@ import React from 'react';
 type Store = {
   id: string;
   store_name: string;
-  store_type: string;
-  store_category: string;
+  type: string;
+  category: string;
   address: string;
   whatsapp: string;
+  lat?: number | null;
+  long?: number | null;
 };
 
 const columnHelper = createColumnHelper<Store>();
@@ -81,7 +83,6 @@ export default function TableStoreList({
   setSortOrder,
 }: TableStoreListProps) {
   const router = useRouter();
-
   const setSort = (field: string, direction: 'asc' | 'desc') => {
     setSortBy(field);
     setSortOrder(direction);
@@ -107,15 +108,16 @@ export default function TableStoreList({
   );
 
   const { data, isLoading } = useGetStore(params);
-
   const stores: Store[] = Array.isArray(data?.data)
     ? data.data.map((item) => ({
         id: String(item.id),
         store_name: item.name,
-        store_type: '', // StoreItem doesn't have a type property
-        store_category: '', // StoreItem doesn't have a category property
+        type: item.type,
+        category: item.category,
         address: item.address,
         whatsapp: item.phone,
+        lat: item.lat,
+        long: item.long,
       }))
     : [];
 
@@ -131,14 +133,14 @@ export default function TableStoreList({
         header: () => getSortableHeader('Nama Toko', 'store_name', sortBy, sortOrder, setSort),
         cell: (info) => <div className="whitespace-normal break-words">{info.getValue()}</div>,
       }),
-      columnHelper.accessor('store_type', {
-        header: () => getSortableHeader('Tipe Toko', 'store_type', sortBy, sortOrder, setSort),
+      columnHelper.accessor('type', {
+        header: () => getSortableHeader('Tipe Toko', 'type', sortBy, sortOrder, setSort),
         cell: (info) => {
           const value = info.getValue();
           const isRetailer = value === 'retail' || value === 'retailer';
           return (
             <div
-              className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[8.5rem] text-center ${
+              className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded text-center inline-block ${
                 isRetailer ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#D8F9FF] text-[#0FA6C1]'
               }`}
             >
@@ -147,8 +149,8 @@ export default function TableStoreList({
           );
         },
       }),
-      columnHelper.accessor('store_category', {
-        header: () => getSortableHeader('Jenis Toko', 'store_category', sortBy, sortOrder, setSort),
+      columnHelper.accessor('category', {
+        header: () => getSortableHeader('Jenis Toko', 'category', sortBy, sortOrder, setSort),
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('address', {
@@ -162,15 +164,51 @@ export default function TableStoreList({
       columnHelper.display({
         id: 'aksi',
         header: () => <div className="font-bold text-black text-center">Aksi</div>,
-        cell: (info) => (
-          <div className="flex gap-2 justify-center items-center">
-            <FileDisplayOne className="cursor-pointer" />
-            <Edit
-              className="cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={() => router.push(`/dashboard/store/${info.row.original.id}/edit`)}
-            />
-          </div>
-        ),
+        cell: (info) => {
+          const store = info.row.original;
+          const isLocationAvailable = store.lat != null && store.long != null;
+          return (
+            <div className="flex gap-2 justify-center items-center">
+              {isLocationAvailable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const mapsUrl = `https://www.google.com/maps?q=${store.lat},${store.long}`;
+                    window.open(mapsUrl, '_blank');
+                  }}
+                  className="transition-colors p-0 bg-transparent border-0 cursor-pointer"
+                  title="Lihat di Google Maps"
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M3.28616 10.918C2.0795 11.28 1.3335 11.78 1.3335 12.3323C1.3335 13.437 4.31816 14.3323 8.00016 14.3323C11.6822 14.3323 14.6668 13.437 14.6668 12.3323C14.6668 11.78 13.9205 11.28 12.7142 10.918"
+                      stroke="currentColor"
+                      strokeWidth="1.33333"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8.00033 11.6654C8.00033 11.6654 12.3337 8.83336 12.3337 5.55936C12.3337 3.2247 10.3937 1.33203 8.00033 1.33203C5.60699 1.33203 3.66699 3.2247 3.66699 5.55936C3.66699 8.83336 8.00033 11.6654 8.00033 11.6654Z"
+                      stroke="currentColor"
+                      strokeWidth="1.33333"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8.00016 7.33333C8.44219 7.33333 8.86611 7.15774 9.17867 6.84518C9.49123 6.53262 9.66683 6.10869 9.66683 5.66667C9.66683 5.22464 9.49123 4.80072 9.17867 4.48816C8.86611 4.17559 8.44219 4 8.00016 4C7.55814 4 7.13421 4.17559 6.82165 4.48816C6.50909 4.80072 6.3335 5.22464 6.3335 5.66667C6.3335 6.10869 6.50909 6.53262 6.82165 6.84518C7.13421 7.15774 7.55814 7.33333 8.00016 7.33333Z"
+                      stroke="currentColor"
+                      strokeWidth="1.33333"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+              <Edit
+                className="cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => router.push(`/dashboard/store/${store.id}/edit`)}
+              />
+            </div>
+          );
+        },
       }),
     ],
     [sortBy, sortOrder, setSort, router]

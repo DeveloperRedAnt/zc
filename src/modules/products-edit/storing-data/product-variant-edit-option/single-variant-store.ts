@@ -30,7 +30,9 @@ export type SingleVariantData = {
 };
 
 export type SingleVariantEditState = {
-  currentVariant: SingleVariantData | null;
+  // Store multiple variants data instead of single
+  variants: { [key: string]: SingleVariantData }; // key format: "productId-variantId"
+  currentKey: string | null;
 
   // Actions
   initializeSingleVariant: (
@@ -54,36 +56,40 @@ export type SingleVariantEditState = {
   updateMultiPack: (priceMultiPackList: PriceMultiPackItem[], isWholesale: boolean) => void;
   setMultiPackErrors: (errors: { [itemId: number]: { [field: string]: string } }) => void;
   saveSingleVariant: () => Promise<void>;
-  clearSingleVariant: () => void;
+  clearSingleVariant: (productId?: string, variantId?: number) => void;
   hasValidData: (productId: string, variantId: number) => boolean;
   getCurrentVariant: () => SingleVariantData | null;
+  setCurrentVariant: (productId: string, variantId: number) => void;
 };
 
 const STORAGE_KEY = 'Single-variant-edit-data';
 
+// Helper function to create key
+const createKey = (productId: string, variantId: number): string => `${productId}-${variantId}`;
+
 export const useSingleVariantEditStore = create<SingleVariantEditState>()(
   persist(
     (set, get) => ({
-      currentVariant: null,
+      variants: {},
+      currentKey: null,
 
       initializeSingleVariant: (productId, variantId, variantData) => {
-        const existingVariant = get().currentVariant;
+        const key = createKey(productId, variantId);
+        const existingVariants = get().variants;
+        const existingVariant = existingVariants[key];
 
         // Cek apakah data yang ada masih valid untuk variant dan product yang sama
-        const shouldPreserveExisting =
-          existingVariant &&
-          existingVariant.variantId === variantId &&
-          existingVariant.productId === productId &&
-          existingVariant.lastSaved !== null;
+        const shouldPreserveExisting = existingVariant && existingVariant.lastSaved !== null;
 
         if (shouldPreserveExisting) {
-          // Gunakan data yang sudah ada
+          // Set as current variant and use existing data
+          set({ currentKey: key });
           return;
         }
 
         // Initialize fresh data
         const variantUnits = variantData.variantUnits || [];
-        const priceMultiPackList =
+        const priceMultiPackList: PriceMultiPackItem[] =
           variantUnits.length > 0
             ? variantUnits.map((unit) => ({
                 id: unit.id || Date.now() + Math.random(),
@@ -116,42 +122,71 @@ export const useSingleVariantEditStore = create<SingleVariantEditState>()(
           lastSaved: null,
         };
 
-        set({ currentVariant: newVariant });
+        set({
+          variants: {
+            ...existingVariants,
+            [key]: newVariant,
+          },
+          currentKey: key,
+        });
+      },
+
+      setCurrentVariant: (productId, variantId) => {
+        const key = createKey(productId, variantId);
+        set({ currentKey: key });
       },
 
       updateCardValue: (cardValue) => {
-        const current = get().currentVariant;
-        if (!current) return;
+        const { variants, currentKey } = get();
+        if (!currentKey || !variants[currentKey]) return;
+
+        const current = variants[currentKey];
+        const updatedVariant = {
+          ...current,
+          cardValue,
+        };
 
         set({
-          currentVariant: {
-            ...current,
-            cardValue,
+          variants: {
+            ...variants,
+            [currentKey]: updatedVariant,
           },
         });
       },
 
       updateMultiPack: (priceMultiPackList, isWholesale) => {
-        const current = get().currentVariant;
-        if (!current) return;
+        const { variants, currentKey } = get();
+        if (!currentKey || !variants[currentKey]) return;
+
+        const current = variants[currentKey];
+        const updatedVariant = {
+          ...current,
+          priceMultiPackList,
+          isWholesale,
+        };
 
         set({
-          currentVariant: {
-            ...current,
-            priceMultiPackList,
-            isWholesale,
+          variants: {
+            ...variants,
+            [currentKey]: updatedVariant,
           },
         });
       },
 
       setMultiPackErrors: (errors) => {
-        const current = get().currentVariant;
-        if (!current) return;
+        const { variants, currentKey } = get();
+        if (!currentKey || !variants[currentKey]) return;
+
+        const current = variants[currentKey];
+        const updatedVariant = {
+          ...current,
+          multiPackErrors: errors,
+        };
 
         set({
-          currentVariant: {
-            ...current,
-            multiPackErrors: errors,
+          variants: {
+            ...variants,
+            [currentKey]: updatedVariant,
           },
         });
       },
@@ -159,18 +194,24 @@ export const useSingleVariantEditStore = create<SingleVariantEditState>()(
       saveSingleVariant: async () => {
         return new Promise((resolve, reject) => {
           try {
-            const current = get().currentVariant;
-            if (!current) {
+            const { variants, currentKey } = get();
+            if (!currentKey || !variants[currentKey]) {
               reject(new Error('No variant data to save'));
               return;
             }
 
+            const current = variants[currentKey];
             const now = new Date().toISOString();
 
+            const updatedVariant = {
+              ...current,
+              lastSaved: now,
+            };
+
             set({
-              currentVariant: {
-                ...current,
-                lastSaved: now,
+              variants: {
+                ...variants,
+                [currentKey]: updatedVariant,
               },
             });
             resolve();
@@ -181,28 +222,50 @@ export const useSingleVariantEditStore = create<SingleVariantEditState>()(
         });
       },
 
-      clearSingleVariant: () => {
-        set({ currentVariant: null });
+      clearSingleVariant: (productId, variantId) => {
+        const { variants } = get();
+
+        if (productId && variantId) {
+          // Clear specific variant
+          const key = createKey(productId, variantId);
+          const { [key]: _, ...remainingVariants } = variants;
+
+          set({
+            variants: remainingVariants,
+            currentKey: get().currentKey === key ? null : get().currentKey,
+          });
+        } else {
+          // Clear all variants
+          set({
+            variants: {},
+            currentKey: null,
+          });
+        }
       },
 
       hasValidData: (productId, variantId) => {
-        const current = get().currentVariant;
+        const key = createKey(productId, variantId);
+        const variants = get().variants;
+        const variant = variants[key];
+
         return (
-          current !== null &&
-          current.productId === productId &&
-          current.variantId === variantId &&
-          current.lastSaved !== null
+          variant !== undefined &&
+          variant.productId === productId &&
+          variant.variantId === variantId &&
+          variant.lastSaved !== null
         );
       },
 
       getCurrentVariant: () => {
-        return get().currentVariant;
+        const { variants, currentKey } = get();
+        return currentKey && variants[currentKey] ? variants[currentKey] : null;
       },
     }),
     {
       name: STORAGE_KEY,
       partialize: (state) => ({
-        currentVariant: state.currentVariant,
+        variants: state.variants,
+        currentKey: state.currentKey,
       }),
     }
   )

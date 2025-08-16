@@ -159,3 +159,29 @@ export interface StoreVariantSuccessResponse {
   message: string;
   data: [];
 }
+
+// Option dalam variant
+export interface VariantAttributeOption {
+  id: number;
+  product_id: number;
+  variant_attribute_id: number;
+  option_value: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductVariantDetail {
+  id: number;
+  variant_name: string | null;
+  sku: string;
+  barcode: string;
+  price: string;
+  stock: string;
+  attribute_options: VariantAttributeOption[];
+}
+
+export interface ProductVariantDetailResponse {
+  status: string; // contoh: "success"
+  message: string; // contoh: "Product variant detail retrieved successfully"
+  data: ProductVariantDetail;
+}

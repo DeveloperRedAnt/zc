@@ -33,7 +33,7 @@ interface VariantItem {
 
 interface LocalStorageVariantData {
   state: {
-    currentVariant: {
+    variants: {
       variantId: number;
       productId: string;
       name: string;
@@ -112,13 +112,13 @@ export default function FormProductVariant() {
 
       // Cek ada data local storage & sesuai productId
       const hasLocalData =
-        localVariantData?.state?.currentVariant?.variantId === variantId &&
-        localVariantData?.state?.currentVariant?.productId === productId.toString();
+        localVariantData?.state?.variants?.variantId === variantId &&
+        localVariantData?.state?.variants?.productId === productId.toString();
 
       let variantName = '';
       if (hasLocalData) {
         // Pakai nama dari local storage
-        variantName = localVariantData!.state.currentVariant.name;
+        variantName = localVariantData!.state.variants.name;
       } else {
         // Generate nama dari attributes
         variantName =
@@ -131,7 +131,7 @@ export default function FormProductVariant() {
       let prices: VariantPrice[] = [];
       if (hasLocalData) {
         prices =
-          localVariantData!.state.currentVariant.priceMultiPackList.map((price) => ({
+          localVariantData!.state.variants.priceMultiPackList.map((price) => ({
             id: price.id,
             namePcs: price.unitName,
             quantity: price.conversionValue,
@@ -152,8 +152,8 @@ export default function FormProductVariant() {
       const isActive = variant.is_active ?? true;
 
       if (hasLocalData) {
-        barcode = localVariantData!.state.currentVariant.cardValue.barcode;
-        sku = localVariantData!.state.currentVariant.cardValue.sku;
+        barcode = localVariantData!.state.variants.cardValue.barcode;
+        sku = localVariantData!.state.variants.cardValue.sku;
       } else {
         barcode = variant.barcode || '';
         sku = variant.sku_code || '';
@@ -193,12 +193,12 @@ export default function FormProductVariant() {
 
   const handleEditVariant = (variantId: number) => {
     // Navigate to edit variant page with variant ID
-    router.push(`/dashboard/products/edit/${productId}/variant/${variantId}`);
+    router.push(`/dashboard/products/${productId}/edit/variant-options/${variantId}/edit`);
   };
 
   const handleAddVariantOption = () => {
     // Navigate to add variant page
-    router.push(`/dashboard/products/edit/${productId}/variant/add`);
+    router.push(`/dashboard/products/${productId}/edit/variant-options/create`);
   };
 
   if (!finalData.length) {

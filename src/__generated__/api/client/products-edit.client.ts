@@ -1,3 +1,4 @@
+import { parsePrice } from '../../../utils/currency';
 // client/product-variant.client.ts
 import { getDataFromApi } from '../../../utils/url';
 import * as DTO from '../dto/products-edit.dto';
@@ -113,7 +114,7 @@ export const transformApiDataToFormattedVariants = (
         id: unit.id,
         unitName: unit.unit_name,
         conversionValue: Number(unit.conversion_value) || 0,
-        price: parseFloat(unit.price.replace(/[^0-9.]/g, '')) || 0
+        price: parsePrice(unit.price) || 0
       }))
     };
   });
@@ -128,6 +129,7 @@ export const transformFormattedVariantsToApiData = (
 ): DTO.UpdateProductVariantsPayload => {
   const variants = formattedVariants.map(variant => {
     const cardValue = cardValues[variant.id];
+    console.log(variant, "variant 1")
     
     return {
       id: variant.id, // Already a number

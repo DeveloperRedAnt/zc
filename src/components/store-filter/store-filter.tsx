@@ -89,12 +89,11 @@ const createLoadOptions = (
             phone: '',
             email: '',
             lat: 0,
-            lng: 0,
+            long: 0,
             image: '',
-            is_active: true,
-            created_at: '',
-            updated_at: '',
-          } as StoreItem,
+            type: '',
+            category: '',
+          } as unknown as StoreItem,
         });
       }
 
@@ -201,12 +200,11 @@ export default function StoreFilter({ disabled }: StoreFilterProps) {
             phone: '',
             email: '',
             lat: 0,
-            lng: 0,
+            long: 0,
             image: '',
-            is_active: true,
-            created_at: '',
-            updated_at: '',
-          } as StoreItem,
+            type: '',
+            category: '',
+          } as unknown as StoreItem,
         };
 
         onChange(semuaTokoOption);

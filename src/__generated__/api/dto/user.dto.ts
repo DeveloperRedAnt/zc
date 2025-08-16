@@ -83,7 +83,7 @@ export type CreateEmployeePayload = {
     password: string;
     password_confirmation: string;
     is_active: boolean;
-    image?: File | null;
+    image?: string;
   };
   
   export type CreateEmployeeResponse = {

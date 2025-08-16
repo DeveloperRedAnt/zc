@@ -17,10 +17,10 @@ import CustomInput from '@/components/input/custom-input';
 import { Stepper } from '@/components/number-stepper/number-stepper';
 import { useRegisterField } from '@/hooks/use-form-validator/use-register-field';
 import { Delete } from '@icon-park/react';
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 type PriceMultiPackItem = {
-  id: number;
+  id?: number;
   unitName: string;
   conversionValue: number;
   price: number;
@@ -66,6 +66,33 @@ export default function MultiPackItem({ index, item, onChange, onRemove, errors 
     getValue: () => priceRef.current?.value ?? '',
   });
 
+  // Ensure item.id is available
+  const itemId = item.id ?? 0;
+
+  const handleUnitNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      onChange(itemId, 'unitName', e.target.value);
+      handleunitNameChange();
+    },
+    [itemId, onChange, handleunitNameChange]
+  );
+
+  const handleConversionValueChange = useCallback(
+    (val: number) => {
+      onChange(itemId, 'conversionValue', val);
+      handleconversionValueChange();
+    },
+    [itemId, onChange, handleconversionValueChange]
+  );
+
+  const handlePriceChangeCallback = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      onChange(itemId, 'price', Number(e.target.value));
+      handlePriceChange();
+    },
+    [itemId, onChange, handlePriceChange]
+  );
+
   return (
     <div className="mb-4">
       <div className="flex flex-wrap gap-6">
@@ -75,10 +102,7 @@ export default function MultiPackItem({ index, item, onChange, onRemove, errors 
             ref={unitNameFieldRef}
             label="Nama Satuan"
             value={item.unitName}
-            onChange={(e) => {
-              onChange(item.id, 'unitName', e.target.value);
-              handleunitNameChange();
-            }}
+            onChange={handleUnitNameChange}
             placeholder="cth: Single"
             required
             isWidthFull
@@ -92,10 +116,7 @@ export default function MultiPackItem({ index, item, onChange, onRemove, errors 
           <Stepper
             ref={conversionValueFieldRef}
             value={item.conversionValue}
-            onChange={(val) => {
-              onChange(item.id, 'conversionValue', val);
-              handleconversionValueChange();
-            }}
+            onChange={handleConversionValueChange}
             label="Kuantiti"
             required
             error={conversionValueError || errors.conversionValue}
@@ -112,10 +133,7 @@ export default function MultiPackItem({ index, item, onChange, onRemove, errors 
             inputNumber
             prependText="Rp"
             value={item.price.toString()}
-            onChange={(e) => {
-              onChange(item.id, 'price', Number(e.target.value));
-              handlePriceChange();
-            }}
+            onChange={handlePriceChangeCallback}
             required
             isWidthFull
             className={priceError || errors.price ? '!border-[#F08181]' : 'border-[#C2C7D0]'}

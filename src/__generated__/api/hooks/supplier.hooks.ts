@@ -8,8 +8,6 @@ export const useSuppliers = (page?: number, search?: string) => {
     return useQuery({
         queryKey: ['suppliers', page, search],
         queryFn: () => getSupplier({
-            //   'x-organization-id': String(organization?.id ?? '1'),
-            'x-organization-id': String("1"),
             page,
             search,
         }),

@@ -25,4 +25,4 @@ export * from './reports/sales-product.client';
 export * from './reports/sales-variant.client';
 export * from './reports/sales-details.client';
 export * from './reports/sales-summary.client';
-
+export * from './variant-options.client';

@@ -8,7 +8,23 @@ import { PriceMultiPackItem } from '@/modules/products-edit/storing-data/product
 import { useSingleVariantEditStore } from '@/modules/products-edit/storing-data/product-variant-edit-option/single-variant-store';
 import type { VariantUnit as StoreVariantUnit } from '@/modules/products-edit/storing-data/product-variant-edit-option/types';
 import { Plus, Refresh } from '@icon-park/react';
-import { useEffect } from 'react';
+import isEqual from 'lodash/isEqual';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+
+export function useDeepCompareMemo<T>(factory: () => T, deps: unknown[]): T {
+  const ref = useRef<unknown[]>([]);
+  const signalRef = useRef(0);
+
+  if (!isEqual(deps, ref.current)) {
+    ref.current = deps;
+    signalRef.current++;
+  }
+
+  const signal = signalRef.current; // ambil nilai stabil
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: false positive, we need signal as dependency
+  return useMemo(factory, [signal]);
+}
 
 type MultiUnitPriceProps = {
   variantUnits: StoreVariantUnit[];
@@ -24,52 +40,82 @@ export function MultiUnitPrice({ variantUnits = [], variantId }: MultiUnitPriceP
     removeMultiPackItem,
     resetVariantMultiPack,
     toggleWholesale,
+    isVariantInitialized,
   } = useVariantMultiPackStore();
 
   const { updateMultiPack } = useSingleVariantEditStore();
 
   const isEdit = true;
 
+  // const memoizedVariantUnits = useMemo(() => variantUnits, [JSON.stringify(variantUnits)]);
+  const memoizedVariantUnits = useDeepCompareMemo(() => variantUnits, [variantUnits]);
+  // Memoize variant units to prevent unnecessary re-initializations
+
   // Get current variant data
   const variantData = getVariantData(variantId);
   const { priceMultiPackList, isWholesale, multiPackErrors } = variantData;
 
-  // Initialize data when component mounts or when variantUnits/variantId changes
+  // Initialize data when component mounts only if not already initialized
   useEffect(() => {
-    initializeVariantData(variantId, variantUnits);
-  }, [variantUnits, variantId, initializeVariantData]);
+    if (!isVariantInitialized(variantId) && memoizedVariantUnits.length > 0) {
+      initializeVariantData(variantId, memoizedVariantUnits);
+    }
+  }, [variantId, memoizedVariantUnits, initializeVariantData, isVariantInitialized]);
 
-  // Sync changes to single variant store
-  useEffect(() => {
+  // Sync changes to single variant store with useCallback to prevent infinite renders
+  const syncToSingleVariantStore = useCallback(() => {
     updateMultiPack(priceMultiPackList, isWholesale);
   }, [priceMultiPackList, isWholesale, updateMultiPack]);
 
-  const handleRadioChange = (value: string) => {
-    const newIsWholesale = value === 'wholesale';
-    toggleWholesale(variantId, newIsWholesale);
-  };
-
-  const handleReset = () => {
-    resetVariantMultiPack(variantId);
-  };
-
-  const handleAddMultiPack = () => {
-    addMultiPackItem(variantId);
-  };
-
-  const handleRemoveMultiPack = (id: number) => {
-    if (priceMultiPackList.length > 1) {
-      removeMultiPackItem(variantId, id);
+  useEffect(() => {
+    // Only sync if variant is initialized to prevent syncing empty data
+    if (isVariantInitialized(variantId)) {
+      syncToSingleVariantStore();
     }
-  };
+  }, [syncToSingleVariantStore, isVariantInitialized, variantId]);
 
-  const handleUpdateMultiPack = (
-    id: number,
-    field: keyof PriceMultiPackItem,
-    value: string | number
-  ) => {
-    updateMultiPackItem(variantId, id, field, value);
-  };
+  const handleRadioChange = useCallback(
+    (value: string) => {
+      const newIsWholesale = value === 'wholesale';
+      toggleWholesale(variantId, newIsWholesale);
+    },
+    [variantId, toggleWholesale]
+  );
+
+  const handleReset = useCallback(() => {
+    resetVariantMultiPack(variantId);
+  }, [variantId, resetVariantMultiPack]);
+
+  const handleAddMultiPack = useCallback(() => {
+    addMultiPackItem(variantId);
+  }, [variantId, addMultiPackItem]);
+
+  const handleRemoveMultiPack = useCallback(
+    (id: number) => {
+      if (priceMultiPackList.length > 1) {
+        removeMultiPackItem(variantId, id);
+      }
+    },
+    [variantId, priceMultiPackList.length, removeMultiPackItem]
+  );
+
+  const handleUpdateMultiPack = useCallback(
+    (id: number, field: keyof PriceMultiPackItem, value: string | number) => {
+      updateMultiPackItem(variantId, id, field, value);
+    },
+    [variantId, updateMultiPackItem]
+  );
+
+  // Don't render until variant is initialized
+  if (!isVariantInitialized(variantId)) {
+    return (
+      <div className="pb-6 border-b-gray-200 border-t">
+        <div className="pt-6 mb-4 flex justify-center items-center">
+          <div className="text-sm text-gray-500">Memuat data multi satuan...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-6 border-b-gray-200 border-t">
@@ -121,10 +167,10 @@ export function MultiUnitPrice({ variantUnits = [], variantId }: MultiUnitPriceP
           key={`${variantId}-${item.id}`}
           index={index}
           item={item}
-          errors={multiPackErrors[item.id] || {}}
+          errors={multiPackErrors[item.id!] || {}}
           onChange={handleUpdateMultiPack}
           onRemove={
-            priceMultiPackList.length > 1 ? () => handleRemoveMultiPack(item.id) : undefined
+            priceMultiPackList.length > 1 ? () => handleRemoveMultiPack(item.id!) : undefined
           }
         />
       ))}

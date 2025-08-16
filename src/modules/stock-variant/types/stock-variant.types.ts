@@ -8,6 +8,7 @@ export interface StockEntry {
   variant_id?: number;
   store_name?: string;
   attributes?: VariantAttribute[];
+  attribute_options?: VariantAttributeOption[];
 }
 
 export type StockEntryListProps = {
@@ -119,4 +120,13 @@ export interface VariantUnit {
 export interface Store {
   id: string;
   name: string;
+}
+
+export interface VariantAttributeOption {
+  id: number;
+  product_id: number;
+  variant_attribute_id: number;
+  option_value: string;
+  created_at: string;
+  updated_at: string;
 }

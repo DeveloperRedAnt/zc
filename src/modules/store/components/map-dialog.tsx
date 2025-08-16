@@ -428,7 +428,7 @@ const MapDialog = ({ lat, lng, setLatLng, name, address, triggerFormChange }: Ma
           </div>
         )}
       </div>
-      <div className="absolute bottom-6 right-6 z-[1000]">
+      {/* <div className="absolute bottom-6 right-6 z-[1000]">
         <button
           type="button"
           className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg font-medium flex items-center gap-2"
@@ -438,13 +438,12 @@ const MapDialog = ({ lat, lng, setLatLng, name, address, triggerFormChange }: Ma
               lng,
               location: `${lat}, ${lng}`,
             });
-            // Dialog closing is handled by parent component
           }}
         >
           <span>✓</span>
           <span>Pilih Lokasi</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Map Container */}
       <MapContainer

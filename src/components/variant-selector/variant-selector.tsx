@@ -2,74 +2,73 @@
 
 import CustomInput from '@/components/input/custom-input';
 import { RadioGroup, RadioGroupItem } from '@/components/radio-group/radio-group';
-import React, { useState } from 'react';
+import { useVariantValidation } from '@/modules/products-edit/components/options/hooks/use-variant-validation';
+import { useVariantOptionsStore } from '@/modules/products-edit/components/options/stores';
+import React, { useRef } from 'react';
 
-interface VariantOption {
-  id: string;
-  value: string;
-  label: string;
-}
+export default function VariantSelector({ variants }) {
+  const {
+    selectedVariantOptions,
+    setSelectedVariantOption,
+    validationErrors,
+    setValidationError,
+    clearValidationError,
+  } = useVariantOptionsStore();
 
-interface Variant {
-  id: number;
-  name: string;
-  title: string;
-  options: VariantOption[];
-  selectedValue?: string;
-  customValue?: string;
-}
+  const { getAttributeError } = useVariantValidation();
 
-interface VariantSelectorProps {
-  variants: Variant[];
-  onChange?: (variantId: number, selectedValue: string, customValue?: string) => void;
-}
+  const customInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
 
-export default function VariantSelector({ variants, onChange }: VariantSelectorProps) {
-  const [variantStates, setVariantStates] = useState<
-    Record<number, { selectedValue: string; customValue: string }>
-  >({});
-
-  const handleOptionChange = (variantId: number, value: string) => {
-    setVariantStates((prev) => ({
-      ...prev,
-      [variantId]: {
-        // Ensure customValue is always a string, defaulting to empty string if not set
-        selectedValue: value,
-        customValue: prev[variantId]?.customValue || '',
-      },
-    }));
-
-    const currentState = variantStates[variantId];
-    onChange?.(variantId, value, currentState?.customValue);
+  // Hapus error untuk attribute tertentu
+  const clearAttributeError = (attributeId: number) => {
+    if (validationErrors.attributes?.[attributeId]) {
+      const newErrors = { ...validationErrors.attributes };
+      delete newErrors[attributeId];
+      if (Object.keys(newErrors).length === 0) {
+        clearValidationError('attributes');
+      } else {
+        setValidationError('attributes', newErrors);
+      }
+    }
   };
 
-  const handleCustomValueChange = (variantId: number, value: string) => {
-    setVariantStates((prev) => ({
-      ...prev,
-      [variantId]: {
-        // Ensure selectedValue is always a string, defaulting to empty string if not set
-        selectedValue: prev[variantId]?.selectedValue || '',
-        customValue: value,
-      },
-    }));
+  // Handler perubahan pilihan radio
+  const handleSelectionChange = (attributeId: number, value: string) => {
+    if (value === 'custom') {
+      setSelectedVariantOption(attributeId, null, '');
+      setTimeout(() => {
+        customInputRefs.current[attributeId]?.focus();
+      }, 100);
+    } else {
+      setSelectedVariantOption(attributeId, Number(value), '');
+    }
+    clearAttributeError(attributeId);
+  };
 
-    const currentState = variantStates[variantId];
-    onChange?.(variantId, currentState?.selectedValue || '', value);
+  // Handler perubahan nilai custom input
+  const handleCustomValueChange = (attributeId: number, customValue: string) => {
+    const currentSelection = selectedVariantOptions[attributeId];
+    if (currentSelection?.valueId === null) {
+      setSelectedVariantOption(attributeId, null, customValue);
+      if (customValue.trim()) clearAttributeError(attributeId);
+    }
   };
 
   return (
     <div className="space-y-12 p-5">
-      {variants.map((variant) => {
-        const currentState = variantStates[variant.id] || {
-          selectedValue: variant.selectedValue || '',
-          customValue: variant.customValue || '',
+      {variants[0].map((variant, index) => {
+        const attributeError = getAttributeError(variant.attribute.id);
+        const selectedOption = selectedVariantOptions[variant.attribute.id] ?? {
+          valueId: undefined,
+          customValue: '',
         };
+        const isCustomSelected = selectedOption?.valueId === null;
 
         return (
-          <div key={variant.id} className="space-y-6">
+          <div key={variant.attribute.id} className="space-y-6">
             <div>
-              <h3 className="text-md font-medium text-gray-800 mb-2">Varian {variant.id}:</h3>
-              <p className="text-gray-600 text-sm">{variant.title}</p>
+              <h3 className="text-md font-medium text-gray-800 mb-2">Varian {index + 1}:</h3>
+              <p className="text-gray-600 text-sm">{variant.attribute.name}</p>
             </div>
 
             <div>
@@ -78,54 +77,70 @@ export default function VariantSelector({ variants, onChange }: VariantSelectorP
               </h4>
 
               <RadioGroup
-                value={currentState.selectedValue}
-                onValueChange={(value) => handleOptionChange(variant.id, value)}
                 className="space-y-4"
+                value={
+                  selectedOption.valueId != null
+                    ? selectedOption.valueId.toString()
+                    : isCustomSelected
+                      ? 'custom'
+                      : ''
+                }
+                onValueChange={(value) => handleSelectionChange(variant.attribute.id, value)}
               >
-                {/* Grid layout for options */}
+                {/* Pilihan bawaan */}
                 <div className="grid grid-cols-5 gap-4">
-                  {variant.options.map((option) => (
+                  {variant.attribute.values.map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
                       <RadioGroupItem
-                        value={option.value}
-                        id={`${variant.id}-${option.id}`}
+                        value={option.id.toString()}
+                        id={`${variant.attribute.id}-${option.id}`}
                         className="text-blue-500"
                       />
                       <label
-                        htmlFor={`${variant.id}-${option.id}`}
+                        htmlFor={`${variant.attribute.id}-${option.id}`}
                         className="text-sm text-gray-700 cursor-pointer"
                       >
-                        {option.label}
+                        {option.value}
                       </label>
                     </div>
                   ))}
                 </div>
 
-                {/* Custom option with input */}
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="custom"
-                      id={`${variant.id}-custom`}
-                      className="text-blue-500"
-                    />
-                    <label
-                      htmlFor={`${variant.id}-custom`}
-                      className="text-sm font-medium text-gray-800"
-                    >
-                      Opsi Baru
-                    </label>
+                {/* Opsi custom */}
+                {variant.attribute.values.length < 10 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="custom"
+                        id={`${variant.attribute.id}-custom`}
+                        className="text-blue-500"
+                      />
+                      <label
+                        htmlFor={`${variant.attribute.id}-custom`}
+                        className="text-sm font-medium text-gray-800 cursor-pointer"
+                      >
+                        Opsi Baru
+                      </label>
+                    </div>
+                    <div className="ml-6">
+                      <CustomInput
+                        placeholder="cth: Coklat"
+                        className={`max-w-md ${
+                          attributeError ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        value={isCustomSelected ? selectedOption.customValue || '' : ''}
+                        onChange={(e) =>
+                          handleCustomValueChange(variant.attribute.id, e.target.value)
+                        }
+                        disabled={!isCustomSelected}
+                      />
+                    </div>
                   </div>
-                  <div className="ml-6">
-                    <CustomInput
-                      placeholder="cth: Coklat"
-                      value={currentState.customValue}
-                      onChange={(e) => handleCustomValueChange(variant.id, e.target.value)}
-                      className="max-w-md border-gray-300"
-                    />
-                  </div>
-                </div>
+                )}
               </RadioGroup>
+
+              {/* Error message */}
+              {attributeError && <p className="text-red-500 text-sm mt-2">{attributeError}</p>}
             </div>
           </div>
         );

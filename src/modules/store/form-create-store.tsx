@@ -23,15 +23,15 @@ const MapDialog = dynamic(() => import('./components/map-dialog'), {
   ssr: false,
 });
 
-const DEFAULT_LAT = -6.2; // Jakarta
+const DEFAULT_LAT = -6.2;
 const DEFAULT_LNG = 106.816666;
 
 const FormStore: React.FC<FormStoreProps> = ({
+  loadingDataStore = false,
   optionsTypeStore,
   optionsCatStore,
   onFormChange,
   initialValues,
-  loadingDataStore = false,
 }) => {
   // State untuk form
   const [name, setName] = useState(initialValues?.name ?? '');
@@ -54,7 +54,6 @@ const FormStore: React.FC<FormStoreProps> = ({
   const [openMapDialog, setOpenMapDialog] = useState(false);
   const [_isClient, setIsClient] = useState(false);
 
-  // Error handling
   const { ref: nameRef, error: nameError, handleChange: onNameChange } = useRegisterField('name');
   const {
     ref: phoneRef,
@@ -89,6 +88,7 @@ const FormStore: React.FC<FormStoreProps> = ({
           : ''
       );
       isFirstSync.current = false;
+      triggerFormChange({});
     }
   }, [initialValues]);
 
@@ -107,9 +107,9 @@ const FormStore: React.FC<FormStoreProps> = ({
       lat: 'lat' in changed && typeof changed.lat === 'number' ? changed.lat : lat ?? DEFAULT_LAT,
       long:
         'long' in changed && typeof changed.long === 'number' ? changed.long : long ?? DEFAULT_LNG,
-      // location: 'location' in changed ? changed.location : location, // Removed because not in StoreFormData
     });
   };
+
   return (
     <>
       {loadingDataStore ? (
@@ -201,8 +201,6 @@ const FormStore: React.FC<FormStoreProps> = ({
                     setLat(null);
                     setLong(null);
                     triggerFormChange({ lat: undefined, long: undefined });
-                  } else {
-                    // location is not a property of StoreFormData, so we only update the local state
                   }
                 }}
                 className="w-full h-9"
@@ -223,10 +221,12 @@ const FormStore: React.FC<FormStoreProps> = ({
                 }}
               >
                 <SelectTrigger
-                  icon={<ChevronDown size={18} />}
-                  className="w-full h-9 border pb-1 mt-1"
+                  className={`w-full pb-1 border mt-1 ${
+                    categoryError ? '!border-[#F08181]' : 'border-[#C2C7D0]'
+                  }`}
+                  icon={<ChevronDown size={18} className="ml-2" />}
                 >
-                  <SelectValue placeholder="Pilih Jenis Toko" />
+                  <SelectValue placeholder="Pilih Jenis" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

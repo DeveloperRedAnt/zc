@@ -1,6 +1,6 @@
 import { getDataFromApi } from '../../../utils/url';
 import { CompositeStockRequest, ResponseInitStockFirstComposiste } from '../dto/inti-first-stock/composite.dto';
-import { ProductDetail, StoreVariantRequest, StoreVariantResponse } from '../dto/set-variant-stock.dto';
+import { ProductDetail, ProductVariantDetailResponse, StoreVariantRequest, StoreVariantResponse } from '../dto/set-variant-stock.dto';
 import { StoreRequestParams, StoreResponse, SupplierRequestParams, SupplierResponse } from '../dto/supplier.dto';
 
 
@@ -10,6 +10,7 @@ export const getSupplier = async (params: SupplierRequestParams): Promise<Suppli
         url: '/api/suppliers',
         injectHeaders: ['x-organization-id'],
         params,
+        withPagination: true,
         transformer: (data: Record<string, unknown>) => data as unknown as SupplierResponse
     });
 
@@ -62,3 +63,15 @@ export const postCompositeStock = async ({ body, store_id }: { body: CompositeSt
     body,
     transformer: (response: Record<string, unknown>) => response as unknown as ResponseInitStockFirstComposiste
   });
+
+export const getProductVariantDetail = async ( params: { id: number }): Promise<ProductVariantDetailResponse> =>
+  getDataFromApi<{ store_id: number }, ProductVariantDetailResponse>({
+    type: 'get',
+    url: `/api/product-variant/${params.id}`,
+    injectHeaders: [
+      'x-organization-id',
+      'x-device-id',
+      'x-store-id',
+    ],
+    transformer: (data: Record<string, unknown>) => data as unknown as ProductVariantDetailResponse
+});

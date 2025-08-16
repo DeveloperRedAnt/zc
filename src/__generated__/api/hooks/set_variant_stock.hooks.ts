@@ -42,3 +42,19 @@ export function useGetProductDetail(
     ...options,
   });
 }
+
+export function useGetProductVariantDetail(
+  variantId: number,
+  options?: Omit<UseQueryOptions<DTO.ProductVariantDetailResponse, Error>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: ['productVariantDetail', variantId],
+    queryFn: async () => {
+      const response = await api.getProductVariantDetail({ id: variantId });
+      return response
+    },
+    enabled: !!variantId, 
+    staleTime: 5 * 60 * 1000, 
+    ...options,
+  });
+}

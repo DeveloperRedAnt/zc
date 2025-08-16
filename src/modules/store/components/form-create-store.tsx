@@ -1,5 +1,7 @@
 'use client';
 
+import { useBusinesModel } from '@/__generated__/api/hooks/business/business-models.hooks';
+import { useCategoryStore } from '@/__generated__/api/hooks/business/business.hooks';
 import type { OptionType } from '@/components/dropdown/dropdown';
 import FormFieldError from '@/components/form-field-error/form-field-error';
 import CustomInput from '@/components/input/custom-input';
@@ -28,19 +30,32 @@ const getInitialLocation = (lat?: number, lng?: number) =>
   typeof lat === 'number' && typeof lng === 'number' ? `${lat}, ${lng}` : '';
 
 const FormStore: React.FC<FormStoreProps> = ({
-  optionsTypeStore,
-  optionsCatStore,
   onFormChange,
   initialValues,
   loadingDataStore = false,
 }) => {
-  const [selectedType, setSelectedType] = useState<OptionType | null>(
-    initialValues?.type ? { label: '', value: initialValues.type } : null
-  );
-  const [selectedCategory, setSelectedCategory] = useState<OptionType | null>(
-    initialValues?.category ? { label: '', value: initialValues.category } : null
-  );
-  const [name, setName] = useState(initialValues?.name ?? 'toko mau makmur ubur-ubur');
+  const { data: listCategory } = useCategoryStore();
+  const { data: listType } = useBusinesModel();
+
+  // Mapping options
+  const typeOptions = Array.isArray(listType)
+    ? listType.map((item) => ({
+        label: item.name,
+        value: item.name,
+      }))
+    : [];
+
+  const categoryOptions = Array.isArray(listCategory)
+    ? listCategory.map((item) => ({
+        label: item.name,
+        value: item.name,
+      }))
+    : [];
+
+  // State
+  const [selectedType, setSelectedType] = useState<OptionType | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<OptionType | null>(null);
+  const [name, setName] = useState(initialValues?.name ?? '');
   const [noWhatsapp, setNoWhatsapp] = useState<string>(
     initialValues?.phone ? String(initialValues.phone) : ''
   );
@@ -56,31 +71,35 @@ const FormStore: React.FC<FormStoreProps> = ({
   const [address, setAddress] = useState(initialValues?.address ?? '');
   const [openMapDialog, setOpenMapDialog] = useState(false);
 
+  // Set selectedType & selectedCategory dari initialValues dan options
+  const [didSetInitial, setDidSetInitial] = useState(false);
+
   useEffect(() => {
-    if (initialValues) {
-      setSelectedType(initialValues.type ? { label: '', value: initialValues.type } : null);
-      setSelectedCategory(
-        initialValues.category ? { label: '', value: initialValues.category } : null
-      );
-      setName(initialValues.name ?? 'toko mau makmur ubur-ubur');
+    if (!didSetInitial && initialValues && Array.isArray(listType) && Array.isArray(listCategory)) {
+      const matchType = listType.find((item) => item.id === initialValues.type);
+      setSelectedType(matchType ? { label: matchType.name, value: matchType.id } : null);
+
+      const matchCat = listCategory.find((item) => item.id === initialValues.category);
+      setSelectedCategory(matchCat ? { label: matchCat.name, value: matchCat.id } : null);
+
+      setName(initialValues.name ?? '');
       setNoWhatsapp(initialValues.phone ? String(initialValues.phone) : '');
       setAddress(initialValues.address ?? '');
       setLat(typeof initialValues.lat === 'number' ? initialValues.lat : DEFAULT_LAT);
       setLng(typeof initialValues.long === 'number' ? initialValues.long : DEFAULT_LNG);
       setLocation(getInitialLocation(initialValues.lat, initialValues.long));
+
+      setDidSetInitial(true); // <-- agar hanya dijalankan sekali
     }
-  }, [initialValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues, listType, listCategory, didSetInitial]);
 
   const { ref: nameRef, error: nameError } = useRegisterField('name');
   const { ref: noWhatsappRef, error: noWhatsappError } = useRegisterField('noWhatsapp');
 
-  const { error: storeTypeError, handleChange: onStoreTypeChange } = useRegisterField(
-    'type',
-    true,
-    {
-      getValue: () => selectedType?.value?.toString() ?? '',
-    }
-  );
+  const { error: storeTypeError } = useRegisterField('type', true, {
+    getValue: () => selectedType?.value?.toString() ?? '',
+  });
   const { error: categoryError, handleChange: onCategoryChange } = useRegisterField(
     'category',
     true,
@@ -94,8 +113,8 @@ const FormStore: React.FC<FormStoreProps> = ({
       name: changed.name ?? name,
       address: changed.address ?? address,
       phone: changed.phone ?? noWhatsapp,
-      type: selectedType?.value?.toString() ?? '',
-      category: selectedCategory?.value?.toString() ?? '',
+      type: changed.type ?? selectedType?.value?.toString() ?? '',
+      category: changed.category ?? selectedCategory?.value?.toString() ?? '',
       lat: changed.lat ?? lat,
       long: changed.long ?? lng,
     });
@@ -121,7 +140,7 @@ const FormStore: React.FC<FormStoreProps> = ({
       const selected = options.find((opt) => opt.value.toString() === val) ?? null;
       setter(selected);
       onFieldChange();
-      triggerFormChange({ [field]: selected });
+      triggerFormChange({ [field]: selected?.value ?? '' });
     };
 
   return (
@@ -166,12 +185,7 @@ const FormStore: React.FC<FormStoreProps> = ({
             <div className="w-1/2">
               <Select
                 value={selectedType?.value?.toString() ?? ''}
-                onValueChange={handleSelectChange(
-                  setSelectedType,
-                  'type',
-                  onStoreTypeChange,
-                  optionsTypeStore
-                )}
+                onValueChange={handleSelectChange(setSelectedType, 'type', () => {}, typeOptions)}
               >
                 <SelectTrigger
                   className="w-full pb-1 border !border-[#C2C7D0] mt-1"
@@ -182,7 +196,7 @@ const FormStore: React.FC<FormStoreProps> = ({
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Tipe Toko</SelectLabel>
-                    {optionsTypeStore.map((opt) => (
+                    {typeOptions.map((opt) => (
                       <SelectItem key={String(opt.value)} value={String(opt.value)}>
                         {opt.label}
                       </SelectItem>
@@ -212,7 +226,7 @@ const FormStore: React.FC<FormStoreProps> = ({
                   setSelectedCategory,
                   'category',
                   onCategoryChange,
-                  optionsCatStore
+                  categoryOptions
                 )}
               >
                 <SelectTrigger
@@ -226,7 +240,7 @@ const FormStore: React.FC<FormStoreProps> = ({
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Jenis Toko</SelectLabel>
-                    {optionsCatStore.map((opt) => (
+                    {categoryOptions.map((opt) => (
                       <SelectItem key={String(opt.value)} value={String(opt.value)}>
                         {opt.label}
                       </SelectItem>

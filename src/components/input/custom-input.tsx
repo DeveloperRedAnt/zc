@@ -173,7 +173,7 @@ const CustomInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, CustomInp
             (disabled || readonly) && 'opacity-60 cursor-not-allowed'
           )}
         >
-          <div className="relative flex items-center w-full">
+          <div className="relative flex items-center">
             {(prependText || PrependIconComponent) && (
               <div className="absolute left-3 text-gray-500 text-sm flex items-center z-10">
                 {prependText ? (

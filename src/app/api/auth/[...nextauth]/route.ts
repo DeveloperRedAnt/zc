@@ -46,6 +46,7 @@ export const authOptions: NextAuthOptions = {
               token: data.token,
               role: data.role || 'admin',
               organizations: data.organizations,
+              store_id: data.organization.store?.id || null,
             };
           }
           return null;
@@ -72,12 +73,14 @@ export const authOptions: NextAuthOptions = {
           name?: string;
           token?: string;
           organizations: Organizations;
+          store_id?: number | null;
         };
         token.id = customUser.id;
         if (customUser.role) token.role = customUser.role;
         if (customUser.name) token.name = customUser.name;
         if (customUser.token) token.token = customUser.token;
         if (customUser.organizations) token.organizations = customUser.organizations;
+        if (customUser.store_id !== undefined) token.store_id = customUser.store_id;
       }
 
       return token;
@@ -90,6 +93,7 @@ export const authOptions: NextAuthOptions = {
           id?: string;
           role?: string;
           name?: string;
+          store_id?: number | null;
         };
 
         // Cast user with proper type
@@ -100,6 +104,7 @@ export const authOptions: NextAuthOptions = {
         user.id = token.id as string;
         user.role = (token as { role?: string }).role as string;
         user.name = (token as { name?: string }).name as string;
+        user.store_id = (token as { store_id?: number | null }).store_id;
 
         // Handle token
         if (token.token) {

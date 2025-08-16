@@ -551,3 +551,165 @@ export type AddVariantOptionsRequest = {
 
 export type VariantDataResponse = string[]
 export type AddVariantOptionsResponse = BaseResponseSchema<{VariantDataResponse}>
+
+
+// Enhanced DTO types to fix compatibility issues
+// import { BaseRequestPagination, BaseResponseSchema, BaseResponseSchemaPagination } from "./base.dto";
+
+// ... Keep all existing types from your DTO file ...
+
+// Enhanced GetProductDetailVariant with required IDs
+export type EnhancedGetProductDetailVariant = {
+    thumbnail: string;
+    attributes: [];
+    barcode: string;
+    id: string;
+    is_active: boolean;
+    is_wholesale: boolean;
+    minimum_stock: number;
+    sku_code: string;
+    variant_units: Array<{
+      conversion_value: string;
+      id: string; // This ensures ID is always present
+      price: string;
+      unit_name: string;
+    }>;
+}
+
+// Enhanced GetProductDetail that uses EnhancedGetProductDetailVariant
+export type EnhancedGetProductDetail = {
+  id: number;
+  brand: string;
+  name: string;
+  package?: string;
+  content?: string;
+  unit?: {
+    id: number;
+    name: string;
+  }
+  price: string;
+  thumbnail?: string;
+  is_favorite?: boolean;
+  variants?: EnhancedGetProductDetailVariant[];
+  is_active?: boolean;
+  barcode?: string;
+  sku_code?: string;
+  composite?: ProductComposite;
+  stock_tracking?: {
+    is_enabled: boolean;
+    minimum_stock: number;
+  };
+  expired_reminder?: {
+    is_enabled: boolean;
+    reminder_in_days: number;
+    reminder_in_date: string;
+    countdown: string;
+  };
+  current_stock?: number;
+  type?: 'variant' | 'composite' | 'single'; // Changed 'simple' to 'single' for consistency
+  tags: {
+    id: number;
+    name: string;
+  }[];
+};
+
+// Enhanced UpdateProductRequestSchema with better variant units typing
+export type EnhancedUpdateProductRequestSchema = {
+  id: number;
+  name: string;
+  type: "composite" | "variant" | "single"; // Changed to match the expected types
+  package: string;
+  thumbnail: string;
+  is_active: boolean;
+  is_favorite: boolean;
+  is_non_tax: boolean;
+  content: string;
+  unit_id: number;
+  current_stock: number;
+  tag_ids: number[];
+  is_stock_tracking: boolean;
+  is_enable_expired_reminder: boolean;
+  expired_reminder_in_days: number;
+  expired_reminder_in_date: string;
+  variants: EnhancedGetProductDetailVariant[]
+  composites?: {
+    production_per_batch: number,
+    components: CompositesComponents[]
+  }
+}
+
+// Export all existing types as well for backward compatibility
+export * from './product.dto'; // Assuming this is your original DTO file
+
+// LocalStorage integration types
+export interface LocalStorageVariantData {
+  state: {
+    currentKey?: string;
+    variants: {
+      [key: string]: {
+        variantId: number;
+        productId: string;
+        name: string;
+        cardValue: {
+          file: string;
+          barcode: string;
+          sku: string;
+          minStock: number;
+        };
+        isWholesale: boolean;
+        lastSaved: string;
+        multiPackErrors: { [itemId: number]: { [field: string]: string } };
+        priceMultiPackList: Array<{
+          id: number;
+          unitName: string;
+          conversionValue: number;
+          price: number;
+        }>;
+      };
+    };
+  };
+  version: number;
+}
+
+// Helper type for form data with proper typing
+export interface EnhancedFormDataInput {
+  id: number;
+  thumbnail?: string;
+  variants?: EnhancedGetProductDetailVariant[];
+  composite?: {
+    components?: {
+      quantity?: number;
+      product_variant_id?: number;
+    }[];
+    production_per_batch?: number;
+  };
+  default_prices?: {
+    itemName?: string;
+    quantity?: number;
+    price?: number;
+  }[];
+  priceMultiPackList?: Array<{
+    id?: number;
+    itemName?: string;
+    unit_name?: string;
+    quantity?: number;
+    price?: number;
+  }>;
+  sku?: string;
+  barcode?: string;
+  isActiveProduct?: boolean;
+  productName?: string;
+  package?: string;
+  isFavorite?: boolean;
+  content?: string;
+  unit_id?: number | null;
+  is_track_stock?: boolean;
+  minimum_stock?: number | null;
+  is_enable_expired_reminder?: boolean;
+  expired_reminder_in_days?: number | null;
+  expired_reminder_in_date?: string | null;
+  is_wholesale?: boolean;
+  current_stock: number;
+  type?: 'single' | 'variant' | 'composite';
+  [key: string]: unknown;
+}

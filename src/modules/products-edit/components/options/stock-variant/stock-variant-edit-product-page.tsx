@@ -1,5 +1,5 @@
 import {
-  ProductDetail,
+  ProductVariantDetail,
   StoreVariantProduct,
   StoreVariantRequest,
 } from '@/__generated__/api/dto/set-variant-stock.dto';
@@ -7,16 +7,18 @@ import { usePostStoreVariant } from '@/__generated__/api/hooks/set_variant_stock
 import { Button } from '@/components/button/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card/card';
 import { Label } from '@/components/label/label';
-import { useEditVariantStockForm } from '@/modules/products-edit/hooks/useEditVariantStockForm';
+import { useEditVariantStockForm } from '@/modules/products-edit/components/options/hooks/use-edit-variant-stock-form';
 import { DialogStockFirst } from '@/modules/stock-variant/dialog-stock-frist';
 import { StockEntryList } from '@/modules/stock-variant/stock-entry-list';
 import { SupplierSection } from '@/modules/stock-variant/supplier-section';
+import { Check } from '@icon-park/react';
 import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface StockVariantPageProps {
-  productData?: ProductDetail;
+  productData?: ProductVariantDetail;
 }
 
 export function StockVariantPage({ productData }: StockVariantPageProps) {
@@ -42,21 +44,20 @@ export function StockVariantPage({ productData }: StockVariantPageProps) {
     getFormDataForAPI,
     variants,
   } = useEditVariantStockForm(productData);
+  const params = useParams();
+  const productId = parseInt(params.id as string);
 
   // TanStack Query mutation hook
   const storeVariantMutation = usePostStoreVariant({
-    onSuccess: (data) => {
-      if (data.code === 201 && data.status === 'success') {
-        toast.success('Tersimpan!', {
-          description: 'Data stok variant telah tersimpan dengan sukses.',
-          className: 'bg-[#16a34a]',
-        });
-        setOpenDialog(false);
-        router.push('/dashboard/products');
-      }
+    onSuccess: () => {
+      toast.success('Tersimpan!', {
+        description: 'Opsi Varian Anda telah berhasil disimpan',
+      });
+      setOpenDialog(false);
+      router.push(`/dashboard/products/${productId}/edit`);
     },
     onError: (error) => {
-      toast.error('Gagal menyimpan stock variant!', {
+      toast.error('Gagal menyimpan Opsi Varian!', {
         description: `Terjadi kesalahan: ${error.message}`,
         className: 'bg-[#dc2626]',
       });
@@ -92,6 +93,7 @@ export function StockVariantPage({ productData }: StockVariantPageProps) {
           })
         ),
       };
+
       storeVariantMutation.mutate(requestBody);
     } catch (error) {
       console.error('Error preparing data:', error);
@@ -134,34 +136,37 @@ export function StockVariantPage({ productData }: StockVariantPageProps) {
             />
 
             {/* Group entries per variant */}
-            {variants?.map((variant) => {
-              const variantEntries = getEntriesByVariant(variant.id);
-              const variantTitle = getVariantTitle(variant.attributes);
-
-              return (
-                <div key={variant.id} className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-md font-medium">{variantTitle}</h3>
-                    <p className="text-sm text-gray-500">SKU: {variant.sku_code}</p>
-                  </div>
-                  <StockEntryList
-                    stockEntries={variantEntries}
-                    errors={errors}
-                    onRemove={handleRemoveStockEntry}
-                    onChange={handleStockEntryChange}
-                    onAdd={() => handleAddStockToVariant(variant.id)}
-                    variantId={variant.id}
-                    showAddButton={true}
-                  />
+            {variants && (
+              <div key={variants.id} className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-md font-medium">
+                    {getVariantTitle(
+                      variants.attribute_options?.map((opt) => ({
+                        attribute: '',
+                        option_value: opt.option_value,
+                      }))
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-500">SKU: {variants.sku ?? '-'}</p>
                 </div>
-              );
-            })}
+                <StockEntryList
+                  stockEntries={getEntriesByVariant(variants.id)}
+                  errors={errors}
+                  onRemove={handleRemoveStockEntry}
+                  onChange={handleStockEntryChange}
+                  onAdd={() => handleAddStockToVariant(variants.id)}
+                  variantId={variants.id}
+                  showAddButton={true}
+                />
+              </div>
+            )}
             <div className="flex gap-2 mt-6 justify-end">
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                Kembali ke Tambah Produk
+                Kembali ke Tambah Opsi Varian
               </Button>
-              <Button type="submit" variant="primary" disabled={storeVariantMutation.isPending}>
+              <Button type="submit" variant="success" disabled={storeVariantMutation.isPending}>
                 {storeVariantMutation.isPending ? 'Menyimpan...' : 'Simpan Produk'}
+                <Check />
               </Button>
             </div>
           </form>

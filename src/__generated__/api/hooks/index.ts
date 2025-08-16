@@ -22,3 +22,4 @@ export * from './management-subscription/add-on-confirmation.hooks';
 export * from './management-subscription/checkout.hooks';
 export * from './reports/sales-details.hooks';
 export * from './reports/sales-summary.hooks';
+export * from './variant-options.hooks';

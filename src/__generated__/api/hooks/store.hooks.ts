@@ -105,3 +105,20 @@ export function useGetStore(
     ...options,
   });
 }
+
+
+export function useUpdateStoreV2(
+  options?: UseMutationOptions<
+    DTO.StoreSchema,
+    Error,
+    {
+      store_id: string;
+      body: DTO.StoreSchema;
+    }
+  >
+) {
+  return useMutation({
+    mutationFn: (params) => api.updateStore(params),
+    ...options,
+  });
+}

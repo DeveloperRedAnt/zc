@@ -134,3 +134,13 @@ export const onStoreStockFirstVariant = async (params: {
       transformer: (data: Record<string, unknown>) => data as unknown as DTO.StoreListResponse
     })
 
+export const updateStore = async (params: {
+  store_id: string;
+  body: DTO.StoreSchema;
+}): Promise<DTO.StoreSchema> => getDataFromApi<typeof params, DTO.StoreSchema, DTO.StoreSchema>({
+      type: 'put',
+      url: `/api/stores/${params.store_id}`,
+      injectHeaders: ['x-device-id', 'x-organization-id'],
+      body: params.body,
+      transformer: (data: Record<string, unknown>) => data as DTO.StoreSchema,
+  });

@@ -1,6 +1,8 @@
 'use client';
 
-import { useGetStoreDetail, useUpdateStore } from '@/__generated__/api/hooks';
+import { useGetStoreDetail, useUpdateStoreV2 } from '@/__generated__/api/hooks';
+import { useBusinesModel } from '@/__generated__/api/hooks/business/business-models.hooks';
+import { useCategoryStore } from '@/__generated__/api/hooks/business/business.hooks';
 import { Button } from '@/components/button/button';
 import SkeletonButton from '@/components/button/skeleton-button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/card/card';
@@ -32,18 +34,6 @@ type OptionType = {
   value: number | string;
 };
 
-const optionsTypeStore: OptionType[] = [
-  { label: 'Retail', value: 1 },
-  { label: 'Grosir', value: 2 },
-  { label: 'Online', value: 3 },
-];
-
-const optionsCatStore: OptionType[] = [
-  { label: 'Bahan Pokok', value: 1 },
-  { label: 'Fashion', value: 2 },
-  { label: 'Elektronik', value: 3 },
-];
-
 function mapApiToForm(data): StoreFormData | undefined {
   if (!data) return undefined;
 
@@ -58,7 +48,7 @@ function mapApiToForm(data): StoreFormData | undefined {
     category: categoryValue,
     address: data.address ?? '',
     lat: data.lat ? Number(data.lat) : 0,
-    long: data.lng ? Number(data.lng) : 0,
+    long: data.long ? Number(data.long) : 0,
   };
 }
 
@@ -97,6 +87,23 @@ function EditStorePage() {
     'x-device-id': '1',
     body: { id: (storeId as string) || '' },
   });
+  const { data: listCategory } = useCategoryStore();
+  const { data: listType } = useBusinesModel();
+
+  // Options
+  const optionsTypeStore = Array.isArray(listType)
+    ? listType.map((item) => ({
+        label: item.name,
+        value: item.name,
+      }))
+    : [];
+
+  const optionsCatStore = Array.isArray(listCategory)
+    ? listCategory.map((item) => ({
+        label: item.name,
+        value: item.name,
+      }))
+    : [];
 
   const [formState, setFormState] = useState<StoreFormState>({
     name: '',
@@ -112,7 +119,7 @@ function EditStorePage() {
   const { validateFields } = useFormValidator();
   usePageLoading({ autoStart: false, initialDelay: 0 });
 
-  const { mutate: updateStore } = useUpdateStore({
+  const { mutate: updateStore } = useUpdateStoreV2({
     onSuccess: () => {
       setOpenDialogConfirm(false);
       toast.success('Tersimpan !', {
@@ -124,7 +131,6 @@ function EditStorePage() {
     onError: (error) => {
       setOpenDialogConfirm(false);
       let errorMessage = 'Terjadi kesalahan';
-
       // Type guard untuk AxiosError
       if ((error as AxiosError).isAxiosError && (error as AxiosError).response) {
         const axiosError = error as AxiosError<{
@@ -164,18 +170,18 @@ function EditStorePage() {
     const { lat, lng } = parseLatLng(formState.location);
 
     updateStore({
-      'x-organization-id': '1',
-      'x-device-id': '1',
       store_id: (storeId as string) || '',
       body: {
         id: Number(storeId),
         name: formState.name,
-        phone: formState.noWhatsapp, // Use noWhatsapp field from form state
+        phone: formState.noWhatsapp,
         lat: lat ? parseFloat(lat) : null,
-        lng: lng ? parseFloat(lng) : null,
-        email: 'dummy@gmail.com',
+        long: lng ? parseFloat(lng) : null,
+        email: null,
         address: formState.address,
-        image: '',
+        image: null,
+        type: formState.storeType ? String(formState.storeType.value) : '',
+        category: formState.category ? String(formState.category.value) : '',
       },
     });
   }, [formState, getRegisteredFields, setErrors, validateFields, updateStore, storeId]);
@@ -203,18 +209,12 @@ function EditStorePage() {
               initialValues={formData}
               loadingDataStore={isLoading}
               onFormChange={(formData: StoreFormData) => {
-                // Convert StoreFormData to StoreFormState
                 const location =
                   formData.lat && formData.long ? `${formData.lat}, ${formData.long}` : '';
-
-                // Find matching store type option
                 const storeType =
                   optionsTypeStore.find((opt) => String(opt.value) === formData.type) || null;
-
-                // Find matching category option
                 const category =
                   optionsCatStore.find((opt) => String(opt.value) === formData.category) || null;
-
                 setFormState((prev) => ({
                   ...prev,
                   name: formData.name,

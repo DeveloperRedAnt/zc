@@ -1,5 +1,5 @@
 import { DatePicker } from '@/components/datepicker/date-picker';
-import { Input } from '@/components/input/input';
+import CustomInput from '@/components/input/custom-input';
 import { Label } from '@/components/label/label';
 import { cn } from '@/libs/utils';
 import { SupplierSectionProps } from '@/modules/stock-variant/types/stock-variant.types';
@@ -49,30 +49,30 @@ export function SupplierSection({
         </div>
 
         {/* Biaya Lain-lain */}
-        <div>
-          <Label className="mb-2 block text-sm font-medium text-gray-700">Biaya Lain-lain</Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-              Rp
-            </span>
-            <Input
-              type="text"
-              placeholder="0"
-              className="pl-9 h-10"
-              value={otherCosts}
-              onChange={(e) => setOtherCosts(e.target.value)}
-            />
-          </div>
+        <div className="flex flex-col gap-6">
+          <CustomInput
+            currency
+            className="border-[#C2C7D0] h-10"
+            placeholder="0"
+            prependText="Rp"
+            inputNumber
+            isWidthFull
+            value={otherCosts}
+            label="Biaya Lain-lain"
+            onChange={(e) => {
+              setOtherCosts(e.target.value);
+            }}
+          />
         </div>
 
         {/* No. Nota */}
-        <div>
-          <Label className="mb-2 block text-sm font-medium text-gray-700">No. Nota</Label>
-          <Input
-            type="text"
+        <div className="flex flex-col gap-3">
+          <CustomInput
+            className="border-[#C2C7D0] h-10"
             placeholder="cth: AA112233"
-            className="h-10"
             value={invoiceNumber}
+            label="Nomor Nota"
+            isWidthFull
             onChange={(e) => setInvoiceNumber(e.target.value)}
           />
         </div>

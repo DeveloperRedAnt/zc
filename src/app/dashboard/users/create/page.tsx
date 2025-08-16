@@ -31,7 +31,14 @@ export default function page() {
 
   const [employeeId, setEmployeeId] = useState<number | null>(null);
 
-  const { mutateAsync: createEmployee } = useCreateEmployee();
+  const { mutateAsync: createEmployee } = useCreateEmployee({
+    onSuccess: () => {
+      toast.success('Tersimpan!', {
+        description: 'User Anda telah berhasil disimpan',
+      });
+      router.push('/dashboard/users');
+    },
+  });
   const { mutateAsync: updateEmployee } = useUpdateEmployee();
 
   useEffect(() => {
@@ -64,9 +71,11 @@ export default function page() {
       is_active: isActive,
     };
 
+    localStorage.removeItem('employeeId');
+
     try {
       if (!employeeId) {
-        const payload = photo ? { ...basePayload, image: photo } : basePayload;
+        const payload = photo ? { ...basePayload, image: '' } : basePayload;
 
         const response = await createEmployee({
           body: payload,
@@ -79,7 +88,7 @@ export default function page() {
       } else {
         await updateEmployee({
           id: employeeId,
-          body: photo ? { ...basePayload, image: photo } : basePayload,
+          body: photo ? { ...basePayload, image: '' } : basePayload,
         });
         router.push(`/dashboard/users/${employeeId}/assign-permission`);
       }

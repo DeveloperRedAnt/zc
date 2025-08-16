@@ -27,6 +27,9 @@ export * from './reports/sales-product.dto';
 export * from './reports/sales-variant.dto';
 export * from './reports/sales-details.dto';
 export * from './reports/sales-summary.dto';
+export * from "./business/business.dto";
+export * from  "./business/bussiness-model.dto";
+export * from './variant-options.dto';
 
 
 

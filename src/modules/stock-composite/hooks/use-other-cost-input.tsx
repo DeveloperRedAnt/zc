@@ -1,7 +1,6 @@
 import { usePostCompositeStock } from '@/__generated__/api/hooks/init-first-stock/composite.hooks';
 import { useGetProductDetail } from '@/__generated__/api/hooks/product.hooks';
 import { useOrganizationStore } from '@/store/organization-store';
-import { getStoreID } from '@/utils/cookies-helper';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -9,13 +8,11 @@ import { FormValues } from '../types/form-values';
 import { formValuesSchema } from '../types/form-values';
 
 export function useCompositeStockForm(productId: number) {
-  const storeId = getStoreID();
-
   const {
     data: productDetail,
     error: productDetailError,
     isLoading: productDetailLoading,
-  } = useGetProductDetail({ id: productId }, storeId);
+  } = useGetProductDetail({ id: productId });
 
   const [openSaveDialogComposite, setOpenSaveDialogComposite] = useState(false);
 

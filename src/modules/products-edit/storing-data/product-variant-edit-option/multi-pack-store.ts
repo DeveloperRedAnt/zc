@@ -15,6 +15,7 @@ interface VariantMultiPackData {
   isWholesale: boolean;
   multiPackErrors: { [itemId: number]: { [field: string]: string } };
   initialData: PriceMultiPackItem[]; // Store initial data for reset
+  isInitialized: boolean; // Flag to prevent re-initialization
 }
 
 interface VariantMultiPackState {
@@ -39,6 +40,7 @@ interface VariantMultiPackState {
     variantId: number,
     errors: { [itemId: number]: { [field: string]: string } }
   ) => void;
+  isVariantInitialized: (variantId: number) => boolean;
 }
 
 const defaultVariantData: VariantMultiPackData = {
@@ -46,6 +48,7 @@ const defaultVariantData: VariantMultiPackData = {
   isWholesale: false,
   multiPackErrors: {},
   initialData: [],
+  isInitialized: false,
 };
 
 // Helper function to convert VariantUnit to PriceMultiPackItem
@@ -64,19 +67,33 @@ export const useVariantMultiPackStore = create<VariantMultiPackState>((set, get)
   // Initialize data for a specific variant
   initializeVariantData: (variantId: number, variantUnits: VariantUnit[]) => {
     const state = get();
+    const existingData = state.variantData.get(variantId);
+
+    // Only initialize if not already initialized
+    if (existingData?.isInitialized) {
+      return;
+    }
+
     const convertedData = convertVariantUnitsToPriceMultiPack(variantUnits);
 
-    const newVariantData = {
+    const newVariantData: VariantMultiPackData = {
       priceMultiPackList: [...convertedData],
       isWholesale: false,
       multiPackErrors: {},
       initialData: [...convertedData], // Store for reset functionality
+      isInitialized: true,
     };
 
     const newMap = new Map(state.variantData);
     newMap.set(variantId, newVariantData);
 
     set({ variantData: newMap });
+  },
+
+  // Check if variant is initialized
+  isVariantInitialized: (variantId: number) => {
+    const state = get();
+    return state.variantData.get(variantId)?.isInitialized ?? false;
   },
 
   // Get data for a specific variant
@@ -119,7 +136,7 @@ export const useVariantMultiPackStore = create<VariantMultiPackState>((set, get)
     const currentData = state.variantData.get(variantId) || defaultVariantData;
     const newMap = new Map(state.variantData);
 
-    const newItem = {
+    const newItem: PriceMultiPackItem = {
       id: Date.now() + Math.random(),
       unitName: '',
       conversionValue: 1,

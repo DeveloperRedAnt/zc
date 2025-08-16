@@ -14,7 +14,7 @@ import {
 import type { OptionType } from '@/components/dropdown/dropdown';
 import Dropdown from '@/components/dropdown/dropdown';
 import FormFieldError from '@/components/form-field-error/form-field-error';
-import CustomInput from '@/components/input/custom-input';
+import SimpleInput from '@/components/input/simple-input';
 import { zeroPad } from '@/utils/pad-start';
 import { Check } from '@icon-park/react';
 import { format } from 'date-fns';
@@ -136,8 +136,10 @@ const VoucherDialog = forwardRef<VoucherDialogRef, VoucherDialogProps>(
               phone: '',
               email: '',
               lat: 0,
-              lng: 0,
+              long: 0,
               image: '',
+              type: '',
+              category: '',
             },
           });
         }
@@ -225,11 +227,27 @@ const VoucherDialog = forwardRef<VoucherDialogRef, VoucherDialogProps>(
       router.refresh();
     };
 
+    // Format number with dots as thousands separator
+    const formatAmount = (value: number): string => {
+      if (value === 0) return '';
+      return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
+
     const handleInputChange = (field: keyof VoucherFormData, value: string) => {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: field === 'amount' ? (value !== '' ? Number(value) : 0) : value,
-      }));
+      if (field === 'amount') {
+        // Handle amount field - remove non-numeric characters for processing
+        const numericValue = value.replace(/[^\d]/g, '');
+        setFormData((prev) => ({
+          ...prev,
+          [field]: numericValue !== '' ? Number(numericValue) : 0,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+      }
+
       // Clear error when user starts typing
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: '' }));
@@ -340,7 +358,7 @@ const VoucherDialog = forwardRef<VoucherDialogRef, VoucherDialogProps>(
           <div className="space-y-4 py-4">
             {/* Input Nama Voucher */}
             <div>
-              <CustomInput
+              <SimpleInput
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 required
@@ -353,7 +371,7 @@ const VoucherDialog = forwardRef<VoucherDialogRef, VoucherDialogProps>(
 
             {/* Input Kode Voucher */}
             <div>
-              <CustomInput
+              <SimpleInput
                 value={formData.code}
                 onChange={(e) => handleInputChange('code', e.target.value)}
                 required
@@ -415,13 +433,18 @@ const VoucherDialog = forwardRef<VoucherDialogRef, VoucherDialogProps>(
 
             {/* Input Amount */}
             <div>
-              <CustomInput
-                value={formData.amount === 0 ? '' : formData.amount.toString()}
+              <SimpleInput
+                value={
+                  selectedStatus?.value === 'nominal'
+                    ? formatAmount(formData.amount)
+                    : formData.amount === 0
+                      ? ''
+                      : formData.amount.toString()
+                }
                 onChange={(e) => handleInputChange('amount', e.target.value)}
                 required
                 isWidthFull
-                currency={selectedStatus?.value === 'nominal'}
-                inputNumber={selectedStatus?.value === 'percent'}
+                type="text"
                 placeholder="0"
                 label={selectedStatus?.value === 'percent' ? 'Persentase (%)' : 'Nominal (Rp)'}
               />

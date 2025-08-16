@@ -11,7 +11,7 @@ import { useVariantMultiPackStore } from '@/modules/products-edit/storing-data/p
 import { useSingleVariantEditStore } from '@/modules/products-edit/storing-data/product-variant-edit-option/single-variant-store';
 import { Check } from '@icon-park/react';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { DeleteDialog } from './dialog-opsi-varian';
 
 type ApiVariantData = {
@@ -58,9 +58,10 @@ const FormOptions = () => {
   const [useLocalData, setUseLocalData] = useState(false);
   const [skipApiCall, setSkipApiCall] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Fungsi helper untuk convert
-  const toFormattedData = (apiData: ApiVariantData): FormattedData => {
+  // Fungsi helper untuk convert - moved before hooks
+  const toFormattedData = useCallback((apiData: ApiVariantData): FormattedData => {
     return {
       id: apiData.id,
       name: apiData.name,
@@ -70,7 +71,7 @@ const FormOptions = () => {
       minStock: apiData.minStock ?? 0,
       variantUnits: (apiData.variantUnits as VariantUnit[]) ?? [],
     };
-  };
+  }, []);
 
   const {
     initializeSingleVariant,
@@ -81,6 +82,7 @@ const FormOptions = () => {
     hasValidData,
     getCurrentVariant,
     clearSingleVariant,
+    setCurrentVariant,
   } = useSingleVariantEditStore();
 
   // Only call API if we don't have local data
@@ -96,10 +98,62 @@ const FormOptions = () => {
   const detailVariantRef = useRef<DTO.ProductCardValue | null>(null);
   const [fieldErrors, setFieldErrors] = useState<DTO.FieldErrors>({});
 
+  // Compute current variant data at the top level to avoid conditional hook calls
+  const currentVariantId = useMemo(() => {
+    return variantId ? parseInt(variantId) : 0;
+  }, [variantId]);
+
+  // Compute current variant data before any early returns
+  const currentVariantData = useMemo(() => {
+    if (!currentVariantId) return null;
+
+    if (useLocalData) {
+      // Get from single variant store
+      return getCurrentVariant();
+    }
+    // Get from API data
+    const apiVariant = formattedVariants?.find((variant) => variant.id === currentVariantId);
+    if (apiVariant) {
+      return {
+        id: apiVariant.id,
+        name: apiVariant.name,
+        thumbnail: apiVariant.thumbnail || '',
+        barcode: apiVariant.barcode || '',
+        sku: apiVariant.sku || '',
+        minStock: apiVariant.minStock ?? 0,
+        variantUnits: apiVariant.variantUnits || [],
+      };
+    }
+    return null;
+  }, [useLocalData, getCurrentVariant, formattedVariants, currentVariantId]);
+
+  // Helper function to get variant data in correct format
+  const variantForComponent = useMemo(() => {
+    if (!currentVariantData) return null;
+
+    if (useLocalData && currentVariantData && 'variantId' in currentVariantData) {
+      const singleVariant: LocalVariantData = currentVariantData;
+      return {
+        id: singleVariant.variantId,
+        name: singleVariant.name,
+        thumbnail: singleVariant.cardValue?.file || '',
+        barcode: singleVariant.cardValue?.barcode || '',
+        sku: singleVariant.cardValue?.sku || '',
+        minStock: singleVariant.cardValue?.minStock ?? 0,
+        variantUnits: singleVariant.priceMultiPackList || [],
+      };
+    }
+    return currentVariantData as ApiVariantData;
+  }, [useLocalData, currentVariantData]);
+
   // Check localStorage on component mount
   useEffect(() => {
     if (productId && variantId) {
       const currentVariantId = parseInt(variantId);
+
+      // Set current variant context first
+      setCurrentVariant(productId, currentVariantId);
+
       const hasValid = hasValidData(productId, currentVariantId);
 
       if (hasValid) {
@@ -111,18 +165,32 @@ const FormOptions = () => {
         if (currentVariant) {
           detailVariantRef.current = currentVariant.cardValue;
         }
+        setIsInitialized(true);
       } else {
         setUseLocalData(false);
         setSkipApiCall(false);
-        // Clear any stale data
-        clearSingleVariant();
+        // Clear any stale data for this specific variant
+        clearSingleVariant(productId, currentVariantId);
       }
     }
-  }, [productId, variantId, hasValidData, getCurrentVariant, clearSingleVariant]);
+  }, [
+    productId,
+    variantId,
+    hasValidData,
+    getCurrentVariant,
+    clearSingleVariant,
+    setCurrentVariant,
+  ]);
 
   // Initialize variant from API data when it's loaded
   useEffect(() => {
-    if (formattedVariants && formattedVariants.length > 0 && !useLocalData && variantId) {
+    if (
+      formattedVariants &&
+      formattedVariants.length > 0 &&
+      !useLocalData &&
+      variantId &&
+      !isInitialized
+    ) {
       const currentVariantId = parseInt(variantId);
       const currentVariantData = formattedVariants.find((v) => v.id === currentVariantId);
 
@@ -142,17 +210,29 @@ const FormOptions = () => {
           sku: currentVariantData.sku || '',
           minStock: currentVariantData.minStock ?? 0,
         };
+
+        setIsInitialized(true);
       }
     }
-  }, [formattedVariants, useLocalData, variantId, productId, initializeSingleVariant]);
+  }, [
+    formattedVariants,
+    useLocalData,
+    variantId,
+    productId,
+    initializeSingleVariant,
+    isInitialized,
+  ]);
 
-  const handleDetailVariantChange = (values: DTO.ProductCardValue) => {
-    detailVariantRef.current = values;
-    updateCardValue(values);
-    setFieldErrors({});
-  };
+  const handleDetailVariantChange = useCallback(
+    (values: DTO.ProductCardValue) => {
+      detailVariantRef.current = values;
+      updateCardValue(values);
+      setFieldErrors({});
+    },
+    [updateCardValue]
+  );
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     const currentVariantId = parseInt(variantId);
     const currentVariant = getCurrentVariant();
 
@@ -227,9 +307,9 @@ const FormOptions = () => {
 
     setFieldErrors({});
     setDialogOpen(true);
-  };
+  }, [variantId, getCurrentVariant, setMultiPackErrors, validateVariant]);
 
-  const handleConfirmSave = async () => {
+  const handleConfirmSave = useCallback(async () => {
     try {
       setIsSaving(true);
       const currentVariantId = parseInt(variantId);
@@ -265,7 +345,8 @@ const FormOptions = () => {
         description: 'Data varian telah disimpan ke localStorage.',
         className: 'bg-green-500 text-white',
       });
-      router.push(`/dashboard/products/${productId}/edit`);
+
+      window.location.href = `/dashboard/products/${productId}/edit`;
     } catch (error) {
       console.error('Error saving variant:', error);
       toast.error('Gagal menyimpan varian', {
@@ -275,7 +356,14 @@ const FormOptions = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [
+    variantId,
+    updateCardValue,
+    updateMultiPack,
+    setMultiPackErrors,
+    saveSingleVariant,
+    productId,
+  ]);
 
   // Loading state
   if (!useLocalData && !skipApiCall && dataLoading) {
@@ -305,32 +393,8 @@ const FormOptions = () => {
     );
   }
 
-  // Get current variant to display
-  let currentVariantData: ApiVariantData | LocalVariantData | null = null;
-
-  const currentVariantId = parseInt(variantId);
-
-  if (useLocalData) {
-    // Get from single variant store
-    currentVariantData = getCurrentVariant();
-  } else {
-    // Get from API data
-    const apiVariant = formattedVariants?.find((variant) => variant.id === currentVariantId);
-    if (apiVariant) {
-      currentVariantData = {
-        id: apiVariant.id,
-        name: apiVariant.name,
-        thumbnail: apiVariant.thumbnail || '',
-        barcode: apiVariant.barcode || '',
-        sku: apiVariant.sku || '',
-        minStock: apiVariant.minStock ?? 0,
-        variantUnits: apiVariant.variantUnits || [],
-      };
-    }
-  }
-
   // If no variant found with the specified ID
-  if (!currentVariantData) {
+  if (!currentVariantData || !variantForComponent) {
     return (
       <div className="p-[10px] flex justify-center items-center min-h-[200px]">
         <div className="text-center">
@@ -349,25 +413,6 @@ const FormOptions = () => {
       </div>
     );
   }
-
-  // Helper function to get variant data in correct format
-  const getVariantDataForComponent = () => {
-    if (useLocalData && currentVariantData && 'variantId' in currentVariantData) {
-      const singleVariant: LocalVariantData = currentVariantData;
-      return {
-        id: singleVariant.variantId,
-        name: singleVariant.name,
-        thumbnail: singleVariant.cardValue?.file || '',
-        barcode: singleVariant.cardValue?.barcode || '',
-        sku: singleVariant.cardValue?.sku || '',
-        minStock: singleVariant.cardValue?.minStock ?? 0,
-        variantUnits: singleVariant.priceMultiPackList || [],
-      };
-    }
-    return currentVariantData as ApiVariantData;
-  };
-
-  const variantForComponent = getVariantDataForComponent();
 
   return (
     <FormValidationProvider>

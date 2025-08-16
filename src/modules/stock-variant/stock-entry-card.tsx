@@ -1,7 +1,7 @@
 import { Button } from '@/components/button/button';
 import { Card } from '@/components/card/card';
 import { DatePicker } from '@/components/datepicker/date-picker';
-import { Input } from '@/components/input/input';
+import CustomInput from '@/components/input/custom-input';
 import { Label } from '@/components/label/label';
 import { cn } from '@/libs/utils';
 import { SelectToko } from '@/modules/stock-variant/select-toko';
@@ -38,20 +38,16 @@ export function StockEntryCard({
         </div>
 
         {/* Stok Awal */}
-        <div>
-          <Label
-            htmlFor={`stokAwal-${entry.id}`}
-            className="mb-1 block text-sm font-medium text-gray-700"
-          >
-            Stok Awal <span className="text-red-500">*</span>
-          </Label>
-          <Input
+        <div className="flex flex-col">
+          <CustomInput
             id={`stokAwal-${entry.id}`}
-            type="number"
-            placeholder="3"
-            value={entry.stokAwal}
-            onChange={(e) => onChange(entry.id, 'stokAwal', e.target.value)}
             className={cn('h-10', { 'border-red-500': errors[`stockEntries[${index}].stokAwal`] })}
+            placeholder="0"
+            inputNumber
+            isWidthFull
+            label="Stok Awal"
+            required
+            onChange={(e) => onChange(entry.id, 'stokAwal', e.target.value)}
           />
           {errors[`stockEntries[${index}].stokAwal`] && (
             <p className="text-red-500 text-xs mt-1">{errors[`stockEntries[${index}].stokAwal`]}</p>
@@ -59,28 +55,21 @@ export function StockEntryCard({
         </div>
 
         {/* Harga Beli */}
-        <div>
-          <Label
-            htmlFor={`hargaBeli-${entry.id}`}
-            className="mb-1 block text-sm font-medium text-gray-700"
-          >
-            Harga Beli <span className="text-red-500">*</span>
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-              Rp
-            </span>
-            <Input
-              id={`hargaBeli-${entry.id}`}
-              type="number"
-              placeholder="12.000"
-              className={cn('pl-9 h-10', {
-                'border-red-500': errors[`stockEntries[${index}].hargaBeli`],
-              })}
-              value={entry.hargaBeli}
-              onChange={(e) => onChange(entry.id, 'hargaBeli', e.target.value)}
-            />
-          </div>
+        <div className="flex flex-col">
+          <CustomInput
+            id={`hargaBeli-${entry.id}`}
+            currency
+            className={cn('pl-9 h-10', {
+              'border-red-500': errors[`stockEntries[${index}].hargaBeli`],
+            })}
+            placeholder="0"
+            prependText="Rp"
+            inputNumber
+            isWidthFull
+            label="Harga Beli"
+            required
+            onChange={(e) => onChange(entry.id, 'hargaBeli', e.target.value)}
+          />
           {errors[`stockEntries[${index}].hargaBeli`] && (
             <p className="text-red-500 text-xs mt-1">
               {errors[`stockEntries[${index}].hargaBeli`]}
@@ -96,7 +85,7 @@ export function StockEntryCard({
           <DatePicker
             value={entry.tanggalKedaluwarsa}
             onChange={(date) => onChange(entry.id, 'tanggalKedaluwarsa', date as Date)}
-            placeholder="12/12/2025"
+            placeholder="dd/mm/yyyy"
             className={cn('h-10 w-full', {
               'border-red-500': errors[`stockEntries[${index}].tanggalKedaluwarsa`],
             })}

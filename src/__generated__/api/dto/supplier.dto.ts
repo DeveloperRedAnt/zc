@@ -22,7 +22,6 @@ export interface SupplierResponse extends BaseResponseSchema<unknown> {
 }
 
 export interface SupplierRequestParams extends Record<string, unknown> {
-  'x-organization-id': string;
   page?: number;
   search?: string;
 }

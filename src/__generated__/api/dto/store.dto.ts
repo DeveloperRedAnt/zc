@@ -57,10 +57,12 @@ export type StoreSchema = {
   name: string;
   address: string;
   lat: number | null;
-  lng: number | null;
+  long: number | null;
   phone: string;
   email: string | null;
   image: string | null;
+  type: string;
+  category: string;
 };
 
 export type StoreLinksSchema = {
@@ -132,8 +134,10 @@ export interface StoreItem {
   name: string;
   address: string;
   lat: number | null;
-  lng: number | null;
+  long: number | null;
   phone: string;
   email: string | null;
   image: string | null;
+  type: string;
+  category: string
 }

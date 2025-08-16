@@ -1,8 +1,125 @@
-
-
 import { UseMutationOptions, UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import * as api from '../client';
 import * as DTO from '../dto';
+
+// LocalStorage variant data structure
+interface LocalStorageVariantData {
+  state: {
+    currentKey: string;
+    variants: {
+      [key: string]: {
+        variantId: number;
+        productId: string;
+        name: string;
+        cardValue: {
+          file: string;
+          barcode: string;
+          sku: string;
+          minStock: number;
+        };
+        isWholesale: boolean;
+        lastSaved: string;
+        multiPackErrors: { [itemId: number]: { [field: string]: string } };
+        priceMultiPackList: Array<{
+          id: number;
+          unitName: string;
+          conversionValue: number;
+          price: number;
+        }>;
+      };
+    };
+  };
+  version: number;
+}
+
+// Enhanced GetProductDetail type with merged localStorage data
+export interface EnhancedGetProductDetail extends DTO.GetProductDetail {
+  variants?: EnhancedGetProductDetailVariant[];
+}
+
+export interface EnhancedGetProductDetailVariant extends DTO.GetProductDetailVariant {
+  variant_units: Array<{
+    conversion_value: string;
+    id: string;
+    price: string;
+    unit_name: string;
+  }>;
+}
+
+// Helper function to get localStorage data
+function getLocalStorageData(): LocalStorageVariantData | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem('Single-variant-edit-data');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error parsing local storage data:', error);
+  }
+  return null;
+}
+
+// Helper function to find matching localStorage variant data
+function findMatchingLocalVariant(
+  variantId: number, 
+  productId: number,
+  localData: LocalStorageVariantData | null
+) {
+  if (!localData?.state?.variants) return null;
+
+  // Search through all variant keys in localStorage
+  for (const key in localData.state.variants) {
+    const variant = localData.state.variants[key];
+    if (variant?.variantId === variantId && variant.productId === productId.toString()) {
+      return variant;
+    }
+  }
+  return null;
+}
+
+// Enhanced function to merge localStorage data with variants
+function mergeVariantsWithLocalStorage(
+  variants: DTO.GetProductDetailVariant[],
+  productId: number
+): EnhancedGetProductDetailVariant[] {
+  const localData = getLocalStorageData();
+  
+  if (!localData) {
+    return variants.map(variant => ({
+      ...variant,
+      variant_units: variant.variant_units || []
+    }));
+  }
+
+  return variants.map((variant) => {
+    const variantId = Number(variant.id);
+    const matchingLocalVariant = findMatchingLocalVariant(variantId, productId, localData);
+
+    if (matchingLocalVariant) {
+      // Merge localStorage data with original variant
+      return {
+        ...variant,
+        barcode: matchingLocalVariant.cardValue.barcode,
+        sku_code: matchingLocalVariant.cardValue.sku,
+        is_wholesale: matchingLocalVariant.isWholesale,
+        minimum_stock: matchingLocalVariant.cardValue.minStock,
+        variant_units: matchingLocalVariant.priceMultiPackList.map((price) => ({
+          id: price.id.toString(),
+          unit_name: price.unitName,
+          conversion_value: price.conversionValue.toString(),
+          price: price.price.toString(),
+        })),
+      };
+    }
+
+    return {
+      ...variant,
+      variant_units: variant.variant_units || []
+    };
+  });
+}
 
 export function useListProducts(
   params: {
@@ -17,7 +134,6 @@ export function useListProducts(
   });
 }
 
-
 export function useListProductStockOpnames(
   params: DTO.ProductStockOpnameRequest,
   options?: UseQueryOptions<DTO.ProductStockOpnameResponse>
@@ -29,16 +145,28 @@ export function useListProductStockOpnames(
   });
 }
 
-
 export function useGetProductDetail(
   params: {
      id: number 
   },
-  options?
+  options?: UseQueryOptions<EnhancedGetProductDetail>
 ) {
-  return useQuery<DTO.GetProductDetail>({
+  return useQuery<EnhancedGetProductDetail>({
     queryKey: ['getProductDetail', params.id],
-    queryFn: () => api.ProductDetail({id: params.id}),
+    queryFn: async () => {
+      const data = await api.ProductDetail({id: params.id});
+      
+      // Merge with localStorage data if variants exist
+      if (data.variants && data.variants.length > 0) {
+        const mergedVariants = mergeVariantsWithLocalStorage(data.variants, params.id);
+        return {
+          ...data,
+          variants: mergedVariants
+        };
+      }
+      
+      return data;
+    },
     placeholderData: (prev) => prev,
     ...options,
   });
@@ -143,9 +271,8 @@ export function useAdjustmentStockTakings(
   });
 }
 
-
 /**
- * Create product mutation hook
+ * Update product mutation hook with localStorage integration
  */
 export function useUpdateProduct(options?: UseMutationOptions<DTO.CreateProductResponseData,
     Error,
@@ -159,3 +286,6 @@ export function useUpdateProduct(options?: UseMutationOptions<DTO.CreateProductR
     ...options,
   });
 }
+
+// Export helper functions
+export { getLocalStorageData, findMatchingLocalVariant, mergeVariantsWithLocalStorage };

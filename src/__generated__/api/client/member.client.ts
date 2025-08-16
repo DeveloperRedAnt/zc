@@ -6,9 +6,6 @@ import { ValidationError, apiClientWithHeaders } from './base.client';
  * List Members
  */
 export const listMembers = async (params: {
-  'x-device-id': string;
-  'x-store-id': string;
-  'x-organization-id': string;
   body: Partial<DTO.GetMemberPayloadSchema>;
 }) => {
   try {

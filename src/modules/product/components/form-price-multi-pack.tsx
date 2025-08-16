@@ -35,9 +35,9 @@ export default function FormPriceMultiPack({
   };
 
   return (
-    <div className="pb-6 border-b-gray-200 border-t">
+    <div className="pb-6 border-b-gray-200 border-t-gray-200 px-4">
       <div className="pt-6 mb-4 flex justify-between items-center">
-        <p>Harga Multi Satuan</p>
+        <p className="font-medium">Harga Multi Satuan</p>
         {isEdit && (
           <Button type="button" variant="outline" onClick={handleReset}>
             <Refresh />
@@ -89,7 +89,7 @@ export default function FormPriceMultiPack({
       <Button
         type="button"
         variant="outline"
-        className="text-[#555555] mt-4"
+        className="text-[#555555] mt-2"
         onClick={addMultiPackItem}
       >
         <Plus theme="filled" size="24" fill="#555555" />
