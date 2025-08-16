@@ -40,6 +40,6 @@ export type createVoucherRequest = {
   start_at?: string;
   end_at?: string;
   type: string;
-  amount: number;
+  amount: string;
   store_id: number;
 };

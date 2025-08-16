@@ -58,6 +58,7 @@ export const createVoucher = async (params: {
     const headers = {
       'x-device-id': device_id,
       'x-organization-id': organization_id,
+      'x-store-id': params.body.store_id
     };
     const response = await apiClientWithHeaders.post(url, params.body, { headers });
     return response.data;
@@ -79,6 +80,7 @@ export const updateVoucher = async (params: {
     const headers = {
       'x-device-id': device_id,
       'x-organization-id': organization_id,
+      'x-store-id': params.body.store_id
     };
     const response = await apiClientWithHeaders.put(url, params.body, { headers });
     return response.data;

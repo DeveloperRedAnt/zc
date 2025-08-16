@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           if (!whatsapp || !password) return null;
 
           const response = await axios.post(
-            `${API_URL}/api/employee/token`,
+            `${API_URL}/api/v2/employee/token`,
             {
               phone: whatsapp,
               password: password,
@@ -33,14 +33,12 @@ export const authOptions: NextAuthOptions = {
             {
               headers: {
                 accept: 'application/json',
-                'x-device-id': '1',
-                'x-store-id': '1',
-                'x-organization-id': '1',
                 'Content-Type': 'application/json',
               },
             }
           );
           const data = response.data;
+
           if (data?.token) {
             return {
               id: data.user.id,

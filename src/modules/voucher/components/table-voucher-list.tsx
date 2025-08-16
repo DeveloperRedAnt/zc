@@ -10,9 +10,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 
-type Voucher = {
+// Create reusable formatters outside component to avoid recreating
+const numberFormatter = new Intl.NumberFormat('id-ID');
+
+interface Voucher {
   id: string;
   name: string;
   type: string;
@@ -28,7 +31,8 @@ type Voucher = {
     id: number;
     name: string;
   };
-};
+  details?: Array<{ id: string }>;
+}
 
 type TableProductListProps = {
   isLoading?: boolean;
@@ -61,198 +65,211 @@ function TableVoucherList({
 
   const dataTable = useMemo(() => vouchers, [vouchers]);
 
-  const baseColumns = [
-    columnHelper.accessor('name', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+  // Memoize format functions to prevent recreation on every render
+  const formatAmount = useCallback((amount: number, type: string) => {
+    return type === 'nominal' ? `Rp ${numberFormatter.format(amount)}` : `${amount}%`;
+  }, []);
 
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Nama Voucher
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-    }),
-    columnHelper.accessor('type', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+  const formatDateRange = useCallback((start: string, end: string) => {
+    return `${format(new Date(start), 'yyyy/MM/dd')} - ${format(new Date(end), 'yyyy/MM/dd')}`;
+  }, []);
 
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Tipe
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => {
-        const value = info.getValue();
-        const isPersent = value === 'persen';
-        return (
-          <div
-            className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[90px] text-center ${
-              isPersent ? 'bg-[#FFF5DF] text-[#FCBA33]' : 'bg-[#E3FBFF] text-[#0FA6C1]'
-            }`}
-          >
-            {value}
-          </div>
-        );
-      },
-      enableSorting: true,
-    }),
-    columnHelper.accessor('quantity', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
+  const baseColumns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
 
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Jumlah
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => {
-        const amount = info.row.original.amount;
-        const type = info.row.original.type;
-        return type === 'nominal'
-          ? `Rp ${new Intl.NumberFormat('id-ID').format(amount)}`
-          : `${amount}%`;
-      },
-      enableSorting: true,
-    }),
-    columnHelper.accessor('period', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Jangka Waktu
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => {
-        const start = info.row.original.start_at;
-        const end = info.row.original.end_at;
-        return `${format(new Date(start), 'yyyy/MM/dd')} - ${format(new Date(end), 'yyyy/MM/dd')}`;
-      },
-      enableSorting: true,
-    }),
-    columnHelper.accessor('code', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Kode Voucher
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-    }),
-    columnHelper.accessor('status', {
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-
-        return (
-          <div
-            onClick={column.getToggleSortingHandler()}
-            className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
-          >
-            Status
-            {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
-            {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
-            {!isSorted && <SortThree theme="outline" size="16" />}
-          </div>
-        );
-      },
-      cell: (info) => {
-        const value = info.getValue();
-        return (
-          <div
-            className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[4.4rem] mx-auto text-center ${
-              value ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#FAFAFA] text-[#C2C7D0]'
-            }`}
-          >
-            {value ? 'Aktif' : 'Non-Aktif'}
-          </div>
-        );
-      },
-      enableSorting: true,
-    }),
-    columnHelper.display({
-      id: 'aksi',
-      header: () => <div className="font-semibold text-[#555555] text-center">Aksi</div>,
-      cell: ({ row }) => (
-        <div className="flex gap-2 justify-center items-center">
-          {/* Removed invalid type="button" prop */}
-          <Edit
-            className="cursor-pointer hover:text-blue-600 transition-colors"
-            onClick={() => onEditVoucher?.(row.original)}
-          />
-        </div>
-      ),
-    }),
-  ];
-
-  const accordionColumns = [
-    {
-      id: 'expander',
-      header: () => null,
-      cell: ({ row }) => {
-        const hasDetails = row.original.details?.length > 0;
-        if (!hasDetails) return null;
-
-        return (
-          <button
-            onClick={() => row.toggleExpanded()}
-            className="flex items-center justify-center w-8 h-8 cursor-pointer"
-            aria-label={row.getIsExpanded() ? 'Collapse' : 'Expand'}
-            type="button"
-          >
+          return (
             <div
-              className={`transform transition-transform duration-500 ${
-                row.getIsExpanded() ? 'rotate-90' : ''
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Nama Voucher
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => info.getValue(),
+        enableSorting: true,
+      }),
+      columnHelper.accessor('type', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Tipe
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => {
+          const value = info.getValue();
+          const isPersent = value === 'persen';
+          return (
+            <div
+              className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[90px] text-center ${
+                isPersent ? 'bg-[#FFF5DF] text-[#FCBA33]' : 'bg-[#E3FBFF] text-[#0FA6C1]'
               }`}
             >
-              <Right />
+              {value}
             </div>
-          </button>
-        );
+          );
+        },
+        enableSorting: true,
+      }),
+      columnHelper.accessor('quantity', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Jumlah
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => {
+          const amount = info.row.original.amount;
+          const type = info.row.original.type;
+          return formatAmount(amount, type);
+        },
+        enableSorting: true,
+      }),
+      columnHelper.accessor('period', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Jangka Waktu
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => {
+          const start = info.row.original.start_at;
+          const end = info.row.original.end_at;
+          return formatDateRange(start, end);
+        },
+        enableSorting: true,
+      }),
+      columnHelper.accessor('code', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Kode Voucher
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => info.getValue(),
+        enableSorting: true,
+      }),
+      columnHelper.accessor('status', {
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div
+              onClick={column.getToggleSortingHandler()}
+              className="font-semibold text-[#555555] cursor-pointer select-none flex items-center gap-1"
+            >
+              Status
+              {isSorted === 'asc' && <SortAmountUp theme="outline" size="16" />}
+              {isSorted === 'desc' && <SortAmountDown theme="outline" size="16" />}
+              {!isSorted && <SortThree theme="outline" size="16" />}
+            </div>
+          );
+        },
+        cell: (info) => {
+          const value = info.getValue();
+          return (
+            <div
+              className={`h-[1.5rem] px-3 py-1 text-[0.75rem] rounded w-[4.4rem] mx-auto text-center ${
+                value ? 'bg-[#ECFDF5] text-[#75BF85]' : 'bg-[#FAFAFA] text-[#C2C7D0]'
+              }`}
+            >
+              {value ? 'Aktif' : 'Non-Aktif'}
+            </div>
+          );
+        },
+        enableSorting: true,
+      }),
+      columnHelper.display({
+        id: 'aksi',
+        header: () => <div className="font-semibold text-[#555555] text-center">Aksi</div>,
+        cell: ({ row }) => (
+          <div className="flex gap-2 justify-center items-center">
+            {/* Removed invalid type="button" prop */}
+            <Edit
+              className="cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => onEditVoucher?.(row.original)}
+            />
+          </div>
+        ),
+      }),
+    ],
+    [formatAmount, columnHelper, formatDateRange, onEditVoucher]
+  );
+
+  const accordionColumns = useMemo(
+    () => [
+      {
+        id: 'expander',
+        header: () => null,
+        cell: ({ row }) => {
+          const hasDetails = (row.original.details?.length ?? 0) > 0;
+          if (!hasDetails) return null;
+
+          return (
+            <button
+              onClick={() => row.toggleExpanded()}
+              className="flex items-center justify-center w-8 h-8 cursor-pointer"
+              aria-label={row.getIsExpanded() ? 'Collapse' : 'Expand'}
+              type="button"
+            >
+              <div
+                className={`transform transition-transform duration-500 ${
+                  row.getIsExpanded() ? 'rotate-90' : ''
+                }`}
+              >
+                <Right />
+              </div>
+            </button>
+          );
+        },
+        size: 32,
       },
-      size: 32,
-    },
-    ...baseColumns,
-  ];
+      ...baseColumns,
+    ],
+    [baseColumns]
+  );
 
   // Memoize the columns to prevent recreating them on every render
   const columns = useMemo(() => accordionColumns, [accordionColumns]);
